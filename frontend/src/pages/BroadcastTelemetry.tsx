@@ -11,9 +11,14 @@ import {
     Cpu,
     Zap,
     RefreshCw,
-    Info
+    Info,
+    Car,
+    ArrowRightLeft,
+    AlertTriangle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import '../styles/telemetry.css';
+import { DataExportControls } from '../components/DataExportControls';
 
 interface MetricLabel {
     plp_id: string;
@@ -53,8 +58,217 @@ interface TelemetryData {
     note: string;
 }
 
+interface OffloadingData {
+    traffic_offloading: {
+        unicast_congestion_level: number;
+        offload_ratio: number;
+        recommended_offload: number;
+        unicast_latency_ms: number;
+        packet_loss_probability: number;
+        latency_reduction_ms: number;
+        users_offloaded: number;
+        status: string;
+    };
+    mobility: {
+        mobile_user_ratio: number;
+        num_mobile_users: number;
+        num_static_users: number;
+        average_velocity_kmh: number;
+        max_velocity_kmh: number;
+        mobile_coverage_percent: number;
+        static_coverage_percent: number;
+        overall_coverage_percent: number;
+        simulation_time_s: number;
+    };
+    ai_explanation: string;
+}
+
+// Congestion Gauge Component
+function CongestionGauge({ level, label, status }: { level: number; label: string; status: string }) {
+    const percentage = level * 100;
+
+    const getStatusClass = () => {
+        switch (status) {
+            case 'critical': return 'congestion-bar-critical';
+            case 'high': return 'congestion-bar-high';
+            case 'moderate': return 'congestion-bar-moderate';
+            default: return 'congestion-bar-low';
+        }
+    };
+
+    const getStatusBadgeClass = () => {
+        switch (status) {
+            case 'critical': return 'status-badge-critical';
+            case 'high': return 'status-badge-high';
+            case 'moderate': return 'status-badge-moderate';
+            default: return 'status-badge-low';
+        }
+    };
+
+    return (
+        <div className="metric-card">
+            <div className="flex items-center justify-between mb-2">
+                <span className="text-sm font-medium text-slate-600">{label}</span>
+                <span className={cn("status-badge", getStatusBadgeClass())}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                </span>
+            </div>
+            <div className="text-2xl font-bold text-slate-900 mb-2">
+                {percentage.toFixed(1)}%
+            </div>
+            <div className="congestion-bar-container">
+                <div
+                    className={cn("congestion-bar", getStatusClass())}
+                    data-width={Math.min(percentage, 100)}
+                />
+            </div>
+        </div>
+    );
+}
+
+// Offload Ratio Dial
+function OffloadDial({ ratio, reduction, recommended }: { ratio: number; reduction: number; recommended: number }) {
+    const percentage = ratio * 100;
+
+    return (
+        <div className="metric-card">
+            <div className="flex items-center gap-2 mb-2 text-slate-600">
+                <ArrowRightLeft className="h-4 w-4" />
+                <span className="text-sm font-medium">Broadcast Offload Ratio</span>
+            </div>
+            <div className="flex items-end gap-2">
+                <span className="text-2xl font-bold text-slate-900">{percentage.toFixed(0)}%</span>
+                {reduction > 0 && (
+                    <span className="text-sm text-emerald-600 mb-1">
+                        ↓{reduction.toFixed(0)}ms latency saved
+                    </span>
+                )}
+            </div>
+            <div className="offload-bar-container mt-2">
+                <div
+                    className="offload-bar"
+                    data-width={Math.min(percentage, 100)}
+                />
+                {/* Recommended marker */}
+                <div
+                    className="offload-marker"
+                    data-position={recommended * 100}
+                    title={`AI Recommended: ${(recommended * 100).toFixed(0)}%`}
+                />
+            </div>
+            <p className="text-xs text-slate-400 mt-2">
+                {ratio > 0.5
+                    ? "Traffic has been offloaded from cellular to broadcast to reduce congestion."
+                    : ratio > 0.1
+                        ? "Partial offloading active to maintain network performance."
+                        : "Normal operation - minimal offloading required."}
+            </p>
+        </div>
+    );
+}
+
+// Mobile Users Indicator
+function MobileUsersIndicator({
+    numMobile,
+    numStatic,
+    avgVelocity,
+    maxVelocity,
+    mobileCoverage,
+    staticCoverage,
+    simulationTime
+}: {
+    numMobile: number;
+    numStatic: number;
+    avgVelocity: number;
+    maxVelocity: number;
+    mobileCoverage: number;
+    staticCoverage: number;
+    simulationTime: number;
+}) {
+    return (
+        <div className="metric-card">
+            <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center gap-2 text-slate-600">
+                    <Car className="h-4 w-4" />
+                    <span className="text-sm font-medium">Moving Receivers</span>
+                </div>
+                <span className="text-xs text-slate-400">
+                    t = {simulationTime.toFixed(0)}s
+                </span>
+            </div>
+            <div className="grid grid-cols-4 gap-3">
+                <div>
+                    <div className="text-xl font-bold text-slate-900">{numMobile}</div>
+                    <div className="text-xs text-slate-500">Mobile</div>
+                </div>
+                <div>
+                    <div className="text-xl font-bold text-slate-900">{numStatic}</div>
+                    <div className="text-xs text-slate-500">Static</div>
+                </div>
+                <div>
+                    <div className="text-xl font-bold text-slate-900">{avgVelocity.toFixed(0)}</div>
+                    <div className="text-xs text-slate-500">Avg km/h</div>
+                </div>
+                <div>
+                    <div className={cn(
+                        "text-xl font-bold",
+                        mobileCoverage >= 90 ? "text-emerald-600" :
+                            mobileCoverage >= 70 ? "text-yellow-600" : "text-red-600"
+                    )}>
+                        {mobileCoverage.toFixed(0)}%
+                    </div>
+                    <div className="text-xs text-slate-500">Mobile Cov</div>
+                </div>
+            </div>
+            <div className="mt-3 pt-3 border-t border-slate-100">
+                <div className="flex justify-between text-xs">
+                    <span className="text-slate-500">Static Coverage: {staticCoverage.toFixed(0)}%</span>
+                    <span className="text-slate-500">Max Speed: {maxVelocity.toFixed(0)} km/h</span>
+                </div>
+            </div>
+        </div>
+    );
+}
+
+// AI Explanation Banner
+function AIExplanationBanner({ explanation }: { explanation: string }) {
+    const isWarning = explanation.includes('⚠️') || explanation.includes('🚨');
+
+    return (
+        <div className={cn(
+            "rounded-lg border p-4 mb-4",
+            isWarning
+                ? "bg-gradient-to-r from-amber-50 to-orange-50 border-amber-200"
+                : "bg-gradient-to-r from-emerald-50 to-cyan-50 border-emerald-200"
+        )}>
+            <div className="flex items-start gap-3">
+                {isWarning ? (
+                    <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
+                ) : (
+                    <Cpu className="h-5 w-5 text-emerald-500 flex-shrink-0 mt-0.5" />
+                )}
+                <div>
+                    <h4 className={cn(
+                        "font-medium mb-1",
+                        isWarning ? "text-amber-900" : "text-emerald-900"
+                    )}>
+                        AI Adaptation Status
+                    </h4>
+                    <p className={cn(
+                        "text-sm",
+                        isWarning ? "text-amber-800" : "text-emerald-800"
+                    )}>
+                        {explanation}
+                    </p>
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export function BroadcastTelemetry() {
     const [telemetry, setTelemetry] = useState<TelemetryData | null>(null);
+    const [offloadingData, setOffloadingData] = useState<OffloadingData | null>(null);
     const [loading, setLoading] = useState(false);
     const [error, setError] = useState<string | null>(null);
     const [autoRefresh, setAutoRefresh] = useState(true);
@@ -63,15 +277,27 @@ export function BroadcastTelemetry() {
         setLoading(true);
         setError(null);
         try {
-            const res = await fetch('http://localhost:8000/telemetry/all');
-            if (res.ok) {
-                const data = await res.json();
+            // Fetch both telemetry and offloading data in parallel
+            const [telemetryRes, offloadingRes] = await Promise.all([
+                fetch('http://localhost:8000/telemetry/all'),
+                fetch('http://localhost:8000/telemetry/offloading')
+            ]);
+
+            if (telemetryRes.ok) {
+                const data = await telemetryRes.json();
                 setTelemetry(data);
-            } else {
-                setError('Failed to fetch telemetry');
+            }
+
+            if (offloadingRes.ok) {
+                const data = await offloadingRes.json();
+                setOffloadingData(data);
+            }
+
+            if (!telemetryRes.ok && !offloadingRes.ok) {
+                setError('Failed to fetch telemetry data');
             }
         } catch (err) {
-            setError('Connection error');
+            setError('Connection error - is the backend running?');
             console.error(err);
         } finally {
             setLoading(false);
@@ -81,7 +307,7 @@ export function BroadcastTelemetry() {
     useEffect(() => {
         fetchTelemetry();
         if (autoRefresh) {
-            const interval = setInterval(fetchTelemetry, 3000);
+            const interval = setInterval(fetchTelemetry, 2000); // Update every 2 seconds
             return () => clearInterval(interval);
         }
     }, [fetchTelemetry, autoRefresh]);
@@ -137,12 +363,10 @@ export function BroadcastTelemetry() {
     };
 
     const getValueTrend = (metric: TelemetryMetric) => {
-        // Determine if higher is better
         const higherIsBetter = [
             'acquisition_success', 'completion_ratio', 'stability',
             'acceptance_ratio', 'throughput', 'bits_per_hz'
         ].some(term => metric.name.includes(term));
-
 
         if (metric.unit === 'ratio' || metric.unit === 'score') {
             if (metric.value >= 0.95) {
@@ -170,7 +394,7 @@ export function BroadcastTelemetry() {
                 badge.color === 'blue' && "bg-blue-100 text-blue-700",
                 badge.color === 'gray' && "bg-slate-100 text-slate-700"
             )}
-            title="This metric is derived from receiver-side protocol parsing using libatsc3 or validated digital-twin models."
+            title="This metric is derived from receiver-side protocol parsing or validated digital-twin models."
         >
             {badge.emoji} {badge.label}
         </span>
@@ -180,7 +404,7 @@ export function BroadcastTelemetry() {
         const trend = getValueTrend(metric);
 
         return (
-            <div className="bg-white rounded-lg border border-slate-200 p-4 hover:shadow-md transition-shadow">
+            <div className="metric-card hover:shadow-md transition-shadow">
                 <div className="flex items-start justify-between mb-2">
                     <div className="flex items-center gap-2 text-slate-600">
                         {getMetricIcon(metric.name)}
@@ -215,10 +439,11 @@ export function BroadcastTelemetry() {
                         Broadcast Telemetry
                     </h2>
                     <p className="text-slate-500 mt-1">
-                        Impact-oriented metrics for broadcast operations
+                        Real-time traffic offloading and mobility metrics
                     </p>
                 </div>
                 <div className="flex items-center gap-4">
+                    <DataExportControls />
                     <label className="flex items-center gap-2 text-sm text-slate-600">
                         <input
                             type="checkbox"
@@ -226,7 +451,7 @@ export function BroadcastTelemetry() {
                             onChange={(e) => setAutoRefresh(e.target.checked)}
                             className="rounded border-slate-300"
                         />
-                        Auto-refresh
+                        Auto-refresh (2s)
                     </label>
                     <button
                         onClick={fetchTelemetry}
@@ -241,9 +466,15 @@ export function BroadcastTelemetry() {
 
             {/* Error */}
             {error && (
-                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg">
+                <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg flex items-center gap-2">
+                    <AlertTriangle className="h-5 w-5" />
                     {error}
                 </div>
+            )}
+
+            {/* AI Explanation Banner */}
+            {offloadingData && (
+                <AIExplanationBanner explanation={offloadingData.ai_explanation} />
             )}
 
             {/* Current Configuration */}
@@ -269,6 +500,14 @@ export function BroadcastTelemetry() {
                                         {telemetry.config_summary.mode}
                                     </p>
                                 </div>
+                                {offloadingData && (
+                                    <div>
+                                        <span className="text-xs text-slate-400 uppercase">Coverage</span>
+                                        <p className="font-mono font-bold text-lg text-cyan-400">
+                                            {offloadingData.mobility.overall_coverage_percent.toFixed(0)}%
+                                        </p>
+                                    </div>
+                                )}
                             </div>
                             <div className="text-xs text-slate-500">
                                 Last updated: {new Date(telemetry.timestamp).toLocaleTimeString()}
@@ -276,6 +515,111 @@ export function BroadcastTelemetry() {
                         </div>
                     </CardContent>
                 </Card>
+            )}
+
+            {/* Traffic Offloading Section */}
+            {offloadingData && (
+                <div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <ArrowRightLeft className="h-5 w-5 text-cyan-500" />
+                        Traffic Offloading (Cellular → Broadcast)
+                    </h3>
+                    <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                        <CongestionGauge
+                            level={offloadingData.traffic_offloading.unicast_congestion_level}
+                            label="Cellular Network Congestion"
+                            status={offloadingData.traffic_offloading.status}
+                        />
+                        <OffloadDial
+                            ratio={offloadingData.traffic_offloading.offload_ratio}
+                            reduction={offloadingData.traffic_offloading.latency_reduction_ms}
+                            recommended={offloadingData.traffic_offloading.recommended_offload}
+                        />
+                        <div className="metric-card">
+                            <div className="flex items-center gap-2 mb-2 text-slate-600">
+                                <Activity className="h-4 w-4" />
+                                <span className="text-sm font-medium">Unicast Performance</span>
+                            </div>
+                            <div className="grid grid-cols-2 gap-4 mt-3">
+                                <div>
+                                    <div className="text-xl font-bold text-slate-900">
+                                        {offloadingData.traffic_offloading.unicast_latency_ms.toFixed(0)}ms
+                                    </div>
+                                    <div className="text-xs text-slate-500">Latency</div>
+                                </div>
+                                <div>
+                                    <div className={cn(
+                                        "text-xl font-bold",
+                                        offloadingData.traffic_offloading.packet_loss_probability < 0.02 ? "text-emerald-600" :
+                                            offloadingData.traffic_offloading.packet_loss_probability < 0.05 ? "text-yellow-600" : "text-red-600"
+                                    )}>
+                                        {(offloadingData.traffic_offloading.packet_loss_probability * 100).toFixed(2)}%
+                                    </div>
+                                    <div className="text-xs text-slate-500">Packet Loss</div>
+                                </div>
+                            </div>
+                            <div className="mt-3 pt-3 border-t border-slate-100 text-xs text-slate-500">
+                                Users offloaded: {offloadingData.traffic_offloading.users_offloaded}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Mobility Section */}
+            {offloadingData && (
+                <div>
+                    <h3 className="text-lg font-bold text-slate-900 mb-3 flex items-center gap-2">
+                        <Car className="h-5 w-5 text-amber-500" />
+                        Connected Vehicles / Mobility
+                    </h3>
+                    <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                        <MobileUsersIndicator
+                            numMobile={offloadingData.mobility.num_mobile_users}
+                            numStatic={offloadingData.mobility.num_static_users}
+                            avgVelocity={offloadingData.mobility.average_velocity_kmh}
+                            maxVelocity={offloadingData.mobility.max_velocity_kmh}
+                            mobileCoverage={offloadingData.mobility.mobile_coverage_percent}
+                            staticCoverage={offloadingData.mobility.static_coverage_percent}
+                            simulationTime={offloadingData.mobility.simulation_time_s}
+                        />
+                        <div className="metric-card bg-gradient-to-br from-slate-50 to-slate-100">
+                            <h4 className="font-medium text-slate-700 mb-3 flex items-center gap-2">
+                                <Radio className="h-4 w-4" />
+                                Coverage Comparison
+                            </h4>
+                            <div className="space-y-3">
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-slate-600">Static Receivers</span>
+                                        <span className="font-medium">{offloadingData.mobility.static_coverage_percent.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="coverage-bar-container">
+                                        <div
+                                            className="coverage-bar coverage-bar-static"
+                                            data-width={offloadingData.mobility.static_coverage_percent}
+                                        />
+                                    </div>
+                                </div>
+                                <div>
+                                    <div className="flex justify-between text-sm mb-1">
+                                        <span className="text-slate-600">Mobile Receivers</span>
+                                        <span className="font-medium">{offloadingData.mobility.mobile_coverage_percent.toFixed(1)}%</span>
+                                    </div>
+                                    <div className="coverage-bar-container">
+                                        <div
+                                            className="coverage-bar coverage-bar-mobile"
+                                            data-width={offloadingData.mobility.mobile_coverage_percent}
+                                        />
+                                    </div>
+                                </div>
+                            </div>
+                            <p className="text-xs text-slate-500 mt-3">
+                                Coverage stability for moving receivers at speeds up to {offloadingData.mobility.max_velocity_kmh.toFixed(0)} km/h
+                            </p>
+                        </div>
+                    </div>
+                </div>
             )}
 
             {/* Provenance Legend */}

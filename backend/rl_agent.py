@@ -7,45 +7,76 @@ import os
 
 # Import our simulations
 from sim.spatial_model import SpatialGrid
+from sim.unicast_network_model import UnicastNetworkModel
 from backend.optimizer import SpectrumOptimizer
+
 
 class ATSCSlicingEnv(gym.Env):
     """
-    Custom Gymnasium Environment for ATSC 3.0 Slicing.
+    Custom Gymnasium Environment for ATSC 3.0 Slicing with Traffic Offloading.
     
-    State: [Avg SNR, Coverage %, Current Weight Emergency, Current Weight Coverage]
-    Action: Adjust weights for Emergency/Coverage slices [Delta_Emerg, Delta_Cov]
-    Reward: +Throughput - Penalty(Violation)
+    Extended State: [Coverage %, Avg SNR, W_Emg, W_Cov, Unicast Congestion, 
+                     Mobile User Ratio, Avg Velocity]
+    
+    Extended Action: [Delta_Emerg, Delta_Cov, Offload_Ratio]
+    
+    Reward: Maximize coverage + offload benefit - congestion penalty
     """
     
     def __init__(self):
         super(ATSCSlicingEnv, self).__init__()
         
-        # Action: Continuous adjustment to weights [-0.5, 0.5]
-        self.action_space = spaces.Box(low=-0.5, high=0.5, shape=(2,), dtype=np.float32)
+        # Extended Action: [Weight adjustments, Offload Ratio]
+        # Delta weights: [-0.5, 0.5], Offload ratio: [0.0, 1.0]
+        self.action_space = spaces.Box(
+            low=np.array([-0.5, -0.5, 0.0], dtype=np.float32),
+            high=np.array([0.5, 0.5, 1.0], dtype=np.float32),
+            dtype=np.float32
+        )
         
-        # Observation: [Coverage %, Avg SNR, W_Emg, W_Cov]
-        # Normalized ranges approx [0-100, -10 to 40, 0-5, 0-5]
-        self.observation_space = spaces.Box(low=-np.inf, high=np.inf, shape=(4,), dtype=np.float32)
+        # Extended Observation: [Coverage, SNR, W_Emg, W_Cov, Congestion, MobileRatio, Velocity]
+        self.observation_space = spaces.Box(
+            low=-np.inf, high=np.inf, shape=(7,), dtype=np.float32
+        )
         
         self.grid = SpatialGrid()
         self.optimizer = SpectrumOptimizer()
+        self.unicast_model = UnicastNetworkModel()
         
         # Initial State
-        self.current_weights = np.array([1.5, 1.0]) # [Emergency, Coverage]
-        self.state = np.zeros(4)
+        self.current_weights = np.array([1.5, 1.0])  # [Emergency, Coverage]
+        self.current_offload_ratio = 0.0
+        self.state = np.zeros(7)
+        
+        # Mobility simulation state
+        self.mobile_user_ratio = 0.0
+        self.avg_velocity_kmh = 0.0
 
     def reset(self, seed=None, options=None):
         super().reset(seed=seed)
-        self.grid = SpatialGrid() # New user distribution
-        self.current_weights = np.array([1.5, 1.0]) 
+        self.grid = SpatialGrid()  # New user distribution
+        self.current_weights = np.array([1.5, 1.0])
+        self.current_offload_ratio = 0.0
+        
+        # Randomize initial conditions for diverse training
+        self.mobile_user_ratio = np.random.uniform(0.0, 0.5)
+        self.avg_velocity_kmh = np.random.uniform(0.0, 60.0) if self.mobile_user_ratio > 0.1 else 0.0
+        
+        # Randomize unicast conditions
+        self.unicast_model.set_external_congestion(np.random.uniform(0.0, 0.3))
+        
         self.state = self._get_observation()
         return self.state, {}
 
     def step(self, action):
-        # 1. Apply Action (Adjust Weights)
-        self.current_weights += action
+        # 1. Apply Action
+        # Weight adjustments
+        weight_delta = action[:2]
+        self.current_weights += weight_delta
         self.current_weights = np.clip(self.current_weights, 0.1, 5.0)
+        
+        # Offload ratio action
+        self.current_offload_ratio = float(np.clip(action[2], 0.0, 1.0))
         
         # 2. Run Optimization with new weights
         slices = [
@@ -54,52 +85,108 @@ class ATSCSlicingEnv(gym.Env):
         ]
         results = self.optimizer.optimize_allocation(slices)
         
-        # 3. Simulate Physics (Resulting Coverage)
-        # Assume Emergency slice (index 0) defines system reliability
+        # 3. Simulate Coverage (Spatial Grid)
         emerg_config = results[0]
+        
+        # Apply mobility penalty to SNR threshold for mobile users
+        mobility_snr_penalty = self.avg_velocity_kmh * 0.05  # Higher speed = higher SNR needed
+        effective_min_snr = 15.0 + mobility_snr_penalty * self.mobile_user_ratio
+        
         metrics = self.grid.calculate_grid_metrics(
             tx_power_dbm=emerg_config['power_dbm'],
             frequency_mhz=600.0,
-            min_snr_db=15.0 # High threshold for 64QAM
+            min_snr_db=effective_min_snr
         )
         
-        # 4. Calculate Reward
-        # Goal: Maximize Coverage while keeping Emergency Weight reasonable
-        coverage = metrics['coverage_percent']
-        reward = coverage / 10.0 # Base reward
+        # 4. Calculate Unicast Congestion
+        unicast_metrics = self.unicast_model.calculate_congestion(
+            mobile_user_ratio=self.mobile_user_ratio
+        )
+        congestion = unicast_metrics.congestion_level
         
-        # Penalty for low coverage (< 80%)
+        # 5. Calculate Offload Benefit
+        offload_benefit = self.unicast_model.get_offload_benefit(
+            unicast_metrics, 
+            self.current_offload_ratio
+        )
+        effective_congestion = offload_benefit['projected_congestion']
+        
+        # 6. Calculate Reward
+        coverage = metrics['coverage_percent']
+        
+        # Base coverage reward
+        reward = coverage / 10.0
+        
+        # Penalty for low coverage
         if coverage < 80.0:
             reward -= 10.0
             
-        # 5. Update State
+        # Congestion management reward
+        # Reward for reducing congestion through offloading
+        congestion_reduction = congestion - effective_congestion
+        reward += congestion_reduction * 5.0  # +5 for each 0.1 reduction
+        
+        # Penalty for high congestion (not offloading when needed)
+        if effective_congestion > 0.7:
+            reward -= (effective_congestion - 0.7) * 20.0
+            
+        # Reward for appropriate offloading (not over-offloading when not needed)
+        if congestion < 0.3 and self.current_offload_ratio > 0.5:
+            reward -= 2.0  # Penalty for unnecessary offloading
+            
+        # Emergency reliability hard constraint
+        if self.current_weights[0] < 0.5:
+            reward -= 15.0  # Never compromise emergency weight
+        
+        # 7. Update State
         self.state = np.array([
             coverage,
             metrics['avg_snr_db'],
             self.current_weights[0],
-            self.current_weights[1]
+            self.current_weights[1],
+            effective_congestion,
+            self.mobile_user_ratio,
+            self.avg_velocity_kmh / 100.0  # Normalize velocity
         ], dtype=np.float32)
         
         terminated = False
         truncated = False
-        info = {"coverage": coverage}
+        info = {
+            "coverage": coverage,
+            "congestion": congestion,
+            "effective_congestion": effective_congestion,
+            "offload_ratio": self.current_offload_ratio,
+            "mobile_ratio": self.mobile_user_ratio
+        }
         
         return self.state, reward, terminated, truncated, info
 
     def _get_observation(self):
-        # Initial observation (dummy simulation)
-        return np.array([0.0, 0.0, self.current_weights[0], self.current_weights[1]], dtype=np.float32)
+        """Get initial/current observation."""
+        unicast_metrics = self.unicast_model.calculate_congestion(
+            mobile_user_ratio=self.mobile_user_ratio
+        )
+        return np.array([
+            0.0,  # coverage (will be calculated)
+            0.0,  # avg_snr
+            self.current_weights[0],
+            self.current_weights[1],
+            unicast_metrics.congestion_level,
+            self.mobile_user_ratio,
+            self.avg_velocity_kmh / 100.0
+        ], dtype=np.float32)
+
 
 class RLController:
-    """Interface to train/use the PPO Agent"""
+    """Interface to train/use the PPO Agent with Traffic Offloading."""
     
-    def __init__(self, model_path="ppo_atsc_slicing"):
+    def __init__(self, model_path="ppo_atsc_slicing_v2"):
         self.model_path = model_path
         self.env = ATSCSlicingEnv()
         self.model = None
 
     def train(self, timesteps=1000):
-        print("Training PPO Agent...")
+        print("Training PPO Agent with Traffic Offloading...")
         try:
             self.model = PPO("MlpPolicy", self.env, verbose=1, device='cpu')
             self.model.learn(total_timesteps=timesteps)
@@ -108,17 +195,72 @@ class RLController:
         except Exception as e:
             print(f"Training Failed: {e}")
 
-    def suggest_weights(self, current_observation):
-        """Predict optimal weight adjustment"""
-        # Ensure observation is a numpy array with correct dtype
+    def suggest_action(self, current_observation):
+        """
+        Predict optimal action including offload ratio.
+        
+        Args:
+            current_observation: 7-dim array [coverage, snr, w_emg, w_cov, 
+                                              congestion, mobile_ratio, velocity]
+        
+        Returns:
+            3-dim action [delta_emg, delta_cov, offload_ratio]
+        """
+        # Ensure observation is correct shape
         obs = np.array(current_observation, dtype=np.float32)
+        if len(obs) < 7:
+            # Pad with zeros for backward compatibility
+            obs = np.pad(obs, (0, 7 - len(obs)), mode='constant')
         
         if not os.path.exists(self.model_path + ".zip") and self.model is None:
-            self.train(timesteps=500) # Quick train if no model
+            self.train(timesteps=500)
             
         if self.model is None:
-            # Load with CPU device to avoid CUDA issues
             self.model = PPO.load(self.model_path, device='cpu')
              
         action, _ = self.model.predict(obs, deterministic=True)
         return action
+    
+    def suggest_weights(self, current_observation):
+        """
+        Backward compatible method - returns only weight adjustments.
+        
+        Args:
+            current_observation: 4-dim or 7-dim array
+            
+        Returns:
+            2-dim weight adjustment [delta_emg, delta_cov]
+        """
+        obs = np.array(current_observation, dtype=np.float32)
+        
+        # If 4-dim observation (old format), extend it
+        if len(obs) == 4:
+            obs = np.concatenate([obs, [0.3, 0.0, 0.0]])  # Default congestion, no mobility
+        
+        action = self.suggest_action(obs)
+        return action[:2]  # Return only weight adjustments
+
+
+# Quick test
+if __name__ == "__main__":
+    print("Testing Extended ATSC Slicing Environment...")
+    env = ATSCSlicingEnv()
+    
+    # Validate environment
+    try:
+        check_env(env, warn=True)
+        print("✓ Environment validation passed")
+    except Exception as e:
+        print(f"✗ Environment validation failed: {e}")
+    
+    # Test episode
+    obs, _ = env.reset()
+    print(f"\nInitial observation (7-dim): {obs}")
+    
+    for i in range(5):
+        action = env.action_space.sample()
+        obs, reward, terminated, truncated, info = env.step(action)
+        print(f"Step {i+1}: reward={reward:.2f}, coverage={info['coverage']:.1f}%, "
+              f"congestion={info['effective_congestion']:.2f}, offload={info['offload_ratio']:.2f}")
+    
+    print("\n✓ Environment test complete")

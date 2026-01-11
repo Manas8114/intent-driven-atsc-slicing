@@ -544,3 +544,96 @@ async def get_control_plane_metrics():
     """Get AI and control plane health metrics."""
     metrics = control_plane_metrics.get_metrics()
     return {"metrics": [m.to_dict() for m in metrics]}
+
+
+@router.get("/offloading")
+async def get_offloading_metrics():
+    """Get traffic offloading and mobility metrics for frontend visualization."""
+    from .simulation_state import get_simulation_state
+    
+    sim_state = get_simulation_state()
+    
+    # Update unicast metrics based on current state
+    sim_state.update_unicast_metrics()
+    
+    # Update mobile users position (simulate 1 second passing)
+    sim_state.grid.update_mobile_positions(dt_seconds=1.0)
+    
+    # Get mobility metrics from grid
+    mobility_metrics = sim_state.grid.get_mobility_metrics()
+    
+    # Calculate offload recommendation
+    recommended_offload = sim_state.get_offload_recommendation()
+    
+    # If congestion is high, auto-increase offload (AI decision)
+    if sim_state.unicast_congestion_level > 0.5:
+        sim_state.offload_ratio = min(1.0, sim_state.offload_ratio + 0.05)
+    elif sim_state.unicast_congestion_level < 0.3:
+        sim_state.offload_ratio = max(0.0, sim_state.offload_ratio - 0.02)
+    
+    # Calculate latency reduction from offloading
+    latency_reduction = sim_state.unicast_latency_ms * sim_state.offload_ratio * 0.7 if sim_state.offload_ratio > 0.1 else 0
+    
+    # Get grid coverage metrics
+    coverage = sim_state.grid.calculate_grid_metrics(
+        tx_power_dbm=sim_state.last_action.get("power_dbm", 35.0),
+        frequency_mhz=600.0,
+        min_snr_db=15.0
+    )
+    
+    return {
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "traffic_offloading": {
+            "unicast_congestion_level": round(sim_state.unicast_congestion_level, 3),
+            "offload_ratio": round(sim_state.offload_ratio, 3),
+            "recommended_offload": round(recommended_offload, 3),
+            "unicast_latency_ms": round(sim_state.unicast_latency_ms, 1),
+            "packet_loss_probability": round(sim_state.packet_loss_probability, 4),
+            "latency_reduction_ms": round(latency_reduction, 1),
+            "users_offloaded": int(100 * sim_state.offload_ratio),
+            "status": "critical" if sim_state.unicast_congestion_level > 0.7 else
+                     "high" if sim_state.unicast_congestion_level > 0.5 else
+                     "moderate" if sim_state.unicast_congestion_level > 0.3 else "low"
+        },
+        "mobility": {
+            "mobile_user_ratio": round(mobility_metrics.get("mobile_user_ratio", 0.2), 3),
+            "num_mobile_users": mobility_metrics.get("num_mobile_users", 20),
+            "num_static_users": mobility_metrics.get("num_static_users", 80),
+            "average_velocity_kmh": round(mobility_metrics.get("average_velocity_kmh", 45.0), 1),
+            "max_velocity_kmh": round(mobility_metrics.get("max_velocity_kmh", 80.0), 1),
+            "mobile_coverage_percent": round(coverage.get("mobile_coverage_percent", 92.0), 1),
+            "static_coverage_percent": round(coverage.get("static_coverage_percent", 98.0), 1),
+            "overall_coverage_percent": round(coverage.get("coverage_percent", 95.0), 1),
+            "simulation_time_s": round(mobility_metrics.get("simulation_time_s", 0.0), 1)
+        },
+        "ai_explanation": _get_mobility_explanation(sim_state, mobility_metrics)
+    }
+
+
+def _get_mobility_explanation(sim_state, mobility_metrics) -> str:
+    """Generate human-readable explanation of AI's mobility adaptation."""
+    avg_velocity = mobility_metrics.get("average_velocity_kmh", 0)
+    mobile_ratio = mobility_metrics.get("mobile_user_ratio", 0)
+    congestion = sim_state.unicast_congestion_level
+    
+    explanations = []
+    
+    if congestion > 0.7:
+        explanations.append(f"⚠️ Critical cellular congestion ({congestion:.0%}). Aggressively offloading to broadcast.")
+    elif congestion > 0.5:
+        explanations.append(f"📶 High cellular congestion ({congestion:.0%}). Increasing broadcast offload.")
+    elif sim_state.offload_ratio > 0.3:
+        explanations.append(f"✅ Congestion reduced to {congestion:.0%} via broadcast offloading.")
+    
+    if avg_velocity > 60:
+        explanations.append(f"🚗 High mobility detected ({avg_velocity:.0f} km/h). Using robust QPSK modulation.")
+    elif mobile_ratio > 0.3:
+        explanations.append(f"🚗 Significant mobile population ({mobile_ratio:.0%}). Emergency PLPs configured for robustness.")
+    
+    if sim_state.is_emergency_mode:
+        explanations.append("🚨 EMERGENCY MODE ACTIVE. All PLPs optimized for maximum reliability.")
+    
+    if not explanations:
+        explanations.append("✅ Normal operation. Standard ModCod selection active.")
+    
+    return " | ".join(explanations)
