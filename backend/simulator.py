@@ -1,4 +1,5 @@
 import math
+import os
 from typing import Dict, Optional
 
 # Import simulation helpers
@@ -12,6 +13,14 @@ from .atsc_adapter import configure_plp, explain_action
 FREQUENCY_MHZ = 600.0  # Typical UHF channel for ATSC 3.0
 DISTANCE_KM = 10.0     # Representative rural distance
 NOISE_FLOOR_DBM = -100.0  # Assumed thermal noise floor
+
+# Data-driven simulation configuration
+USE_REAL_DATA = True  # Set to True to use SUMO network data instead of random placement
+SUMO_NETWORK_PATH = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "data", "veins-veins-5.3.1", "examples", "veins", "erlangen.net.xml"
+)
+
 
 def evaluate_action(action: Dict[str, any], 
                     mobile_user_ratio: float = 0.0,

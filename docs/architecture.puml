@@ -1,0 +1,253 @@
+@startuml AI-Native Broadcast Architecture
+
+' ============================================================================
+' PROFESSIONAL STYLING
+' ============================================================================
+skinparam backgroundColor #FFFFFF
+skinparam shadowing true
+skinparam defaultFontName Arial
+skinparam defaultFontSize 11
+skinparam ArrowColor #37474F
+skinparam ArrowThickness 1.5
+
+skinparam rectangle {
+    RoundCorner 8
+    BorderThickness 2
+}
+
+skinparam package {
+    BorderThickness 2
+    FontSize 13
+    FontStyle bold
+}
+
+skinparam component {
+    BorderColor #37474F
+    BackgroundColor #FAFAFA
+    FontColor #212121
+    RoundCorner 6
+}
+
+skinparam note {
+    BackgroundColor #FFFDE7
+    BorderColor #FBC02D
+    FontSize 10
+}
+
+' Package Styles
+skinparam package<<AIPlane>> {
+    BackgroundColor #E3F2FD
+    BorderColor #1565C0
+}
+
+skinparam package<<Governance>> {
+    BackgroundColor #FCE4EC
+    BorderColor #C2185B
+}
+
+skinparam package<<Simulation>> {
+    BackgroundColor #E8F5E9
+    BorderColor #2E7D32
+}
+
+skinparam package<<Broadcast>> {
+    BackgroundColor #FFF3E0
+    BorderColor #F57C00
+}
+
+skinparam package<<Hardware>> {
+    BackgroundColor #ECEFF1
+    BorderColor #607D8B
+}
+
+' ============================================================================
+' TITLE
+' ============================================================================
+title <size:18><b>AI-Native Broadcast Intelligence Platform</b></size>\n<size:14>Cognitive Broadcasting Layer Separation Architecture</size>\n<size:11><color:#757575>ITU FG-AINN Reference Implementation</color></size>
+
+' ============================================================================
+' EXTERNAL ACTORS
+' ============================================================================
+actor "Broadcast\nOperator" as Operator #B3E5FC
+actor "NOC\nEngineer" as Engineer #F8BBD9
+
+' ============================================================================
+' AI-NATIVE INTELLIGENCE PLANE
+' ============================================================================
+package "AI-Native Intelligence Plane" <<AIPlane>> {
+    
+    rectangle "Cognitive Core" as CognitiveCore #E8EAF6 {
+        component "Intent\nInterpreter" as Intent #BBDEFB
+        component "AI Decision\nEngine" as AIEngine #90CAF9
+        component "PPO RL\nAgent" as RLAgent #64B5F6
+    }
+    
+    rectangle "Predictive Intelligence" as PredictiveIntel #E8EAF6 {
+        component "Demand\nPredictor" as Demand #64B5F6
+        component "Context\nAnalyzer" as Context #81D4FA
+    }
+    
+    rectangle "Knowledge Layer" as KnowledgeLayer #E8EAF6 {
+        component "Broadcast\nKnowledge Store" as Knowledge #B3E5FC
+        component "Learning\nLoop Tracker" as Learning #B3E5FC
+    }
+}
+
+note right of CognitiveCore
+    <b>AI-Plane Responsibilities:</b>
+    - Interpret operator intent
+    - Predict demand & mobility
+    - Optimize configurations
+    - Learn from outcomes
+    - Recommend (NOT execute)
+end note
+
+' ============================================================================
+' HUMAN GOVERNANCE
+' ============================================================================
+package "Human-in-the-Loop Governance" <<Governance>> {
+    
+    rectangle "Approval Workflow" as ApprovalWorkflow #FFEBEE {
+        component "Approval\nEngine" as Approval #EF9A9A
+        component "Risk\nAssessment" as Risk #FFAB91
+    }
+    
+    rectangle "Audit & Compliance" as AuditBlock #FFEBEE {
+        component "Audit\nTrail" as Audit #FFCDD2
+        component "Regulatory\nCompliance" as Compliance #FFCDD2
+    }
+}
+
+note right of ApprovalWorkflow
+    <b>Governance States:</b>
+    AI_RECOMMENDED
+         |
+    AWAITING_APPROVAL
+         |
+    ENGINEER_APPROVED
+         |
+    DEPLOYED
+end note
+
+' ============================================================================
+' DIGITAL TWIN
+' ============================================================================
+package "Digital Twin (Simulation-First Validation)" <<Simulation>> {
+    
+    rectangle "Spatial Simulation" as SpatialSim #C8E6C9 {
+        component "Spatial Grid\n10km x 10km" as SpatialGrid #A5D6A7
+        component "UHF Propagation\nModel" as Propagation #81C784
+    }
+    
+    rectangle "Mobility & Data" as MobilityData #C8E6C9 {
+        component "SUMO/Veins\nLoader" as SUMO #A5D6A7
+        component "Terrain\nInterface" as Terrain #A5D6A7
+    }
+}
+
+note right of SpatialSim
+    Every AI recommendation is
+    tested in simulation BEFORE
+    human approval is requested.
+end note
+
+' ============================================================================
+' BROADCAST ABSTRACTION
+' ============================================================================
+package "Broadcast Abstraction Layer" <<Broadcast>> {
+    
+    rectangle "ATSC 3.0 Interface" as ATSCInterface #FFE0B2 {
+        component "ATSC 3.0\nAdapter" as ATSCAdapter #FFCC80
+        component "PLP\nConfigurator" as PLPConfig #FFB74D
+    }
+    
+    rectangle "Emergency Path" as EmergencyPath #FFCCBC {
+        component "Emergency\nHandler" as Emergency #FF8A65
+        component "CAP Alert\nProcessor" as CAP #FFAB91
+    }
+}
+
+note bottom of ATSCInterface
+    <b>Output Format:</b>
+    {plp: 0, modulation: "QPSK",
+     coding_rate: "1/2", power_dbm: 38.5}
+end note
+
+' ============================================================================
+' BROADCAST HARDWARE (EXTERNAL)
+' ============================================================================
+package "Broadcast Infrastructure (External - NOT Controlled)" <<Hardware>> {
+    
+    component "ATSC 3.0\nEncoder" as Encoder #CFD8DC
+    component "RF\nTransmitter" as Transmitter #B0BEC5
+    component "Antenna\nArray" as Antenna #90A4AE
+}
+
+note bottom of Encoder #FFEBEE
+    <b>CRITICAL CONSTRAINT</b>
+    This system does NOT:
+    * Generate RF waveforms
+    * Transmit on spectrum
+    * Control physical hardware
+    
+    Config recommendations only.
+end note
+
+' ============================================================================
+' DATA FLOW RELATIONSHIPS
+' ============================================================================
+
+' Operator Input
+Operator --> Intent : 1. Submit Intent
+
+' AI Plane Internal Flow
+Intent --> AIEngine : Policy
+AIEngine --> RLAgent : Request
+RLAgent --> AIEngine : Weights
+Demand ..> AIEngine : Predictions
+Context ..> AIEngine : Analysis
+Knowledge ..> AIEngine : History
+Learning ..> RLAgent : Feedback
+
+' AI to Simulation
+AIEngine --> SpatialGrid : 2. Validate
+SpatialGrid --> Propagation
+SUMO ..> SpatialGrid : Mobility
+Terrain ..> Propagation : Elevation
+SpatialGrid --> AIEngine : Results
+
+' AI to Governance
+AIEngine --> Approval : 3. Recommend
+Approval --> Risk : Assess
+Approval --> Audit : Log
+Engineer --> Approval : 4. Approve
+
+' Governance to Broadcast
+Approval --> ATSCAdapter : 5. Deploy
+ATSCAdapter --> PLPConfig
+Emergency --> ATSCAdapter : Override
+CAP --> Emergency
+
+' Broadcast to Hardware (Config Only)
+ATSCAdapter ..> Encoder : Config Only
+Encoder ..> Transmitter
+Transmitter ..> Antenna
+
+' Feedback Loop
+Audit ..> Learning : Outcomes
+
+' ============================================================================
+' LEGEND
+' ============================================================================
+legend bottom
+    |= Layer |= Color |= Function |
+    | AI-Plane | <#E3F2FD> Blue | Observe, Learn, Recommend |
+    | Governance | <#FCE4EC> Pink | Approve, Audit, Comply |
+    | Digital Twin | <#E8F5E9> Green | Simulate, Validate |
+    | Broadcast | <#FFF3E0> Orange | Translate, Configure |
+    | Hardware | <#ECEFF1> Gray | Execute (NOT controlled) |
+endlegend
+
+footer ITU FG-AINN Build-a-thon 4.0
+
+@enduml

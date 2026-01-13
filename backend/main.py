@@ -9,13 +9,21 @@ from .visualization_router import router as viz_router
 from .rf_adapter import router as rf_router
 from .broadcast_telemetry import router as telemetry_router
 
+# AI Intelligence Layer modules (Cognitive Broadcasting)
+from .ai_data_collector import router as knowledge_router
+from .demand_predictor import router as demand_router
+from .learning_loop import router as learning_router
+
 app = FastAPI(
-    title="Intent‑Driven ATSC Slicing Backend",
+    title="AI-Native Broadcast Intelligence Platform",
     description=(
-        "AI-native broadcast control plane. Computes encoder-ready configurations "
-        "with human approval workflow. This system acts as a control and optimization layer. "
-        "It does NOT generate RF waveforms or transmit on licensed spectrum."
-    )
+        "Cognitive Broadcasting AI Layer for Intent-Driven ATSC 3.0 Network Slicing. "
+        "This system implements an AI-native control plane that continuously senses, "
+        "learns, predicts, and optimizes broadcast behavior. "
+        "It does NOT generate RF waveforms or transmit on licensed spectrum - "
+        "it acts as an intelligence and control layer above the broadcast infrastructure."
+    ),
+    version="2.0.0"
 )
 
 # Allow frontend (http://localhost:5173) to access API
@@ -43,6 +51,19 @@ app.include_router(rf_router, prefix="/rf", tags=["RF Adapter (Simulation Only)"
 
 # Broadcast-grade telemetry
 app.include_router(telemetry_router, prefix="/telemetry", tags=["Broadcast Telemetry"])
+
+# ============================================================================
+# AI Intelligence Layer (Cognitive Broadcasting)
+# ============================================================================
+# These modules implement the "brain" of the AI-native broadcast system:
+# - Knowledge Store: Continuous learning from broadcast feedback
+# - Demand Predictor: Proactive scheduling and mode selection
+# - Learning Loop: Explicit feedback loop with improvement tracking
+
+app.include_router(knowledge_router, tags=["AI Knowledge Store"])
+app.include_router(demand_router, tags=["AI Demand Prediction"])
+app.include_router(learning_router, tags=["AI Learning Loop"])
+
 
 
 

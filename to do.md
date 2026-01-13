@@ -1,19 +1,243 @@
- You are in a very strong position (approx. 85% technical completion), but to guarantee a high score, we need to explicitly hit two missing "Topics of Interest": Data Offloading and Mobility.
+Next Step: Dataset Integration
+When dataset is provided:
 
-Current Status vs. Challenge Topics
-Challenge Topic Current Project Status Verdict
+Inspect structure and classify type
+Implement parameter anchoring or realism calibration
+Add "Data Sources & Assumptions" panel
+Document what is dataset-anchored vs. simulate
+Cognitive Broadcasting AI Layer - Implementation Plan
+Transform the existing Intent-Driven ATSC Slicing system into an AI-Native Broadcast Intelligence Platform with continuous learning, multiple AI purposes, and compelling visual storytelling for ITU FG-AINN judging.
 
-1. AI-Optimized Rural Broadcasting ✅ Excellent (Core focus of your project) Ready
-2. Public Safety / Emergency Alerts ✅ Excellent (Implemented EmergencyMode, overrides) Ready
-3. AI-Based Info/Traffic Offloading ⚠️ Partial (You have the 'pipes', but no logic to simulate Cellular Congestion to trigger the offload). Gap
-4. Connected Vehicles / Mobility ⚠️ Missing (Your SpatialGrid uses static users). Gap
-5. Proposals (Stage 1 & 2) ❌ Missing (Critical Deadline: Jan 10) Critical
-Recommended Action Plan
-To maximize your score (aiming for 50/50), I propose we add the following:
+Proposed Changes
+Backend / AI Intelligence Modules
+[NEW]
+ai_data_collector.py
+Broadcast Knowledge Store module that:
 
-Add "Traffic Offload" Logic (High Priority):
-Simulate Cellular: Add a unicast_congestion_level to the Simulation.
-Update AI: Train the PPO agent to "Offload to Broadcast" when Unicast congestion is high.
-Draft the Proposals:
-I can generate professional Stage 1 (Concept) and Stage 2 (Implementation) proposals using your existing code as evidence.
-Shall I proceed with implementing the "Traffic Offload" logic first, or would you prefer I generate the Proposals immediately to meet the deadline?
+Aggregates synthetic feedback from Digital Twin (SNR maps, user density, mobility patterns)
+Maintains a BroadcastKnowledgeStore class with time-series data
+Generates broadcast knowledge continuously (not file-based)
+Exposes API endpoints: /knowledge/state, /knowledge/history, /knowledge/heatmap
+
+# Key components
+
+class BroadcastKnowledgeStore:
+    snr_history: List[Dict]  # Time-series SNR maps
+    density_observations: List[Dict]  # User clustering observations
+    mobility_patterns: List[Dict]  # Movement trajectory learning
+    service_outcomes: List[Dict]  # Success/failure per decision
+
+    def record_observation(...)  # Called after each simulation step
+    def get_learned_patterns(...)  # Aggregated insights
+    def get_heatmap_data(...)  # For visualization
+[NEW]
+demand_predictor.py
+Demand and context awareness module:
+
+Predicts demand based on: time of day, mobility level, past patterns, emergency likelihood
+Outputs broadcast scheduling hints and pre-emptive slice preparation
+Uses simple time-series patterns + learned historical data
+
+# Key components
+
+class DemandPredictor:
+    def predict_demand(current_time, mobility_ratio, past_load) -> DemandForecast
+    def get_scheduling_hints() -> List[SchedulingHint]
+    def estimate_emergency_likelihood() -> float
+[NEW]
+learning_loop.py
+Explicit continuous learning loop:
+
+Collects (decision → outcome → reward) tuples
+Tracks KPI improvements over time
+Provides before/after comparisons
+Exposes learning timeline for visualization
+class LearningLoopTracker:
+    decision_history: List[DecisionOutcome]
+    kpi_timeline: List[KPISnapshot]
+
+    def record_decision_outcome(decision, kpis) -> None
+    def get_learning_timeline() -> List[LearningMilestone]
+    def get_improvement_stats() -> ImprovementStats
+[MODIFY]
+ai_engine.py
+Add Delivery Mode Intelligence:
+
+Unicast/Multicast/Broadcast mode selection logic
+User clustering analysis for mode decision
+Explanation generation for why a mode was chosen
+Integration with knowledge store and learning loop
+
++ class DeliveryModeDecision:
++     mode: Literal["unicast", "multicast", "broadcast"]
++     confidence: float
++     reasoning: str
++     alternative_modes: List[Dict]
++
++ def select_delivery_mode(congestion, mobility, user_distribution) -> DeliveryModeDecision
+[MODIFY]
+simulator.py
+Add Mobile Reception Stability KPI:
+
+Track consecutive successful receptions for mobile users
+Calculate stability score (variance in reception quality over time)
+Feed data to knowledge store
+return {
+      "coverage": coverage,
+      ...
+
++     "mobile_reception_stability": stability_score,
++     "mobile_coverage_trend": trend_direction,
+  }
+Frontend / Cognitive Brain Views
+[NEW]
+CognitiveBrain.tsx
+"AI Reasoning Snapshot" dashboard showing:
+
+Live intent with visual indicator
+Predicted demand gauge
+Mobility level indicator
+Congestion state with trend
+Chosen delivery mode with reasoning bubble
+AI confidence score
+Real-time adaptation narrative
+This is the flagship "wow" page for judges.
+
+[NEW]
+KnowledgeMap.tsx
+Broadcast Knowledge visualization:
+
+2D heatmap of learned coverage (color-coded SNR zones)
+User density clusters
+Mobility flow arrows (average trajectories)
+Congestion zone overlays
+Banner: "Generated by AI from Broadcast Feedback"
+[NEW]
+LearningTimeline.tsx
+Learning progress visualization:
+
+Line chart: KPI improvement over time (coverage, reliability)
+Before/After comparison cards for key decisions
+Learning milestones with timestamps
+"Decision Quality Trend" indicator
+[MODIFY]
+IntentControl.tsx
+Create "Hurdle Playground" mode:
+
+Prominent buttons: 🚗 Mobility Surge, 📡 Congestion, 🚨 Emergency, 🌫️ Interference
+Live AI explanation panel that updates when hurdles are applied
+Real-time KPI gauges showing adaptation
+"Demo Mode" toggle for presentations
+[MODIFY] Approval UI (within
+BroadcastTelemetry.tsx
+ or new component)
+Enhanced trust display:
+
+AI Confidence Score (0-100%) with visual gauge
+Risk Assessment (Low/Medium/High) with reasoning
+Alternative Rejected Options panel
+"Human-Governed AI" badge
+Navigation & Terminology Updates
+[MODIFY]
+App.tsx
+ or router
+Add navigation:
+
+New "🧠 AI Intelligence" section with sub-pages:
+Cognitive Brain
+Knowledge Map
+Learning Timeline
+Update terminology throughout:
+
+"AI-Native Broadcast Intelligence Layer"
+"Cognitive Broadcasting"
+"Intent → Policy → Action → Feedback"
+"Human-Governed AI"
+"Simulation-First Validation"
+Verification Plan
+Manual Testing (Primary)
+Since this project is a research prototype with frontend visualization, manual testing is appropriate:
+
+Test 1: Cognitive Brain Dashboard
+
+Start the project:
+start_project.cmd
+Navigate to <http://localhost:5173>
+Access "Cognitive Brain" page from navigation
+Verify: Live intent display, demand prediction, mobility indicator, delivery mode with reasoning
+Switch intent → verify AI reasoning updates
+Test 2: Knowledge Store Accumulation
+
+Start the project
+Navigate to "Knowledge Map" page
+Run simulation for ~30 seconds
+Verify: Heatmap updates, density clusters visible, "Generated by AI" label present
+Trigger hurdles → verify knowledge reflects changes
+Test 3: Learning Timeline
+
+Start the project
+Navigate to "Learning Timeline" page
+Let simulation run for 1-2 minutes
+Verify: KPI improvement chart shows data points
+Apply hurdles and let AI adapt → verify milestones appear
+Test 4: Hurdle Playground Demo
+
+Navigate to Intent Control page
+Click 🚗 Mobility Surge button
+Verify: AI explanation updates, KPIs change visibly
+Click 📡 Congestion button → verify mode might switch to broadcast
+Click 🚨 Emergency → verify priority override display
+Test 5: Enhanced Approval Trust
+
+Trigger an AI decision (change intent)
+Check Approval Panel for:
+Confidence score displayed
+Risk assessment with color coding
+Alternative rejected options visible
+API Endpoint Testing
+Run backend and test endpoints with curl or browser:
+
+# Start backend
+
+python -m uvicorn backend.main:app --reload --port 8000
+
+# Test knowledge store
+
+curl <http://localhost:8000/knowledge/state>
+curl <http://localhost:8000/knowledge/heatmap>
+
+# Test demand predictor
+
+curl <http://localhost:8000/demand/current>
+
+# Test learning loop
+
+curl <http://localhost:8000/learning/timeline>
+Expect: JSON responses with appropriate data structures (may be empty initially, should populate after simulation runs).
+
+Implementation Order
+Backend modules first (ai_data_collector.py, demand_predictor.py, learning_loop.py)
+Extend existing backend (ai_engine.py delivery mode, simulator.py mobile stability)
+API router integration (add new endpoints to main.py)
+Frontend flagship page (CognitiveBrain.tsx - most impactful for judges)
+Support pages (KnowledgeMap.tsx, LearningTimeline.tsx)
+Enhance existing pages (IntentControl with Hurdle Playground, Approval trust display)
+Navigation and terminology (router, labels, documentation)
+
+ITU FG-AINN Build-a-thon: Cognitive Broadcasting AI Layer
+Proposal Phase
+ Create Stage-1 Proposal (Research & Architecture)
+ Create Stage-2 Proposal (Implementation & PoC)
+ Review and Refine Proposals
+PoC Development Phase (Future)
+ Design System Architecture
+ Implement Intent Parser
+ Implement AI Slice Optimizer
+ Implement Broadcast Simulation
+ Develop KPI Dashboard
+ Integration and Testing
+Custom SUMO Scenarios: Upload your own
+.net.xml
+ with rural roads
+SPLAT! Output: Generate .ppm coverage maps for terrain-aware propagation
+Population Data: Integrate census/demographic data for intent-driven priorities

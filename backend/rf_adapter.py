@@ -87,6 +87,132 @@ HARDWARE_STUBS = {
 
 
 # ============================================================================
+# Terrain Interface (SPLAT! Integration Stub)
+# ============================================================================
+
+@dataclass
+class TerrainData:
+    """Container for terrain/propagation data from SPLAT! or similar tools."""
+    source: str = "simulated"  # 'simulated', 'splat', 'srtm'
+    path_loss_grid: Optional[np.ndarray] = None  # 2D grid of path loss values in dB
+    grid_resolution_m: float = 100.0  # Grid cell size in meters
+    origin_x: float = 0.0  # Origin X coordinate (UTM or local)
+    origin_y: float = 0.0  # Origin Y coordinate (UTM or local)
+    transmitter_height_m: float = 100.0  # Transmitter antenna height
+    frequency_mhz: float = 600.0  # Frequency used for propagation calculation
+
+
+class TerrainInterface:
+    """
+    Interface for terrain-based propagation data.
+    
+    This is a STUB for future SPLAT! integration. SPLAT! generates:
+    - .sdf files: SPLAT! Data Files with terrain elevation
+    - .ppm files: Coverage maps showing signal strength
+    - .txt files: Path loss reports between points
+    
+    FUTURE INTEGRATION:
+    1. User runs SPLAT! with transmitter location and generates .ppm/.txt output
+    2. This interface reads the output and provides path_loss(x, y) queries
+    3. The spatial model uses this for realistic coverage calculations
+    
+    CURRENT STATE: Returns simulated path loss based on distance only.
+    """
+    
+    def __init__(self, data_path: Optional[str] = None):
+        """
+        Initialize terrain interface.
+        
+        Args:
+            data_path: Path to SPLAT! output directory (optional, currently unused)
+        """
+        self.data_path = data_path
+        self.terrain_data = TerrainData()
+        self._is_loaded = False
+        
+        if data_path:
+            self._try_load_splat_data(data_path)
+    
+    def _try_load_splat_data(self, data_path: str) -> bool:
+        """
+        Attempt to load SPLAT! output data.
+        
+        STUB: Currently just logs a message. Future implementation will:
+        - Parse .ppm coverage maps
+        - Extract path loss values
+        - Build interpolation grid
+        """
+        import os
+        
+        if not os.path.exists(data_path):
+            return False
+        
+        # Look for SPLAT! output files
+        ppm_files = [f for f in os.listdir(data_path) if f.endswith('.ppm')]
+        txt_files = [f for f in os.listdir(data_path) if 'path_loss' in f.lower()]
+        
+        if ppm_files or txt_files:
+            print(f"[TerrainInterface] Found SPLAT! output files in {data_path}")
+            print(f"[TerrainInterface] PPM files: {ppm_files}")
+            print(f"[TerrainInterface] TXT files: {txt_files}")
+            # TODO: Parse these files and populate terrain_data
+            self._is_loaded = True
+            self.terrain_data.source = "splat"
+            return True
+        
+        return False
+    
+    def get_path_loss_db(self, x_km: float, y_km: float, 
+                          tx_power_dbm: float = 35.0,
+                          frequency_mhz: float = 600.0) -> float:
+        """
+        Get path loss at a given location.
+        
+        Args:
+            x_km: X coordinate in km (relative to transmitter at origin)
+            y_km: Y coordinate in km (relative to transmitter at origin)
+            tx_power_dbm: Transmitter power in dBm
+            frequency_mhz: Carrier frequency in MHz
+            
+        Returns:
+            Path loss in dB
+        """
+        if self._is_loaded and self.terrain_data.path_loss_grid is not None:
+            # Interpolate from loaded data
+            # TODO: Implement bilinear interpolation from grid
+            pass
+        
+        # Fallback: Free-space path loss model
+        distance_km = max(0.1, np.sqrt(x_km**2 + y_km**2))
+        # Free-space path loss: FSPL = 20*log10(d) + 20*log10(f) + 20*log10(4*pi/c)
+        fspl_db = 20 * np.log10(distance_km * 1000) + 20 * np.log10(frequency_mhz * 1e6) - 147.55
+        
+        return fspl_db
+    
+    def get_status(self) -> Dict[str, Any]:
+        """Get terrain interface status."""
+        return {
+            "loaded": self._is_loaded,
+            "source": self.terrain_data.source,
+            "data_path": self.data_path,
+            "note": "SPLAT! integration is a future feature. Currently using free-space model."
+        }
+
+
+# Global terrain interface instance (singleton pattern)
+_terrain_interface: Optional[TerrainInterface] = None
+
+
+def get_terrain_interface(data_path: Optional[str] = None) -> TerrainInterface:
+    """Get or create the global terrain interface instance."""
+    global _terrain_interface
+    if _terrain_interface is None:
+        _terrain_interface = TerrainInterface(data_path)
+    return _terrain_interface
+
+
+
+# ============================================================================
 # Transmission Result
 # ============================================================================
 

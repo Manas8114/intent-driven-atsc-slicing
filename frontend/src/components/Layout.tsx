@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3 } from 'lucide-react';
+import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3, Brain, Map, TrendingUp } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { TopStatusBar } from './TopStatusBar';
@@ -11,9 +11,15 @@ interface NavItem {
     label: string;
     icon: React.ElementType;
     highlight?: boolean;
+    section?: string;
 }
 
 const NAV_ITEMS: NavItem[] = [
+    // AI Intelligence Section (NEW - Cognitive Broadcasting)
+    { id: 'cognitive', label: '🧠 Cognitive Brain', icon: Brain, highlight: true, section: 'AI Intelligence' },
+    { id: 'knowledge', label: 'Knowledge Map', icon: Map, section: 'AI Intelligence' },
+    { id: 'learning', label: 'Learning Timeline', icon: TrendingUp, section: 'AI Intelligence' },
+    // Core Operations
     { id: 'overview', label: 'System Overview', icon: LayoutDashboard },
     { id: 'approval', label: 'Deployment Approval', icon: CheckSquare, highlight: true },
     { id: 'telemetry', label: 'Broadcast Telemetry', icon: BarChart3 },

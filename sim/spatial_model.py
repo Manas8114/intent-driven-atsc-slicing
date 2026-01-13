@@ -92,13 +92,18 @@ class SpatialGrid:
     
     Supports both STATIC and MOBILE users for realistic rural/vehicle scenarios.
     
+    DATA SOURCES:
+    - Random generation (default): Uses uniform random placement
+    - SUMO network (data-driven): Loads real road network from .net.xml files
+    
     Used to calculate 'Coverage' as a spatial metric (percentage of area served)
     rather than a single point metric. Results are used by the AI engine to
     evaluate configuration quality and by engineers for approval decisions.
     """
 
     def __init__(self, size_km: float = 10.0, num_users: int = 100, 
-                 num_mobile: int = 0, mobile_speed_range: Tuple[float, float] = (30.0, 80.0)):
+                 num_mobile: int = 0, mobile_speed_range: Tuple[float, float] = (30.0, 80.0),
+                 sumo_data_path: Optional[str] = None):
         """
         Initialize the spatial grid with static and mobile users.
         
@@ -107,14 +112,26 @@ class SpatialGrid:
             num_users: Number of static users
             num_mobile: Number of mobile users (vehicles)
             mobile_speed_range: (min, max) speed in km/h for mobile users
+            sumo_data_path: Optional path to SUMO .net.xml file for data-driven mode
         """
         self.size_km = size_km
         self.num_users = num_users
         self.num_mobile = num_mobile
         self.mobile_speed_range = mobile_speed_range
+        self.data_source = "random"  # Track data provenance
         
-        # Generate random static UE locations (x, y) relative to tower at (0,0)
-        self.ue_locations = np.random.uniform(-size_km/2, size_km/2, (num_users, 2))
+        # Try to load from SUMO data if path provided
+        if sumo_data_path:
+            self.ue_locations = self._load_sumo_locations(sumo_data_path, num_users)
+            if self.ue_locations is not None:
+                self.data_source = "sumo_network"
+                self.num_users = len(self.ue_locations)
+            else:
+                # Fallback to random if SUMO load fails
+                self.ue_locations = np.random.uniform(-size_km/2, size_km/2, (num_users, 2))
+        else:
+            # Generate random static UE locations (x, y) relative to tower at (0,0)
+            self.ue_locations = np.random.uniform(-size_km/2, size_km/2, (num_users, 2))
         
         # Calculate distances once for static users
         self.distances = np.linalg.norm(self.ue_locations, axis=1)
@@ -126,6 +143,46 @@ class SpatialGrid:
         
         # Simulation time tracking
         self.simulation_time_s = 0.0
+    
+    def _load_sumo_locations(self, sumo_path: str, num_users: int) -> Optional[np.ndarray]:
+        """
+        Load user locations from a SUMO network file.
+        
+        Returns None if loading fails, allowing fallback to random generation.
+        """
+        try:
+            from .sumo_loader import SumoNetworkParser, get_user_locations_from_network
+            import os
+            
+            if not os.path.exists(sumo_path):
+                print(f"[SpatialGrid] SUMO file not found: {sumo_path}")
+                return None
+            
+            parser = SumoNetworkParser()
+            network = parser.parse(sumo_path)
+            
+            if not network.junctions:
+                print("[SpatialGrid] No junctions found in SUMO network")
+                return None
+            
+            locations = get_user_locations_from_network(
+                network, 
+                num_users=num_users,
+                normalize_to_km=True
+            )
+            
+            print(f"[SpatialGrid] Loaded {len(locations)} user locations from SUMO network")
+            print(f"[SpatialGrid] Network: {len(network.junctions)} junctions, {len(network.edges)} edges")
+            
+            return locations
+            
+        except ImportError as e:
+            print(f"[SpatialGrid] Could not import sumo_loader: {e}")
+            return None
+        except Exception as e:
+            print(f"[SpatialGrid] Error loading SUMO data: {e}")
+            return None
+
         
     def _init_mobile_users(self):
         """Initialize mobile users with random positions and trajectories."""

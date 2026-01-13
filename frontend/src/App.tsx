@@ -11,12 +11,21 @@ import { CapabilitiesLimits } from './pages/CapabilitiesLimits';
 import { BroadcastTelemetry } from './pages/BroadcastTelemetry';
 import { ApprovalPanel } from './components/ApprovalPanel';
 import { SystemProvider } from './context/SystemContext';
+// AI Intelligence Layer (Cognitive Broadcasting)
+import { CognitiveBrain } from './pages/CognitiveBrain';
+import { KnowledgeMap } from './pages/KnowledgeMap';
+import { LearningTimeline } from './pages/LearningTimeline';
 
 function App() {
-  const [activePage, setActivePage] = useState('overview');
+  const [activePage, setActivePage] = useState('cognitive');
 
   const renderPage = () => {
     switch (activePage) {
+      // AI Intelligence (Cognitive Broadcasting)
+      case 'cognitive': return <CognitiveBrain />;
+      case 'knowledge': return <KnowledgeMap />;
+      case 'learning': return <LearningTimeline />;
+      // Core Operations  
       case 'overview': return <Overview />;
       case 'intent': return <IntentControl />;
       case 'explainability': return <Explainability />;
@@ -27,7 +36,7 @@ function App() {
       case 'readiness': return <BroadcastReadiness />;
       case 'capabilities': return <CapabilitiesLimits />;
       case 'telemetry': return <BroadcastTelemetry />;
-      default: return <Overview />;
+      default: return <CognitiveBrain />;
     }
   };
 
@@ -41,5 +50,3 @@ function App() {
 }
 
 export default App;
-
-
