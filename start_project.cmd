@@ -72,6 +72,7 @@ echo   Frontend UI:    http://localhost:5173
 echo   API Docs:       http://localhost:8000/docs
 echo.
 echo   New Features in this version:
+echo   - Bootstrap Uncertainty Analysis (BCa intervals)
 echo   - Traffic Offloading (Congestion Gauge)
 echo   - Connected Vehicles / Mobility
 echo   - Stage 1 and Stage 2 Proposals (docs folder)

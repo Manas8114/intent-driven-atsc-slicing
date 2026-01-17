@@ -19,6 +19,8 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'cognitive', label: '🧠 Cognitive Brain', icon: Brain, highlight: true, section: 'AI Intelligence' },
     { id: 'knowledge', label: 'Knowledge Map', icon: Map, section: 'AI Intelligence' },
     { id: 'learning', label: 'Learning Timeline', icon: TrendingUp, section: 'AI Intelligence' },
+    { id: 'bootstrap', label: 'Bootstrap Uncertainty', icon: BarChart3, section: 'AI Intelligence' },
+    { id: 'celltowers', label: 'Cell Tower Data', icon: Radio, section: 'AI Intelligence' },
     // Core Operations
     { id: 'overview', label: 'System Overview', icon: LayoutDashboard },
     { id: 'approval', label: 'Deployment Approval', icon: CheckSquare, highlight: true },

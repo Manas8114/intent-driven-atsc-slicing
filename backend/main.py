@@ -13,6 +13,7 @@ from .broadcast_telemetry import router as telemetry_router
 from .ai_data_collector import router as knowledge_router
 from .demand_predictor import router as demand_router
 from .learning_loop import router as learning_router
+from .bootstrap_uncertainty import router as bootstrap_router
 
 app = FastAPI(
     title="AI-Native Broadcast Intelligence Platform",
@@ -63,6 +64,11 @@ app.include_router(telemetry_router, prefix="/telemetry", tags=["Broadcast Telem
 app.include_router(knowledge_router, tags=["AI Knowledge Store"])
 app.include_router(demand_router, tags=["AI Demand Prediction"])
 app.include_router(learning_router, tags=["AI Learning Loop"])
+app.include_router(bootstrap_router, prefix="/bootstrap", tags=["Bootstrap Uncertainty"])
+
+# Real-world data integration
+from .cell_tower_router import router as cell_tower_router
+app.include_router(cell_tower_router, prefix="/cell-towers", tags=["Cell Tower Data"])
 
 
 

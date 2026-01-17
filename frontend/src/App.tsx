@@ -15,6 +15,8 @@ import { SystemProvider } from './context/SystemContext';
 import { CognitiveBrain } from './pages/CognitiveBrain';
 import { KnowledgeMap } from './pages/KnowledgeMap';
 import { LearningTimeline } from './pages/LearningTimeline';
+import { BootstrapUncertainty } from './pages/BootstrapUncertainty';
+import { CellTowerData } from './pages/CellTowerData';
 
 function App() {
   const [activePage, setActivePage] = useState('cognitive');
@@ -25,6 +27,8 @@ function App() {
       case 'cognitive': return <CognitiveBrain />;
       case 'knowledge': return <KnowledgeMap />;
       case 'learning': return <LearningTimeline />;
+      case 'bootstrap': return <BootstrapUncertainty />;
+      case 'celltowers': return <CellTowerData />;
       // Core Operations  
       case 'overview': return <Overview />;
       case 'intent': return <IntentControl />;

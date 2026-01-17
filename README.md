@@ -71,6 +71,8 @@ This transparency is intentional and increases credibility with real broadcast o
 - **Intent Translation**: Natural language-like intents are mapped to mathematical utility functions and constraints.
 - **AI Orchestration (RL)**: A Proximal Policy Optimization (PPO) agent dynamically adjusts slice weights to balance competing objectives (e.g., Reliability vs. Throughput).
 - **Digital Twin Simulation**: A sophisticated `SpatialGrid` simulation models UHF propagation, interference, and decoding probability across a 10km x 10km rural grid.
+- **Bootstrap Uncertainty Analysis**: Publication-quality statistical inference with BCa confidence intervals, block bootstrap for time-series, and IEEE-formatted reporting.
+- **Cell Tower Data Integration**: Real-world cellular interference modeling using 5M+ OpenCellID towers (GSM, LTE, UMTS) for realistic simulation.
 - **Broadcast-Grade Telemetry**: Comprehensive monitoring of transmission metrics, receiver statistics, and control plane performance with NOC-style dashboards.
 - **Hurdle Control**: Interactive controls to simulate adverse network conditions (Interference, Load Spikes, Spectrum Loss) to test the system's resilience.
 - **Explainability**: Transparent "Decision Logs" explain *why* the AI made specific configuration changes (e.g., "Shifted to QPSK due to low SNR").
@@ -389,4 +391,19 @@ Key endpoints:
 | `GET /telemetry/receiver` | GET | Get receiver telemetry |
 | `GET /telemetry/control-plane` | GET | Get control plane telemetry |
 
+### Bootstrap Uncertainty Analysis
+
+| Endpoint | Method | Description |
+|----------|--------|-------------|
+| `GET /bootstrap/analysis` | GET | Full bootstrap analysis with BCa confidence intervals |
+| `GET /bootstrap/diagnostics` | GET | Convergence and stability diagnostics |
+| `GET /bootstrap/report` | GET | IEEE-formatted reporting text |
+| `GET /bootstrap/comparison` | GET | Bootstrap vs Bayesian comparison |
+
 ---
+Why This Matters
+Proper form labeling is essential for:
+
+Screen reader users - They can understand what each field is for
+Motor-impaired users - Clicking the label also focuses the input (larger click target)
+SEO and standards compliance - Meets WCAG accessibility guidelines
