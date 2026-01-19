@@ -22,3 +22,6 @@ Thumbs.db
 ppo_atsc_slicing.zip
 docs.zip
 *.zip
+
+data/AM query result.pdf
+data/cell_towers_*.csv

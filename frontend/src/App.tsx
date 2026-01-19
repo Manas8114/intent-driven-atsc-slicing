@@ -17,6 +17,8 @@ import { KnowledgeMap } from './pages/KnowledgeMap';
 import { LearningTimeline } from './pages/LearningTimeline';
 import { BootstrapUncertainty } from './pages/BootstrapUncertainty';
 import { CellTowerData } from './pages/CellTowerData';
+// Real Broadcast Data Integration
+import { BroadcastCoverage } from './pages/BroadcastCoverage';
 
 function App() {
   const [activePage, setActivePage] = useState('cognitive');
@@ -29,6 +31,7 @@ function App() {
       case 'learning': return <LearningTimeline />;
       case 'bootstrap': return <BootstrapUncertainty />;
       case 'celltowers': return <CellTowerData />;
+      case 'coverage': return <BroadcastCoverage />;
       // Core Operations  
       case 'overview': return <Overview />;
       case 'intent': return <IntentControl />;

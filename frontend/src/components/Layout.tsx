@@ -21,6 +21,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'learning', label: 'Learning Timeline', icon: TrendingUp, section: 'AI Intelligence' },
     { id: 'bootstrap', label: 'Bootstrap Uncertainty', icon: BarChart3, section: 'AI Intelligence' },
     { id: 'celltowers', label: 'Cell Tower Data', icon: Radio, section: 'AI Intelligence' },
+    { id: 'coverage', label: '📡 Broadcast Coverage', icon: Radio, highlight: true, section: 'AI Intelligence' },
     // Core Operations
     { id: 'overview', label: 'System Overview', icon: LayoutDashboard },
     { id: 'approval', label: 'Deployment Approval', icon: CheckSquare, highlight: true },

@@ -180,10 +180,23 @@ class ATSCSlicingEnv(gym.Env):
 class RLController:
     """Interface to train/use the PPO Agent with Traffic Offloading."""
     
+    _instance = None
+    _model_cache = None
+    
+    def __new__(cls, *args, **kwargs):
+        if cls._instance is None:
+            cls._instance = super(RLController, cls).__new__(cls)
+        return cls._instance
+
     def __init__(self, model_path="ppo_atsc_slicing_v2"):
+        # Singleton check to prevent re-init
+        if hasattr(self, 'initialized') and self.initialized:
+            return
+            
         self.model_path = model_path
         self.env = ATSCSlicingEnv()
         self.model = None
+        self.initialized = True
 
     def train(self, timesteps=1000):
         print("Training PPO Agent with Traffic Offloading...")
@@ -216,7 +229,12 @@ class RLController:
             self.train(timesteps=500)
             
         if self.model is None:
-            self.model = PPO.load(self.model_path, device='cpu')
+            # Check class-level cache first
+            if RLController._model_cache is not None:
+                self.model = RLController._model_cache
+            else:
+                self.model = PPO.load(self.model_path, device='cpu')
+                RLController._model_cache = self.model
              
         action, _ = self.model.predict(obs, deterministic=True)
         return action
@@ -234,11 +252,14 @@ class RLController:
         obs = np.array(current_observation, dtype=np.float32)
         
         # If 4-dim observation (old format), extend it
-        if len(obs) == 4:
-            obs = np.concatenate([obs, [0.3, 0.0, 0.0]])  # Default congestion, no mobility
-        
         action = self.suggest_action(obs)
         return action[:2]  # Return only weight adjustments
+
+
+# Global accessor for Singleton instance
+def get_rl_controller() -> RLController:
+    """Get the global singleton RL Controller."""
+    return RLController()
 
 
 # Quick test

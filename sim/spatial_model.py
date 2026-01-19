@@ -312,12 +312,10 @@ class SpatialGrid:
             Dict with coverage metrics for static and mobile users
         """
         # Calculate SNR for static users
-        static_snr_values = []
-        for d in self.distances:
-            rx_pwr = received_power(tx_power_dbm, frequency_mhz, d)
-            rx_pwr -= channel_impairment_db
-            snr = rx_pwr - noise_floor_dbm
-            static_snr_values.append(snr)
+        # Calculate SNR for static users (Vectorized)
+        rx_pwr = received_power(tx_power_dbm, frequency_mhz, self.distances)
+        rx_pwr -= channel_impairment_db
+        static_snr_values = rx_pwr - noise_floor_dbm
         static_snr_values = np.array(static_snr_values)
         
         # Calculate SNR for mobile users (with velocity-based degradation)

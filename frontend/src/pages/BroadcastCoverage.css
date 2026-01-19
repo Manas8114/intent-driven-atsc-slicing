@@ -1,0 +1,453 @@
+/* BroadcastCoverage.css - Styles for broadcast coverage visualization */
+
+:root {
+    --coverage-excellent: #10b981;
+    --coverage-good: #3b82f6;
+    --coverage-fair: #f59e0b;
+    --coverage-poor: #ef4444;
+
+    --service-fm: #8b5cf6;
+    --service-am: #f97316;
+    --service-tv: #06b6d4;
+    --service-default: #6b7280;
+}
+
+/* Coverage level classes */
+.coverage-excellent {
+    color: var(--coverage-excellent);
+}
+
+.coverage-good {
+    color: var(--coverage-good);
+}
+
+.coverage-fair {
+    color: var(--coverage-fair);
+}
+
+.coverage-poor {
+    color: var(--coverage-poor);
+}
+
+/* Coverage card border colors */
+.coverage-card.coverage-excellent {
+    border-left-color: var(--coverage-excellent);
+}
+
+.coverage-card.coverage-good {
+    border-left-color: var(--coverage-good);
+}
+
+.coverage-card.coverage-fair {
+    border-left-color: var(--coverage-fair);
+}
+
+.coverage-card.coverage-poor {
+    border-left-color: var(--coverage-poor);
+}
+
+/* Service type badge colors */
+.service-badge.service-fm {
+    background-color: var(--service-fm);
+}
+
+.service-badge.service-am {
+    background-color: var(--service-am);
+}
+
+.service-badge.service-tv {
+    background-color: var(--service-tv);
+}
+
+.service-badge.service-default {
+    background-color: var(--service-default);
+}
+
+.broadcast-coverage {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+    color: #e2e8f0;
+    padding: 24px;
+}
+
+/* Header */
+.coverage-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 32px;
+    padding-bottom: 24px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.header-content h1 {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0;
+    background: linear-gradient(90deg, #60a5fa, #a78bfa);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+}
+
+.subtitle {
+    color: #94a3b8;
+    margin-top: 4px;
+}
+
+.stats-banner {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+}
+
+.stat-item {
+    text-align: center;
+}
+
+.stat-value {
+    display: block;
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #f1f5f9;
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.stat-badge.real-data {
+    background: linear-gradient(135deg, #10b981, #059669);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+/* Controls Panel */
+.controls-panel {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 24px;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 32px;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.control-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.control-group label {
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: #94a3b8;
+}
+
+.control-group select,
+.control-group input[type="text"] {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #f1f5f9;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-size: 0.875rem;
+    min-width: 180px;
+}
+
+.control-group select:focus,
+.control-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+}
+
+.button-group {
+    display: flex;
+    gap: 4px;
+}
+
+.type-button {
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    color: #94a3b8;
+    padding: 8px 16px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.type-button:hover {
+    background: rgba(255, 255, 255, 0.15);
+}
+
+.type-button.active {
+    background: #3b82f6;
+    border-color: #3b82f6;
+    color: white;
+}
+
+.control-group input[type="range"] {
+    width: 150px;
+    accent-color: #3b82f6;
+}
+
+/* Search */
+.search-group {
+    position: relative;
+}
+
+.search-results {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #1e293b;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 8px;
+    margin-top: 4px;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 10;
+}
+
+.search-result-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+}
+
+.search-result-item:hover {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+.search-result-item .call-sign {
+    font-weight: 600;
+    color: #60a5fa;
+}
+
+.search-result-item .freq {
+    color: #a78bfa;
+    font-size: 0.875rem;
+}
+
+.search-result-item .city {
+    color: #94a3b8;
+    font-size: 0.875rem;
+    margin-left: auto;
+}
+
+/* Coverage Summary */
+.coverage-summary {
+    margin-bottom: 32px;
+}
+
+.coverage-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 24px;
+    border-left: 4px solid #3b82f6;
+    -webkit-backdrop-filter: blur(10px);
+    backdrop-filter: blur(10px);
+}
+
+.coverage-card h3 {
+    margin: 0 0 16px 0;
+    font-size: 1.125rem;
+    color: #f1f5f9;
+}
+
+.coverage-metrics {
+    display: flex;
+    gap: 32px;
+    margin-bottom: 16px;
+}
+
+.metric {
+    text-align: center;
+}
+
+.metric-value {
+    display: block;
+    font-size: 1.75rem;
+    font-weight: 700;
+}
+
+.metric-label {
+    font-size: 0.75rem;
+    color: #94a3b8;
+    text-transform: uppercase;
+}
+
+.strongest-station {
+    font-size: 0.875rem;
+    color: #94a3b8;
+    padding-top: 12px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.strongest-station strong {
+    color: #60a5fa;
+}
+
+/* Stations Section */
+.stations-section h2 {
+    font-size: 1.25rem;
+    margin-bottom: 20px;
+    color: #f1f5f9;
+}
+
+.loading,
+.error {
+    text-align: center;
+    padding: 40px;
+    color: #94a3b8;
+}
+
+.error {
+    color: #ef4444;
+}
+
+.stations-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+    gap: 16px;
+}
+
+.station-card {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    padding: 16px;
+    transition: all 0.2s;
+    border: 1px solid transparent;
+}
+
+.station-card:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+    transform: translateY(-2px);
+}
+
+.station-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 8px;
+}
+
+.service-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+}
+
+.station-header .call-sign {
+    font-weight: 700;
+    font-size: 1.125rem;
+    color: #f1f5f9;
+}
+
+.station-freq {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: #a78bfa;
+    margin-bottom: 12px;
+}
+
+.station-details {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+}
+
+.detail {
+    display: flex;
+    flex-direction: column;
+}
+
+.detail .label {
+    font-size: 0.75rem;
+    color: #64748b;
+}
+
+.detail .value {
+    font-size: 0.875rem;
+    color: #e2e8f0;
+}
+
+.detail.distance .value {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.station-coordinates {
+    font-size: 0.75rem;
+    color: #64748b;
+    font-family: monospace;
+}
+
+/* Footer */
+.coverage-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.875rem;
+    color: #64748b;
+}
+
+.data-source {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.coordinates {
+    font-family: monospace;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .coverage-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
+
+    .stats-banner {
+        flex-wrap: wrap;
+        gap: 16px;
+    }
+
+    .controls-panel {
+        flex-direction: column;
+    }
+
+    .coverage-metrics {
+        flex-wrap: wrap;
+        gap: 20px;
+    }
+
+    .stations-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .coverage-footer {
+        flex-direction: column;
+        gap: 8px;
+    }
+}

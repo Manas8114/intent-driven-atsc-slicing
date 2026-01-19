@@ -37,12 +37,12 @@ export function TopStatusBar() {
             isEmergency ? "bg-red-50 border-red-200" : "bg-white border-slate-200"
         )}>
             {/* AI-Native Platform Banner */}
-            <div className="h-8 bg-gradient-to-r from-purple-600 via-indigo-600 to-blue-600 -mx-6 px-6 flex items-center justify-center gap-3">
-                <Brain className="h-4 w-4 text-white" />
+            <div className="h-8 bg-gradient-to-r from-slate-900 via-slate-800 to-blue-900 -mx-6 px-6 flex items-center justify-center gap-3">
+                <Brain className="h-4 w-4 text-emerald-400" />
                 <span className="text-xs font-bold text-white tracking-widest uppercase">
                     AI-Native Broadcast Intelligence Platform
                 </span>
-                <span className="text-[10px] text-white/70 font-mono">
+                <span className="text-[10px] text-slate-300 font-mono">
                     Intent → Policy → Action → Feedback
                 </span>
             </div>

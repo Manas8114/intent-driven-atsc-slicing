@@ -445,18 +445,29 @@ class BootstrapEngine:
         mean_est = np.mean(bootstrap_estimates)
         std_est = np.std(bootstrap_estimates, ddof=1)
         
-        # Coefficient of variation
-        cv = std_est / np.abs(mean_est) if abs(mean_est) > 1e-10 else float('inf')
+        # Coefficient of variation - use large finite value instead of inf for JSON compatibility
+        if abs(mean_est) > 1e-10:
+            cv = std_est / np.abs(mean_est)
+        else:
+            cv = 999.0  # Large finite value instead of inf
         
-        # Higher moments
-        skewness = float(stats.skew(bootstrap_estimates))
-        kurtosis = float(stats.kurtosis(bootstrap_estimates))
+        # Handle NaN/inf values for JSON serialization
+        def safe_float(val: float, default: float = 0.0) -> float:
+            """Convert value to JSON-safe float."""
+            if np.isnan(val) or np.isinf(val):
+                return default
+            return float(val)
+        
+        # Higher moments with NaN handling
+        skewness = safe_float(stats.skew(bootstrap_estimates), 0.0)
+        kurtosis = safe_float(stats.kurtosis(bootstrap_estimates), 0.0)
         
         # Normality test (Shapiro-Wilk)
         # Use subset for large samples
         test_sample = bootstrap_estimates[:min(5000, len(bootstrap_estimates))]
         if len(test_sample) >= 3:
             _, normality_pvalue = stats.shapiro(test_sample)
+            normality_pvalue = safe_float(normality_pvalue, 1.0)
         else:
             normality_pvalue = 1.0
         
@@ -468,15 +479,15 @@ class BootstrapEngine:
         else:
             distribution_shape = "right_skewed"
         
-        # Convergence check
-        is_converged = cv < 0.05
+        # Convergence check - cv must be finite for comparison
+        is_converged = cv < 0.05 if cv < 999.0 else False
         
         return BootstrapDiagnostics(
             metric_name=metric_name,
-            cv_coefficient=round(cv, 4),
+            cv_coefficient=round(safe_float(cv, 999.0), 4),
             skewness=round(skewness, 4),
             kurtosis=round(kurtosis, 4),
-            normality_pvalue=round(float(normality_pvalue), 4),
+            normality_pvalue=round(normality_pvalue, 4),
             is_converged=is_converged,
             distribution_shape=distribution_shape
         )

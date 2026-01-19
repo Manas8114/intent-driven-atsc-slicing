@@ -19,6 +19,7 @@ from typing import Dict, Any, Optional, List, Literal
 from dataclasses import dataclass, field
 import numpy as np
 import time
+from fastapi.concurrency import run_in_threadpool
 
 router = APIRouter()
 
@@ -441,7 +442,7 @@ async def make_decision(request: DecisionRequest):
     5. Recommendation is submitted to approval engine
     """
     from .optimizer import SpectrumOptimizer
-    from .rl_agent import RLController
+    from .rl_agent import get_rl_controller
     from .environment import get_env_state
     from .simulation_state import get_simulation_state
     from .approval_engine import approval_engine
@@ -482,7 +483,8 @@ async def make_decision(request: DecisionRequest):
     ppo_start = latency.start_timer()
     
     try:
-        rl = RLController()
+        # Use singleton controller
+        rl = get_rl_controller()
         
         est_snr = 20.0 - (env.noise_floor_dbm + 100.0) - env.channel_gain_impairment
         est_coverage = 85.0
@@ -490,7 +492,9 @@ async def make_decision(request: DecisionRequest):
             est_coverage = 60.0
         
         obs = np.array([est_coverage, est_snr, base_weights[0], base_weights[1]], dtype=np.float32)
-        weight_delta = rl.suggest_weights(obs)
+        
+        # Run blocking inference in threadpool
+        weight_delta = await run_in_threadpool(rl.suggest_weights, obs)
         
         adjusted_weights = [
             max(0.1, float(base_weights[0] + weight_delta[0])),
@@ -513,7 +517,9 @@ async def make_decision(request: DecisionRequest):
     # ⏱️ LATENCY TRACKING: Optimization
     opt_start = latency.start_timer()
     optimizer = SpectrumOptimizer(total_power_dbm=40, total_bandwidth_mhz=env.available_bandwidth_mhz)
-    optimized_slices = optimizer.optimize_allocation(slices_config)
+    
+    # Run blocking optimization in threadpool
+    optimized_slices = await run_in_threadpool(optimizer.optimize_allocation, slices_config)
     latency.record_optimization(latency.elapsed_ms(opt_start))
 
     # 4. Spatial Validation (The "Digital Twin")
@@ -524,7 +530,10 @@ async def make_decision(request: DecisionRequest):
 
     # ⏱️ LATENCY TRACKING: Digital Twin Validation
     twin_start = latency.start_timer()
-    grid_metrics = grid.calculate_grid_metrics(
+    
+    # Run blocking simulation in threadpool
+    grid_metrics = await run_in_threadpool(
+        grid.calculate_grid_metrics,
         tx_power_dbm=target_slice['power_dbm'],
         frequency_mhz=600.0,
         min_snr_db=15.0,

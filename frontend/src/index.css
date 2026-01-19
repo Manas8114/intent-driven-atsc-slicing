@@ -5,3 +5,22 @@
     @apply bg-slate-50 text-slate-900;
   }
 }
+
+/* Accessibility: Reduce animations for users who prefer reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* Performance: GPU-accelerated animations */
+.animate-spin,
+.animate-pulse,
+.animate-ping {
+  will-change: transform, opacity;
+}

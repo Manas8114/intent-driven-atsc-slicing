@@ -70,6 +70,6 @@ app.include_router(bootstrap_router, prefix="/bootstrap", tags=["Bootstrap Uncer
 from .cell_tower_router import router as cell_tower_router
 app.include_router(cell_tower_router, prefix="/cell-towers", tags=["Cell Tower Data"])
 
-
-
-
+# Real FCC Broadcast Data Integration
+from .broadcast_data_router import router as broadcast_router
+app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast Data (FCC)"])

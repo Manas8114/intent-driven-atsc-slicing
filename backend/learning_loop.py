@@ -540,3 +540,81 @@ def record_and_learn(
         predicted_kpis=predicted_kpis,
         actual_kpis=actual_kpis
     )
+
+
+# ============================================================================
+# Simulated Data Seeding (For Demo/Testing Only)
+# ============================================================================
+
+@router.post("/learning/seed-demo")
+async def seed_demo_data():
+    """
+    ⚠️ SEED SIMULATED DATA FOR BOOTSTRAP ANALYSIS ⚠️
+    
+    This endpoint generates SYNTHETIC data for demonstration purposes.
+    The data is NOT real - it is generated programmatically to enable
+    bootstrap uncertainty visualization during demos and testing.
+    
+    Use this when the system shows "Insufficient Data for Bootstrap".
+    """
+    import uuid
+    import random
+    
+    tracker = get_learning_tracker()
+    
+    # Intent types for stratified sampling
+    intent_types = ["maximize_coverage", "minimize_latency", "balanced", "emergency"]
+    
+    # Generate 20 simulated decision outcomes
+    for i in range(20):
+        decision_id = f"sim-{uuid.uuid4().hex[:8]}"
+        intent = random.choice(intent_types)
+        
+        # Simulated KPIs with realistic distributions
+        base_coverage = random.gauss(85, 5)  # Mean 85%, std 5%
+        base_quality = random.gauss(0.75, 0.1)  # Mean 0.75, std 0.1
+        
+        predicted_kpis = {
+            "coverage_pct": min(100, max(60, base_coverage + random.gauss(0, 2))),
+            "alert_reliability_pct": min(100, max(80, random.gauss(95, 3))),
+            "spectral_efficiency": max(0.5, random.gauss(3.5, 0.5)),
+            "decision_quality_score": min(1.0, max(0.0, base_quality))
+        }
+        
+        # Actual KPIs with realistic prediction error
+        actual_kpis = {
+            "coverage_pct": min(100, max(60, predicted_kpis["coverage_pct"] + random.gauss(0, 3))),
+            "alert_reliability_pct": min(100, max(80, predicted_kpis["alert_reliability_pct"] + random.gauss(0, 2))),
+            "spectral_efficiency": max(0.5, predicted_kpis["spectral_efficiency"] + random.gauss(0, 0.2)),
+            "decision_quality_score": min(1.0, max(0.0, predicted_kpis["decision_quality_score"] + random.gauss(0.05, 0.05)))
+        }
+        
+        action = {
+            "modulation": random.choice(["QPSK", "16QAM", "64QAM"]),
+            "coding_rate": random.choice(["1/2", "2/3", "3/4", "5/6"]),
+            "power_dbm": random.uniform(30, 40),
+            "delivery_mode": random.choice(["broadcast", "unicast", "hybrid"])
+        }
+        
+        # Record the simulated decision
+        tracker.record_decision_outcome(
+            decision_id=decision_id,
+            intent=intent,
+            action=action,
+            predicted_kpis=predicted_kpis,
+            actual_kpis=actual_kpis
+        )
+    
+    return {
+        "status": "success",
+        "message": "⚠️ SIMULATED DATA SEEDED - NOT REAL DATA ⚠️",
+        "disclaimer": "This data was generated programmatically for demonstration purposes only. "
+                      "It does not represent actual system performance or real broadcast decisions.",
+        "data_generated": {
+            "decisions": 20,
+            "kpi_snapshots": len(tracker.kpi_timeline),
+            "intent_types": intent_types
+        },
+        "next_step": "Visit /bootstrap/analysis to see bootstrap uncertainty estimation"
+    }
+

@@ -309,17 +309,55 @@ export function BootstrapUncertainty() {
                     <CardContent className="p-6">
                         <div className="flex items-start gap-4">
                             <AlertCircle className="h-6 w-6 text-amber-600 flex-shrink-0" />
-                            <div>
+                            <div className="flex-1">
                                 <h3 className="font-semibold text-amber-900">Insufficient Data for Bootstrap</h3>
                                 <p className="text-amber-700 mt-1">{error}</p>
                                 <p className="text-sm text-amber-600 mt-3">
                                     Run more AI decision simulations to accumulate at least 10 data points for reliable bootstrap estimation.
                                 </p>
+                                <div className="mt-4 p-3 bg-amber-100 rounded-lg border border-amber-300">
+                                    <p className="text-sm font-medium text-amber-800 mb-2">
+                                        🧪 Demo Mode: Seed Simulated Data
+                                    </p>
+                                    <p className="text-xs text-amber-700 mb-3">
+                                        For demonstration purposes, you can generate synthetic data to test the bootstrap analysis.
+                                        <strong> This is NOT real data</strong> - it is programmatically generated.
+                                    </p>
+                                    <button
+                                        onClick={async () => {
+                                            try {
+                                                await fetch('http://localhost:8000/learning/seed-demo', { method: 'POST' });
+                                                await fetchData();
+                                            } catch (err) {
+                                                console.error('Failed to seed demo data:', err);
+                                            }
+                                        }}
+                                        className="px-4 py-2 bg-amber-600 text-white text-sm font-medium rounded-lg hover:bg-amber-700 transition-colors"
+                                    >
+                                        ⚠️ Seed Simulated Data (Demo Only)
+                                    </button>
+                                </div>
                             </div>
                         </div>
                     </CardContent>
                 </Card>
             )}
+
+            {/* Simulated Data Warning Banner */}
+            {analysis && analysis.data_characteristics.unique_intents.some(i =>
+                ['maximize_coverage', 'minimize_latency', 'balanced', 'emergency'].includes(i)
+            ) && (
+                    <div className="bg-red-50 border-2 border-red-300 rounded-lg p-4 flex items-center gap-3">
+                        <AlertCircle className="h-6 w-6 text-red-600 flex-shrink-0" />
+                        <div>
+                            <h4 className="font-bold text-red-800">⚠️ SIMULATED DATA - NOT REAL</h4>
+                            <p className="text-sm text-red-700">
+                                The bootstrap analysis below is based on <strong>programmatically generated simulation data</strong> for demonstration purposes only.
+                                It does not represent actual system performance or real broadcast decisions.
+                            </p>
+                        </div>
+                    </div>
+                )}
 
             {/* Tab Navigation */}
             {analysis && (
