@@ -72,7 +72,7 @@ This transparency is intentional and increases credibility with real broadcast o
 - **AI Orchestration (RL)**: A Proximal Policy Optimization (PPO) agent dynamically adjusts slice weights to balance competing objectives (e.g., Reliability vs. Throughput).
 - **Digital Twin Simulation**: A sophisticated `SpatialGrid` simulation models UHF propagation, interference, and decoding probability across a 10km x 10km rural grid.
 - **Bootstrap Uncertainty Analysis**: Publication-quality statistical inference with BCa confidence intervals, block bootstrap for time-series, and IEEE-formatted reporting.
-- **Cell Tower Data Integration**: Real-world cellular interference modeling using 5M+ OpenCellID towers (GSM, LTE, UMTS) for realistic simulation.
+- **Real-World Data Integration**: Integrates **FCC Broadcast Station Data** (AM/FM/TV) and **OpenCellID** (5M+ towers) to model realistic interference scenarios.
 - **Broadcast-Grade Telemetry**: Comprehensive monitoring of transmission metrics, receiver statistics, and control plane performance with NOC-style dashboards.
 - **Hurdle Control**: Interactive controls to simulate adverse network conditions (Interference, Load Spikes, Spectrum Loss) to test the system's resilience.
 - **Explainability**: Transparent "Decision Logs" explain *why* the AI made specific configuration changes (e.g., "Shifted to QPSK due to low SNR").
@@ -295,9 +295,15 @@ npm run dev
   - `spatial_model.py`: Digital twin spatial coverage simulation
   - `channel_model.py`: RF propagation modeling
   - `interference_simulator.py`: Interference simulation
+  - `real_interference_simulator.py`: Real-world interaction modeling
   - `emergency_scenarios.py`: Emergency scenario testing
   - `validation.py`: Simulation validation utilities
   - `__pycache__/`: Python bytecode cache
+- `data/`: Data ingestion and processing
+  - `fcc_data_parser.py`: Parser for FCC broadcast station databases
+  - `osm_data_fetcher.py`: Fetcher for OpenStreetMap terrain capabilities
+  - `pdf_extractor.py`: Utility for extracting query results from regulatory PDFs
+  - `broadcast_data_loader.py`: Universal loader for processed CSV datasets
 - `libatsc3/`: ATSC 3.0 reference library (C/C++).
   - `src/`: Source code for ATSC 3.0 parsing and processing
   - `CMakeLists.txt`: Build configuration
