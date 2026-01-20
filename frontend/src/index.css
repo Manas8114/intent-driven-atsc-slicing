@@ -1,13 +1,68 @@
 @import "tailwindcss";
 
+/* ============================================================================
+   Dark Mode Support
+   ============================================================================
+   Uses class-based dark mode toggling. Add 'dark' class to html element.
+   Respects system preference via JavaScript on initial load.
+*/
+
+:root {
+  --color-bg: 248, 250, 252;
+  /* slate-50 */
+  --color-text: 15, 23, 42;
+  /* slate-900 */
+  --color-card: 255, 255, 255;
+  --color-border: 226, 232, 240;
+  /* slate-200 */
+  --color-accent: 59, 130, 246;
+  /* blue-500 */
+}
+
+.dark {
+  --color-bg: 15, 23, 42;
+  /* slate-900 */
+  --color-text: 248, 250, 252;
+  /* slate-50 */
+  --color-card: 30, 41, 59;
+  /* slate-800 */
+  --color-border: 51, 65, 85;
+  /* slate-700 */
+  --color-accent: 96, 165, 250;
+  /* blue-400 */
+}
+
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900;
+    @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50;
+    transition: background-color 0.3s ease, color 0.3s ease;
   }
+}
+
+/* Card dark mode styling */
+.dark .bg-white {
+  @apply bg-slate-800;
+}
+
+.dark .border-slate-200 {
+  @apply border-slate-700;
+}
+
+.dark .text-slate-900 {
+  @apply text-slate-50;
+}
+
+.dark .text-slate-500 {
+  @apply text-slate-400;
+}
+
+.dark .bg-slate-50 {
+  @apply bg-slate-800;
 }
 
 /* Accessibility: Reduce animations for users who prefer reduced motion */
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {
@@ -23,4 +78,13 @@
 .animate-pulse,
 .animate-ping {
   will-change: transform, opacity;
+}
+
+/* Dark mode toggle button animation */
+.dark-mode-toggle {
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.dark-mode-toggle:hover {
+  transform: scale(1.05);
 }

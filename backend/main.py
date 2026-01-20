@@ -82,3 +82,66 @@ app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast 
 from .experience_buffer import router as experience_router
 app.include_router(experience_router, prefix="/experiences", tags=["Training Experience Buffer"])
 
+
+# ============================================================================
+# Startup Event: Seed Demo Data
+# ============================================================================
+# Automatically seeds demonstration data on startup for hackathon demos.
+# This ensures the learning timeline and bootstrap analysis have data immediately.
+
+@app.on_event("startup")
+async def seed_demo_data_on_startup():
+    """
+    Seed demo data when the server starts.
+    
+    This ensures that the learning timeline, bootstrap analysis, and other
+    AI-native features have data to display immediately during demos.
+    """
+    from .learning_loop import get_learning_tracker
+    import uuid
+    import random
+    
+    tracker = get_learning_tracker()
+    
+    # Only seed if the tracker is empty
+    if tracker.total_decisions == 0:
+        print("🌱 Seeding demo data for hackathon demonstration...")
+        
+        intent_types = ["maximize_coverage", "minimize_latency", "balanced", "emergency"]
+        
+        for i in range(15):
+            decision_id = f"demo-{uuid.uuid4().hex[:8]}"
+            intent = random.choice(intent_types)
+            
+            # Realistic KPIs
+            base_coverage = random.gauss(87, 4)
+            
+            predicted_kpis = {
+                "coverage": min(1.0, max(0.6, base_coverage / 100 + random.gauss(0, 0.02))),
+                "alert_reliability": min(1.0, max(0.8, random.gauss(0.96, 0.02))),
+            }
+            
+            actual_kpis = {
+                "coverage": min(1.0, max(0.6, predicted_kpis["coverage"] + random.gauss(0, 0.02))),
+                "alert_reliability": min(1.0, max(0.8, predicted_kpis["alert_reliability"] + random.gauss(0, 0.01))),
+                "mobile_stability": random.uniform(0.8, 0.95)
+            }
+            
+            action = {
+                "modulation": random.choice(["QPSK", "16QAM", "64QAM"]),
+                "coding_rate": random.choice(["5/15", "7/15", "9/15"]),
+                "power_dbm": random.uniform(33, 38),
+                "delivery_mode": random.choice(["broadcast", "multicast", "hybrid"])
+            }
+            
+            tracker.record_decision_outcome(
+                decision_id=decision_id,
+                intent=intent,
+                action=action,
+                predicted_kpis=predicted_kpis,
+                actual_kpis=actual_kpis
+            )
+        
+        print(f"✅ Demo data seeded: {tracker.total_decisions} decisions recorded")
+    else:
+        print(f"ℹ️  Learning tracker already has {tracker.total_decisions} decisions, skipping seed")

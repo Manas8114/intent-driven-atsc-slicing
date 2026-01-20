@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
+import { ThinkingTrace } from '../components/ui/ThinkingTrace';
+import { ErrorBoundary } from '../components/ErrorBoundary';
 import {
     Brain, Activity, Wifi, Radio, Zap, TrendingUp,
     AlertTriangle, CheckCircle, Gauge, Users, Car,
@@ -449,8 +451,8 @@ export function CognitiveBrain() {
 
                         {/* Total Cycle */}
                         <div className={`text-center p-4 rounded-lg border ${state.latency_metrics?.real_time_capable
-                                ? 'bg-emerald-50 border-emerald-200'
-                                : 'bg-amber-50 border-amber-200'
+                            ? 'bg-emerald-50 border-emerald-200'
+                            : 'bg-amber-50 border-amber-200'
                             }`}>
                             <Timer className={`h-6 w-6 mx-auto mb-2 ${state.latency_metrics?.real_time_capable ? 'text-emerald-600' : 'text-amber-600'
                                 }`} />
@@ -521,6 +523,21 @@ export function CognitiveBrain() {
                     )}
                 </CardContent>
             </Card>
+
+            {/* AI Thinking Trace - Live Terminal */}
+            <ErrorBoundary fallbackMessage="AI Thinking Trace temporarily unavailable">
+                <Card>
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium text-slate-600 flex items-center gap-2">
+                            <Brain className="h-4 w-4 text-purple-500" />
+                            Live AI Reasoning
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <ThinkingTrace />
+                    </CardContent>
+                </Card>
+            </ErrorBoundary>
 
             {/* Environment Status */}
             <Card>

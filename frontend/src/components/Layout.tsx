@@ -1,5 +1,5 @@
-import React from 'react';
-import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3, Brain, Map, TrendingUp, Database, Layers, Gauge } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3, Brain, Map, TrendingUp, Database, Layers, Gauge, Moon, Sun } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { TopStatusBar } from './TopStatusBar';
@@ -47,6 +47,18 @@ interface LayoutProps {
 
 export function Layout({ children, activePage, onNavigate }: LayoutProps) {
     const { logs, adaptationExplanation } = useSystem();
+    const [darkMode, setDarkMode] = useState(() => {
+        if (typeof window !== 'undefined') {
+            const saved = localStorage.getItem('darkMode');
+            return saved ? JSON.parse(saved) : window.matchMedia('(prefers-color-scheme: dark)').matches;
+        }
+        return false;
+    });
+
+    useEffect(() => {
+        document.documentElement.classList.toggle('dark', darkMode);
+        localStorage.setItem('darkMode', JSON.stringify(darkMode));
+    }, [darkMode]);
 
     return (
         <div className="flex flex-col h-screen bg-slate-50 text-slate-900 overflow-hidden">
@@ -61,10 +73,23 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                             <div className="bg-blue-600 rounded-lg p-1.5 shadow-lg shadow-blue-500/30">
                                 <Radio className="h-5 w-5 text-white" />
                             </div>
-                            <span className="font-bold text-xl tracking-tight text-slate-900">BroadcastAI</span>
+                            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">BroadcastAI</span>
                         </div>
-                        <div className="text-[10px] text-slate-400 font-mono pl-11">
-                            CONTROL PLANE v1.2
+                        <div className="flex items-center justify-between">
+                            <div className="text-[10px] text-slate-400 font-mono pl-11">
+                                CONTROL PLANE v1.2
+                            </div>
+                            <button
+                                onClick={() => setDarkMode(!darkMode)}
+                                className="p-1.5 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors dark-mode-toggle"
+                                title={darkMode ? 'Switch to light mode' : 'Switch to dark mode'}
+                            >
+                                {darkMode ? (
+                                    <Sun className="h-4 w-4 text-amber-400" />
+                                ) : (
+                                    <Moon className="h-4 w-4 text-slate-400" />
+                                )}
+                            </button>
                         </div>
                     </div>
 

@@ -743,7 +743,8 @@ async def get_cognitive_state():
     # Get mobility metrics
     try:
         mobility_metrics = sim_state.grid.get_mobility_metrics()
-    except:
+    except (AttributeError, Exception) as e:
+        # Handle missing grid or method gracefully
         mobility_metrics = {"mobile_user_ratio": 0.0}
     
     # Get latency metrics from the tracker
