@@ -141,8 +141,59 @@ class SpatialGrid:
         self.mobile_users: List[MobileUser] = []
         self._init_mobile_users()
         
+        # Real-world data integration
+        self.cell_interference_model = None
+        self.real_data_loaded = False
+        
         # Simulation time tracking
         self.simulation_time_s = 0.0
+    
+    def load_real_cell_interference(
+        self,
+        broadcast_lat: float = 28.6139,  # Default: Delhi
+        broadcast_lon: float = 77.2090,
+        radius_km: float = 30
+    ) -> Dict:
+        """
+        Load real cell tower data from OpenCellID to model interference.
+        
+        This grounds the Digital Twin in physical reality by using
+        actual cell tower positions and characteristics.
+        
+        Args:
+            broadcast_lat: Latitude of simulated broadcast tower
+            broadcast_lon: Longitude of simulated broadcast tower
+            radius_km: Radius to search for interfering towers
+            
+        Returns:
+            Dict with loading status and tower count
+        """
+        try:
+            from backend.cell_tower_data import get_interference_model
+            
+            self.cell_interference_model = get_interference_model(
+                broadcast_lat=broadcast_lat,
+                broadcast_lon=broadcast_lon,
+                radius_km=radius_km
+            )
+            
+            summary = self.cell_interference_model.get_interference_summary()
+            self.real_data_loaded = summary.get("loaded", False)
+            self.data_source = "opencellid" if self.real_data_loaded else self.data_source
+            
+            return {
+                "status": "success" if self.real_data_loaded else "no_data",
+                "tower_count": summary.get("tower_count", 0),
+                "radio_breakdown": summary.get("radio_breakdown", {}),
+                "data_source": "OpenCellID",
+                "coverage_center": (broadcast_lat, broadcast_lon)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "reason": str(e),
+                "data_source": "simulation_fallback"
+            }
     
     def _load_sumo_locations(self, sumo_path: str, num_users: int) -> Optional[np.ndarray]:
         """

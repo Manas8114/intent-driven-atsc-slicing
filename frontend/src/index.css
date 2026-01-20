@@ -1,45 +1,67 @@
 @import "tailwindcss";
 
 /* ============================================================================
-   Dark Mode Support
+   AI-Native Broadcast Intelligence Platform - Premium Dark Theme
    ============================================================================
-   Uses class-based dark mode toggling. Add 'dark' class to html element.
-   Respects system preference via JavaScript on initial load.
+   Deep blues, cyans, and emeralds for a broadcast control room aesthetic.
 */
 
 :root {
-  --color-bg: 248, 250, 252;
-  /* slate-50 */
-  --color-text: 15, 23, 42;
+  /* Premium broadcast control room palette */
+  --color-primary-rgb: 14, 165, 233;
+  /* sky-500 */
+  --color-accent-rgb: 34, 211, 238;
+  /* cyan-400 */
+  --color-success-rgb: 16, 185, 129;
+  /* emerald-500 */
+  --color-warning-rgb: 245, 158, 11;
+  /* amber-500 */
+  --color-danger-rgb: 239, 68, 68;
+  /* red-500 */
+  --color-live-rgb: 239, 68, 68;
+  /* red pulsing */
+
+  /* Light mode defaults */
+  --color-bg: 248, 250, 2 slate-50;
+  --color-text-primary: 15, 23, 42;
   /* slate-900 */
+  --color-text-secondary: 71, 85, 105;
+  /* slate-600 */
   --color-card: 255, 255, 255;
   --color-border: 226, 232, 240;
-  /* slate-200 */
-  --color-accent: 59, 130, 246;
-  /* blue-500 */
 }
 
 .dark {
-  --color-bg: 15, 23, 42;
-  /* slate-900 */
-  --color-text: 248, 250, 252;
+  --color-bg: 2, 6, 23;
+  /* slate-950 */
+  --color-text-primary: 248, 250, 252;
   /* slate-50 */
-  --color-card: 30, 41, 59;
+  --color-text-secondary: 148, 163, 184;
+  /* slate-400 */
+  --color-card: 15, 23, 42;
+  /* slate-900 */
+  --color-border: 30, 41, 59;
   /* slate-800 */
-  --color-border: 51, 65, 85;
-  /* slate-700 */
-  --color-accent: 96, 165, 250;
-  /* blue-400 */
+  --color-glow-primary: rgba(14, 165, 233, 0.15);
 }
 
 @layer base {
   body {
     @apply bg-slate-50 text-slate-900 dark:bg-slate-900 dark:text-slate-50;
     transition: background-color 0.3s ease, color 0.3s ease;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Smooth scrolling */
+  html {
+    scroll-behavior: smooth;
   }
 }
 
-/* Card dark mode styling */
+/* ============================================================================
+   Card & Panel Styling
+   ============================================================================ */
+
 .dark .bg-white {
   @apply bg-slate-800;
 }
@@ -60,7 +82,266 @@
   @apply bg-slate-800;
 }
 
-/* Accessibility: Reduce animations for users who prefer reduced motion */
+/* Glassmorphism cards */
+.glass-card {
+  @apply bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-slate-800;
+  box-shadow:
+    0 4px 6px -1px rgba(0, 0, 0, 0.05),
+    0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+.glass-card-dark {
+  @apply bg-slate-950/90 backdrop-blur-md border border-slate-800/50;
+  box-shadow:
+    0 10px 30px -10px rgba(0, 0, 0, 0.5),
+    inset 0 1px 1px rgba(255, 255, 255, 0.05);
+}
+
+/* Broadcast Control Room Accents */
+.card-glow-cyan {
+  @apply border-cyan-500/30;
+  box-shadow: 0 0 15px rgba(6, 182, 212, 0.1);
+}
+
+.card-glow-emerald {
+  @apply border-emerald-500/30;
+  box-shadow: 0 0 15px rgba(16, 185, 129, 0.1);
+}
+
+.live-indicator-pulse {
+  @apply relative flex h-2 w-2;
+}
+
+.live-indicator-pulse::before {
+  content: '';
+  @apply absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75 animate-ping;
+}
+
+.live-indicator-pulse::after {
+  content: '';
+  @apply relative inline-flex rounded-full h-2 w-2 bg-red-600;
+}
+
+/* Gauge styling utilities */
+.gauge-track {
+  stroke: #1e293b;
+}
+
+.gauge-progress-cyan {
+  stroke: #06b6d4;
+  filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.5));
+}
+
+.gauge-progress-emerald {
+  stroke: #10b981;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.5));
+}
+
+/* ============================================================================
+   Interactive India Map Styles
+   ============================================================================ */
+
+.india-map-grid {
+  background-image:
+    linear-gradient(rgba(14, 165, 233, 0.15) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(14, 165, 233, 0.15) 1px, transparent 1px);
+  background-size: 40px 40px;
+  animation: gridPulse 8s ease-in-out infinite;
+}
+
+@keyframes gridPulse {
+
+  0%,
+  100% {
+    opacity: 0.15;
+  }
+
+  50% {
+    opacity: 0.25;
+  }
+}
+
+.india-map-glow {
+  background:
+    radial-gradient(circle at 50% 35%, rgba(14, 165, 233, 0.12) 0%, transparent 45%),
+    radial-gradient(circle at 25% 55%, rgba(16, 185, 129, 0.08) 0%, transparent 35%),
+    radial-gradient(circle at 75% 65%, rgba(139, 92, 246, 0.06) 0%, transparent 35%);
+}
+
+.india-outline {
+  transition: stroke-opacity 0.3s ease;
+}
+
+.india-outline:hover {
+  stroke-opacity: 0.9;
+}
+
+/* Sidebar offset for fixed positioned elements */
+.sidebar-offset {
+  margin-left: 256px;
+}
+
+/* ============================================================================
+   Animation Utilities
+   ============================================================================ */
+
+/* Smooth fade in */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out forwards;
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    transform: translateX(20px);
+    opacity: 0;
+  }
+
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out forwards;
+}
+
+/* Pulse glow effect */
+@keyframes pulseGlow {
+
+  0%,
+  100% {
+    box-shadow: 0 0 5px rgba(14, 165, 233, 0.3);
+  }
+
+  50% {
+    box-shadow: 0 0 20px rgba(14, 165, 233, 0.5), 0 0 40px rgba(14, 165, 233, 0.2);
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulseGlow 2s ease-in-out infinite;
+}
+
+/* Signal wave animation */
+@keyframes signalWave {
+  0% {
+    transform: scale(1);
+    opacity: 0.6;
+  }
+
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.animate-signal-wave {
+  animation: signalWave 2s ease-out infinite;
+}
+
+/* Data flow animation */
+@keyframes dataFlow {
+  0% {
+    stroke-dashoffset: 20;
+  }
+
+  100% {
+    stroke-dashoffset: 0;
+  }
+}
+
+.animate-data-flow {
+  animation: dataFlow 1s linear infinite;
+}
+
+/* ============================================================================
+   Intent & Status Badges
+   ============================================================================ */
+
+.intent-badge {
+  @apply inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium;
+  transition: all 0.2s ease;
+}
+
+.intent-badge:hover {
+  transform: translateY(-1px);
+}
+
+.intent-coverage {
+  @apply bg-blue-500/20 text-blue-400 border border-blue-500/30;
+}
+
+.intent-latency {
+  @apply bg-purple-500/20 text-purple-400 border border-purple-500/30;
+}
+
+.intent-emergency {
+  @apply bg-red-500/20 text-red-400 border border-red-500/30;
+}
+
+.intent-balanced {
+  @apply bg-emerald-500/20 text-emerald-400 border border-emerald-500/30;
+}
+
+.status-incoming {
+  @apply bg-amber-500/20 text-amber-400;
+}
+
+.status-processing {
+  @apply bg-blue-500/20 text-blue-400;
+}
+
+.status-applied {
+  @apply bg-emerald-500/20 text-emerald-400;
+}
+
+/* ============================================================================
+   Button Improvements
+   ============================================================================ */
+
+.btn-primary {
+  @apply px-4 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white font-medium rounded-lg;
+  @apply hover:from-cyan-400 hover:to-blue-400 transition-all duration-200;
+  @apply active:scale-[0.98] cursor-pointer;
+  box-shadow: 0 4px 14px -3px rgba(14, 165, 233, 0.4);
+}
+
+.btn-secondary {
+  @apply px-4 py-2 bg-slate-700 text-slate-100 font-medium rounded-lg;
+  @apply hover:bg-slate-600 transition-all duration-200;
+  @apply active:scale-[0.98] cursor-pointer;
+}
+
+.btn-ghost {
+  @apply px-4 py-2 text-slate-400 font-medium rounded-lg;
+  @apply hover:bg-slate-800 hover:text-slate-200 transition-all duration-200;
+  @apply cursor-pointer;
+}
+
+.btn-danger {
+  @apply px-4 py-2 bg-gradient-to-r from-red-500 to-rose-500 text-white font-medium rounded-lg;
+  @apply hover:from-red-400 hover:to-rose-400 transition-all duration-200;
+  @apply active:scale-[0.98] cursor-pointer;
+}
+
+/* ============================================================================
+   Accessibility & Reduced Motion
+   ============================================================================ */
+
 @media (prefers-reduced-motion: reduce) {
 
   *,
@@ -71,20 +352,112 @@
     transition-duration: 0.01ms !important;
     scroll-behavior: auto !important;
   }
+
+  .india-map-grid,
+  .animate-pulse,
+  .animate-ping,
+  .animate-pulse-glow,
+  .animate-signal-wave {
+    animation: none !important;
+  }
 }
 
-/* Performance: GPU-accelerated animations */
+/* GPU-accelerated animations */
 .animate-spin,
 .animate-pulse,
-.animate-ping {
+.animate-ping,
+.animate-pulse-glow {
   will-change: transform, opacity;
 }
 
-/* Dark mode toggle button animation */
+/* ============================================================================
+   Dark Mode Toggle
+   ============================================================================ */
+
 .dark-mode-toggle {
   transition: transform 0.3s ease, background-color 0.3s ease;
 }
 
 .dark-mode-toggle:hover {
   transform: scale(1.05);
+}
+
+/* ============================================================================
+   Scrollbar Styling
+   ============================================================================ */
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-slate-800/50;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-slate-600;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-slate-500;
+}
+
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(71, 85, 105) rgb(30, 41, 59);
+}
+
+/* ============================================================================
+   Selection Styling
+   ============================================================================ */
+
+::selection {
+  @apply bg-cyan-500/30 text-cyan-50;
+}
+
+::-moz-selection {
+  @apply bg-cyan-500/30 text-cyan-50;
+}
+
+/* ============================================================================
+   Focus States for Accessibility
+   ============================================================================ */
+
+:focus-visible {
+  @apply outline-none ring-2 ring-cyan-500 ring-offset-2 ring-offset-slate-900;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  @apply outline-none ring-2 ring-cyan-500 ring-offset-2 ring-offset-slate-900;
+}
+
+/* IndiaMapBackground static effects */
+.map-grid-pattern {
+  background-image:
+    linear-gradient(rgba(59, 130, 246, 0.3) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(59, 130, 246, 0.3) 1px, transparent 1px);
+  background-size: 50px 50px;
+}
+
+.map-radial-glow {
+  background:
+    radial-gradient(circle at 50% 40%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 30% 60%, rgba(16, 185, 129, 0.1) 0%, transparent 40%),
+    radial-gradient(circle at 70% 70%, rgba(139, 92, 246, 0.1) 0%, transparent 40%);
+}
+
+.map-scanline-effect {
+  background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255, 255, 255, 0.1) 2px, rgba(255, 255, 255, 0.1) 4px);
+}
+
+.map-vignette-effect {
+  background: radial-gradient(ellipse at center, transparent 40%, rgba(15, 23, 42, 0.6) 100%);
 }

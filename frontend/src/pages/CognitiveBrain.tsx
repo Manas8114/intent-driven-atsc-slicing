@@ -2,9 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { ThinkingTrace } from '../components/ui/ThinkingTrace';
 import { ErrorBoundary } from '../components/ErrorBoundary';
+import { useWebSocket } from '../hooks/useWebSocket';
 import {
     Brain, Activity, Wifi, Radio, Zap, TrendingUp,
-    AlertTriangle, CheckCircle, Gauge, Users, Car,
+    AlertTriangle, CheckCircle, Gauge, Car,
     Lightbulb, Eye, Target, Clock, Timer
 } from 'lucide-react';
 
@@ -133,8 +134,31 @@ export function CognitiveBrain() {
     const [cognitiveState, setCognitiveState] = useState<CognitiveState | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [lastWsUpdate, setLastWsUpdate] = useState<Date | null>(null);
 
-    // Fetch cognitive state every 2 seconds
+    // REAL-TIME: WebSocket connection for instant updates
+    const { lastMessage, isConnected } = useWebSocket();
+
+    // Handle WebSocket state updates
+    useEffect(() => {
+        if (lastMessage?.type === 'state_update' && lastMessage.data) {
+            const data = lastMessage.data as Record<string, unknown>;
+            // Merge WebSocket state with existing state
+            if (cognitiveState) {
+                setCognitiveState(prev => prev ? {
+                    ...prev,
+                    learning: {
+                        ...prev.learning,
+                        total_decisions: (data.total_decisions as number) || prev.learning.total_decisions,
+                        reward_trend: (data.reward_trend as string) || prev.learning.reward_trend,
+                    }
+                } : prev);
+            }
+            setLastWsUpdate(new Date());
+        }
+    }, [lastMessage, cognitiveState]);
+
+    // Fetch cognitive state every 2 seconds (REST fallback + full state)
     useEffect(() => {
         const fetchState = async () => {
             try {

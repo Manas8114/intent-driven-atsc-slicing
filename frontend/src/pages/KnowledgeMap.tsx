@@ -14,23 +14,23 @@ interface HeatmapData {
     label: string;
 }
 
-// Color scale for heatmap cells
+// Color scale for heatmap cells - Enhanced for visibility in both themes
 function getSnrColor(snr: number): string {
-    if (snr <= 0) return 'bg-slate-200';
-    if (snr < 10) return 'bg-red-400';
-    if (snr < 15) return 'bg-orange-400';
-    if (snr < 20) return 'bg-yellow-400';
-    if (snr < 25) return 'bg-lime-400';
-    return 'bg-emerald-400';
+    if (snr <= 0) return 'bg-slate-300 dark:bg-slate-700';
+    if (snr < 10) return 'bg-rose-500 dark:bg-rose-600';
+    if (snr < 15) return 'bg-orange-500 dark:bg-orange-600';
+    if (snr < 20) return 'bg-amber-400 dark:bg-amber-500';
+    if (snr < 25) return 'bg-lime-500 dark:bg-lime-600';
+    return 'bg-emerald-500 dark:bg-emerald-600';
 }
 
 function getDensityColor(count: number): string {
-    if (count === 0) return 'bg-slate-100';
-    if (count < 5) return 'bg-blue-200';
-    if (count < 10) return 'bg-blue-300';
-    if (count < 20) return 'bg-blue-400';
-    if (count < 50) return 'bg-blue-500';
-    return 'bg-blue-600';
+    if (count === 0) return 'bg-slate-200 dark:bg-slate-700';
+    if (count < 5) return 'bg-cyan-300 dark:bg-cyan-700';
+    if (count < 10) return 'bg-cyan-400 dark:bg-cyan-600';
+    if (count < 20) return 'bg-cyan-500 dark:bg-cyan-500';
+    if (count < 50) return 'bg-cyan-600 dark:bg-cyan-400';
+    return 'bg-cyan-700 dark:bg-cyan-300';
 }
 
 // Heatmap grid component
@@ -45,7 +45,7 @@ function HeatmapGrid({
 }) {
     return (
         <div className="space-y-2">
-            <h4 className="font-semibold text-slate-700">{title}</h4>
+            <h4 className="font-semibold text-slate-700 dark:text-slate-200">{title}</h4>
             <div className="grid gap-1" style={{ gridTemplateColumns: `repeat(${data.length}, 1fr)` }}>
                 {data.map((row, i) => (
                     row.map((value, j) => (
@@ -215,7 +215,7 @@ export function KnowledgeMap() {
                         {activeLayer === 'coverage' && (
                             <HeatmapGrid
                                 data={heatmapData.coverage_map}
-                                getColor={(v) => v > 0.8 ? 'bg-emerald-400' : v > 0.5 ? 'bg-yellow-400' : 'bg-red-400'}
+                                getColor={(v) => v > 0.8 ? 'bg-emerald-500 dark:bg-emerald-600' : v > 0.5 ? 'bg-amber-400 dark:bg-amber-500' : 'bg-rose-500 dark:bg-rose-600'}
                                 title="Coverage Success Probability"
                             />
                         )}
@@ -224,14 +224,14 @@ export function KnowledgeMap() {
                     {/* Legend */}
                     <div className="mt-6 flex justify-center">
                         {activeLayer === 'snr' && (
-                            <div className="flex items-center gap-2 text-sm text-slate-600">
+                            <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-300">
                                 <span>Poor</span>
                                 <div className="flex gap-1">
-                                    <div className="w-4 h-4 bg-red-400 rounded" />
-                                    <div className="w-4 h-4 bg-orange-400 rounded" />
-                                    <div className="w-4 h-4 bg-yellow-400 rounded" />
-                                    <div className="w-4 h-4 bg-lime-400 rounded" />
-                                    <div className="w-4 h-4 bg-emerald-400 rounded" />
+                                    <div className="w-4 h-4 bg-rose-500 dark:bg-rose-600 rounded" />
+                                    <div className="w-4 h-4 bg-orange-500 dark:bg-orange-600 rounded" />
+                                    <div className="w-4 h-4 bg-amber-400 dark:bg-amber-500 rounded" />
+                                    <div className="w-4 h-4 bg-lime-500 dark:bg-lime-600 rounded" />
+                                    <div className="w-4 h-4 bg-emerald-500 dark:bg-emerald-600 rounded" />
                                 </div>
                                 <span>Excellent</span>
                             </div>

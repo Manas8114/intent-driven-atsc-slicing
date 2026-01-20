@@ -1,49 +1,40 @@
 import { useState } from 'react';
-import { 
-    Car, Radio, AlertTriangle, CloudFog, 
-    ChevronLeft, ChevronRight, Activity, 
+import {
+    Car, Radio, AlertTriangle, CloudFog,
+    ChevronLeft, ChevronRight, Activity,
     Brain, Zap, TrendingUp
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
 
-// Cognitive stress scenarios with detailed AI behavior
+// Cognitive stress scenarios aligned with Backend Chaos Director
 const COGNITIVE_SCENARIOS = [
     {
-        id: 'mobility_surge',
-        label: '🚗 Mobility Surge',
-        icon: Car,
-        desc: 'Rapid increase in mobile receivers with high speed variance',
-        impact: 'AI adapts ModCod for velocity stability',
-        color: 'text-orange-600 bg-orange-50 hover:bg-orange-100 border-orange-200',
-        aiAction: 'The broadcast adapts to mobile conditions by selecting robust modulation'
-    },
-    {
-        id: 'cellular_congestion',
-        label: '📡 Cellular Congestion',
-        icon: Radio,
-        desc: 'Spike in unicast congestion - forces broadcast offload',
-        impact: 'AI switches to broadcast mode to offload cellular',
-        color: 'text-purple-600 bg-purple-50 hover:bg-purple-100 border-purple-200',
-        aiAction: 'The system decides to offload traffic via broadcast delivery'
-    },
-    {
-        id: 'emergency_spike',
-        label: '🚨 Emergency Spike',
-        icon: AlertTriangle,
-        desc: 'Immediate emergency escalation - priority override',
-        impact: 'Emergency PLP activated with maximum reliability',
-        color: 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200',
-        aiAction: 'The AI selects emergency-priority configuration with QPSK 1/2'
-    },
-    {
-        id: 'interference_burst',
-        label: '🌫️ Interference Burst',
+        id: 'monsoon',
+        label: '⛈️ Severe Monsoon',
         icon: CloudFog,
-        desc: 'Wideband interference reduces effective SNR',
-        impact: 'AI triggers robustness adaptation',
+        desc: 'Signal attenuation (-15dB) across all sectors',
+        impact: 'AI must boost power to compensate for rain fade',
         color: 'text-blue-600 bg-blue-50 hover:bg-blue-100 border-blue-200',
-        aiAction: 'The broadcast adapts by reducing modulation order for interference resilience'
+        aiAction: 'The broadcast increases power and switches to robust modulation (QPSK)'
+    },
+    {
+        id: 'flash_crowd',
+        label: '👥 Flash Crowd',
+        icon: Car,
+        desc: '300% traffic surge in city center',
+        impact: 'AI switches to broadcast mode to offload cellular',
+        color: 'text-orange-600 bg-orange-50 hover:bg-orange-100 border-orange-200',
+        aiAction: 'The system offloads traffic to broadcast to relieve congestion'
+    },
+    {
+        id: 'tower_failure',
+        label: '🗼 Tower Failure',
+        icon: AlertTriangle,
+        desc: 'Infrastructure failure in Sector A',
+        impact: 'AI re-routes coverage from adjacent towers',
+        color: 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200',
+        aiAction: 'The AI reconfigures adjacent towers to cover the dead zone'
     }
 ];
 
@@ -62,11 +53,20 @@ export function HurdlePanel() {
 
     const isBusy = phase !== 'idle' && phase !== 'broadcasting' && phase !== 'emergency';
 
-    const handleScenarioTrigger = (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
+    const handleScenarioTrigger = async (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
         // Only one hurdle at a time
         if (activeHurdle && activeHurdle !== scenario.id) {
             // Clear previous hurdle first
             triggerHurdle('clear');
+            try {
+                await fetch('http://localhost:8000/ai/inject-scenario', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ scenario: 'clear' })
+                });
+            } catch (e) {
+                console.error("Failed to clear scenario", e);
+            }
         }
 
         // Log cognitive stress event
@@ -82,11 +82,23 @@ export function HurdlePanel() {
 
         // Add to system logs
         if (addLog) {
-            addLog(`🧠 Cognitive Stress Event Triggered: ${scenario.label}`);
-            addLog(`   AI Response: ${scenario.aiAction}`);
+            addLog(`🧠 Chaos Director: Injecting ${scenario.label}`);
+            addLog(`   Expected Response: ${scenario.aiAction}`);
         }
 
-        // Trigger the actual hurdle
+        // Call Backend API
+        try {
+            await fetch('http://localhost:8000/ai/inject-scenario', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ scenario: scenario.id })
+            });
+        } catch (e) {
+            console.error("Failed to inject scenario", e);
+            if (addLog) addLog(`❌ Failed to inject scenario: ${e}`);
+        }
+
+        // Trigger the internal frontend state (legacy/visuals)
         triggerHurdle(scenario.id);
     };
 
@@ -203,8 +215,8 @@ export function HurdlePanel() {
 
                         <div className="space-y-2 max-h-48 overflow-y-auto">
                             {cognitiveEvents.map((event, i) => (
-                                <div 
-                                    key={i} 
+                                <div
+                                    key={i}
                                     className={cn(
                                         "p-3 rounded-lg border text-xs",
                                         i === 0 ? "bg-purple-50 border-purple-200 animate-in slide-in-from-top-2" : "bg-slate-50 border-slate-200"
@@ -232,7 +244,7 @@ export function HurdlePanel() {
             {!isOpen && (
                 <div className="flex flex-col items-center gap-4 py-4">
                     <Brain className="h-4 w-4 text-purple-500" />
-                    <div 
+                    <div
                         className="text-xs font-mono text-slate-400 uppercase tracking-widest"
                         style={{ writingMode: 'vertical-rl' }}
                     >

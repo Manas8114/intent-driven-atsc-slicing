@@ -193,6 +193,23 @@ class LearningLoopTracker:
         # Check for milestones
         self._check_for_milestones(intent, action, actual_kpis)
         
+        # 🧠 CLOSED-LOOP LEARNING: Trigger model update every 10 decisions
+        if self.total_decisions > 0 and self.total_decisions % 10 == 0:
+            try:
+                from backend.rl_agent import train_online_from_buffer
+                result = train_online_from_buffer(n_steps=3)
+                if result.get("status") == "success":
+                    self.milestones.append({
+                        "timestamp": now.isoformat(),
+                        "milestone_type": "auto_model_update",
+                        "description": f"Automatic PPO update after {self.total_decisions} decisions",
+                        "kpi_before": {},
+                        "kpi_after": {},
+                        "improvement_pct": 0.0
+                    })
+            except Exception as e:
+                print(f"Auto-training skipped: {e}")
+        
         return reward
     
     def _compute_reward(
@@ -513,6 +530,47 @@ async def reset_learning():
     tracker = get_learning_tracker()
     tracker.reset()
     return {"status": "reset", "message": "Learning tracker cleared - demonstration will restart"}
+
+
+@router.post("/learning/train-step")
+async def trigger_training_step(n_steps: int = 5):
+    """
+    🧠 TRIGGER ONLINE MODEL UPDATE 🧠
+    
+    This endpoint triggers a closed-loop learning step:
+    1. Collects recent experiences from the buffer
+    2. Performs mini-batch PPO gradient updates
+    3. Saves the improved model checkpoint
+    4. Logs a "Model Updated" milestone to the learning timeline
+    
+    This is the "Cognitive" part of Cognitive Broadcasting -
+    proving that the AI actually improves from feedback.
+    """
+    from backend.rl_agent import train_online_from_buffer
+    
+    tracker = get_learning_tracker()
+    
+    # Perform online training
+    result = train_online_from_buffer(n_steps=n_steps)
+    
+    # Log milestone if successful
+    if result.get("status") == "success":
+        milestone = {
+            "timestamp": datetime.now().isoformat(),
+            "milestone_type": "model_update",
+            "description": f"PPO model updated with {result.get('experiences_used', 0)} experiences",
+            "kpi_before": {},
+            "kpi_after": {},
+            "improvement_pct": 0.0
+        }
+        tracker.milestones.append(milestone)
+        if len(tracker.milestones) > 50:
+            tracker.milestones.pop(0)
+        
+        result["milestone_logged"] = True
+        result["ai_native_label"] = "Closed-Loop Learning Active"
+    
+    return result
 
 
 # ============================================================================

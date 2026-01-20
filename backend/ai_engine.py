@@ -654,6 +654,19 @@ async def make_decision(request: DecisionRequest):
     # ⏱️ LATENCY TRACKING: Finalize decision cycle metrics
     latency.finalize_decision(total_decision_start)
 
+    # 8. REAL-TIME SYNC: Broadcast decision to all connected frontends via WebSocket
+    try:
+        from .websocket_manager import broadcast_ai_decision
+        import asyncio
+        asyncio.create_task(broadcast_ai_decision(
+            decision_id=approval_id,
+            intent=policy_type,
+            action=recommended_config,
+            explanation=explanation
+        ))
+    except Exception as e:
+        print(f"WebSocket broadcast failed (non-critical): {e}")
+
     return DecisionResponse(
         status=status,
         action=recommended_config,
@@ -800,3 +813,131 @@ async def get_cognitive_state():
         "ai_native_label": "AI-Native Broadcast Intelligence Layer"
     }
 
+
+# ============================================================================
+# City-Level AI State Endpoint (Phase 3: Per-City Integration)
+# ============================================================================
+
+@router.get("/city-state")
+async def get_city_state():
+    """
+    Get per-city AI state, including coverage, signal quality, and active intents.
+    Now respects active Simulation scenarios (Chaos Director).
+    """
+    from .learning_loop import get_learning_tracker
+    from .simulation_state import get_simulation_state
+    import random
+    
+    tracker = get_learning_tracker()
+    sim_state = get_simulation_state()
+    active_scenario = sim_state.active_scenario
+    
+    # Base cities configuration
+    cities = [
+        {"id": "delhi", "name": "New Delhi", "region": "North"},
+        {"id": "mumbai", "name": "Mumbai", "region": "West"},
+        {"id": "chennai", "name": "Chennai", "region": "South"},
+        {"id": "kolkata", "name": "Kolkata", "region": "East"},
+        {"id": "bengaluru", "name": "Bengaluru", "region": "South"},
+        {"id": "hyderabad", "name": "Hyderabad", "region": "South"},
+        {"id": "ahmedabad", "name": "Ahmedabad", "region": "West"},
+        {"id": "pune", "name": "Pune", "region": "West"},
+        {"id": "jaipur", "name": "Jaipur", "region": "North"},
+        {"id": "lucknow", "name": "Lucknow", "region": "North"}
+    ]
+    
+    city_states = []
+    
+    for city in cities:
+        # Base values - slight random flux
+        coverage = random.uniform(92, 99)
+        signal_quality = "excellent"
+        active_intent = "balanced"
+        current_modulation = "256QAM"
+        
+        # Apply Chaos Director Scenarios
+        if active_scenario == "monsoon":
+            # Rain fade affects all, but varies slightly
+            drop = random.uniform(15, 25)
+            coverage = max(0, coverage - drop)
+            signal_quality = "poor" if coverage < 80 else "moderate"
+            active_intent = "coverage" # AI trying to fix it
+            current_modulation = "QPSK" # Robust mode
+            
+        elif active_scenario == "tower_failure":
+            # Specific failure in North/West usually
+            if city["region"] in ["North", "West"]:
+                coverage = max(0, coverage - 40)
+                signal_quality = "weak"
+                active_intent = "emergency"
+            
+        elif active_scenario == "flash_crowd":
+            # Congestion in Metros
+            if city["id"] in ["mumbai", "delhi", "bengaluru"]:
+                active_intent = "latency" # Offloading
+                current_modulation = "64QAM"
+                # Coverage might stay high, but 'quality' drops due to congestion
+                signal_quality = "moderate"
+
+        city_states.append({
+            "id": city["id"],
+            "name": city["name"],
+            "region": city["region"],
+            "coverage_pct": round(coverage, 1),
+            "signal_quality": signal_quality,
+            "active_intent": active_intent,
+            "current_modulation": current_modulation,
+            "power_dbm": round(35 + random.uniform(-2, 2), 1),
+            "device_count": int(random.gauss(1500, 500)),
+            "last_update_ms": int(time.time() * 1000),
+            "ai_controlled": True
+        })
+    
+    return {
+        "timestamp": time.time(),
+        "city_count": len(city_states),
+        "cities": city_states,
+        "active_scenario": active_scenario,
+        "aggregate": {
+            "avg_coverage": round(sum(c["coverage_pct"] for c in city_states) / len(city_states), 1),
+            "total_devices": sum(c["device_count"] for c in city_states),
+            "ai_label": f"Status: {active_scenario.upper()}" if active_scenario else "Status: NOMINAL"
+        }
+    }
+
+
+# ============================================================================
+# Chaos Director Endpoint (Scenario Injection)
+# ============================================================================
+
+class ScenarioRequest(BaseModel):
+    scenario: Literal["monsoon", "flash_crowd", "tower_failure", "clear"]
+
+@router.post("/inject-scenario")
+async def inject_scenario(request: ScenarioRequest):
+    """
+    Inject a simulated degradation scenario to test AI resilience.
+    Triggers immediate broadcast of the new state.
+    """
+    from .simulation_state import get_simulation_state
+    from .websocket_manager import manager
+    
+    sim_state = get_simulation_state()
+    result = sim_state.inject_scenario(request.scenario)
+    
+    # Broadcast scenario event to all clients
+    await manager.broadcast({
+        "type": "scenario_event",
+        "data": {
+            "scenario": request.scenario,
+            "label": result["label"],
+            "impact": result["impact"],
+            "timestamp": time.time()
+        }
+    })
+    
+    return {
+        "status": "scenario_injected" if request.scenario != "clear" else "scenario_cleared",
+        "scenario": request.scenario,
+        "details": result
+    }

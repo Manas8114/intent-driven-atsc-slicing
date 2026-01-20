@@ -38,8 +38,47 @@ class SimulationState:
         
         # Unicast network model
         self._unicast_model = get_unicast_model()
+
+        # === Chaos Director State ===
+        self.active_scenario: Optional[str] = None
+        self.active_scenario_label: Optional[str] = None
         
-    def update_unicast_metrics(self):
+    def inject_scenario(self, scenario_type: str) -> Dict[str, Any]:
+        """
+        Inject a simulated degradation scenario.
+        Returns the impact description.
+        """
+        self.active_scenario = scenario_type
+        
+        impact = {}
+        if scenario_type == "monsoon":
+            self.active_scenario_label = "Severe Monsoon (Singal Attenuation)"
+            # Simulate signal loss
+            impact = {"signal_loss_db": 15.0, "coverage_drop": 0.25}
+            
+        elif scenario_type == "flash_crowd":
+            self.active_scenario_label = "Flash Crowd (Traffic Surge)"
+            # Simulate user surge
+            self.unicast_congestion_level = 0.95
+            self.mobile_user_ratio = 0.5
+            impact = {"traffic_increase": "300%", "congestion": "critical"}
+            
+        elif scenario_type == "tower_failure":
+            self.active_scenario_label = "Tower Failure (Sector A)"
+            # Simulate infrastructure loss
+            impact = {"capacity_loss": 0.33, "dead_zones": "detected"}
+            
+        elif scenario_type == "clear":
+            self.active_scenario = None
+            self.active_scenario_label = None
+            self.unicast_congestion_level = 0.3 # Reset
+            
+        return {
+            "scenario": scenario_type,
+            "label": self.active_scenario_label,
+            "impact": impact,
+            "timestamp": 1234567890 # Placeholder, caller usually timestamps
+        }
         """Update unicast congestion metrics from the network model."""
         metrics = self._unicast_model.calculate_congestion(
             mobile_user_ratio=self.mobile_user_ratio
