@@ -19,6 +19,10 @@ import { BootstrapUncertainty } from './pages/BootstrapUncertainty';
 import { CellTowerData } from './pages/CellTowerData';
 // Real Broadcast Data Integration
 import { BroadcastCoverage } from './pages/BroadcastCoverage';
+// New Competition Features
+import { TrainingData } from './pages/TrainingData';
+import { Architecture } from './pages/Architecture';
+import { Benchmarks } from './pages/Benchmarks';
 
 function App() {
   const [activePage, setActivePage] = useState('cognitive');
@@ -32,6 +36,10 @@ function App() {
       case 'bootstrap': return <BootstrapUncertainty />;
       case 'celltowers': return <CellTowerData />;
       case 'coverage': return <BroadcastCoverage />;
+      // New Competition Features
+      case 'training': return <TrainingData />;
+      case 'architecture': return <Architecture />;
+      case 'benchmarks': return <Benchmarks />;
       // Core Operations  
       case 'overview': return <Overview />;
       case 'intent': return <IntentControl />;
@@ -57,3 +65,4 @@ function App() {
 }
 
 export default App;
+

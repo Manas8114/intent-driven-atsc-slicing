@@ -1,5 +1,5 @@
 import React from 'react';
-import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3, Brain, Map, TrendingUp } from 'lucide-react';
+import { LayoutDashboard, Radio, Activity, FileText, AlertTriangle, Settings, CheckSquare, Info, ClipboardCheck, BarChart3, Brain, Map, TrendingUp, Database, Layers, Gauge } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { TopStatusBar } from './TopStatusBar';
@@ -22,6 +22,10 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'bootstrap', label: 'Bootstrap Uncertainty', icon: BarChart3, section: 'AI Intelligence' },
     { id: 'celltowers', label: 'Cell Tower Data', icon: Radio, section: 'AI Intelligence' },
     { id: 'coverage', label: '📡 Broadcast Coverage', icon: Radio, highlight: true, section: 'AI Intelligence' },
+    // Competition Features
+    { id: 'training', label: '💾 Training Data', icon: Database, highlight: true, section: 'Competition' },
+    { id: 'architecture', label: '🏛️ ITU Architecture', icon: Layers, highlight: true, section: 'Competition' },
+    { id: 'benchmarks', label: '📊 AI vs Baseline', icon: Gauge, highlight: true, section: 'Competition' },
     // Core Operations
     { id: 'overview', label: 'System Overview', icon: LayoutDashboard },
     { id: 'approval', label: 'Deployment Approval', icon: CheckSquare, highlight: true },
