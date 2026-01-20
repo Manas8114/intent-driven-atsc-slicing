@@ -1,0 +1,83 @@
+@startuml AINN_Model_LCM
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+skinparam class {
+    BackgroundColor<<prepare>> #E3F2FD
+    BackgroundColor<<running>> #FFF8E1
+    BackgroundColor<<data>> #E8F5E9
+    BackgroundColor<<storage>> #F3E5F5
+    BorderColor #333333
+}
+
+title Figure 4: Proposed Model LCM Framework\n(Intent-Driven ATSC 3.0 Model Lifecycle)
+
+' Model Preparing Phase
+package "Model preparing phase" <<prepare>> {
+    rectangle "Model\ntraining\n[rl_agent.py\nPPO.learn()]" as training
+    rectangle "Model\ntesting\n[check_env()]" as testing
+    rectangle "Model\ninference\nemulation\n[model.predict()]" as inference_emu
+    rectangle "Model\ntransfer/\ndelivery\n[model.save()]" as transfer
+    
+    training --> testing
+    testing --> inference_emu
+    inference_emu --> transfer
+}
+
+' Model Running Phase
+package "Model running phase" <<running>> {
+    rectangle "Model\nmgmt.\n[RLController]" as mgmt
+    rectangle "Model\ndiscovery\n[os.path.exists()]" as discovery
+    rectangle "Model\nstorage\n[.zip files]" as storage
+    rectangle "Model\nregistration\n[Singleton Pattern]" as registration
+    
+    mgmt --> discovery
+    discovery --> storage
+    storage --> registration
+    
+    rectangle "Model\nrunning\n[suggest_action()]" as running
+    rectangle "Model\ndeactivation\n[reset()]" as deactivation
+    rectangle "Model\nselection/\nfallback\n[v1 → v2]" as selection
+    rectangle "Model fine-\ntuning/\nadapting\n[learning_loop.py]" as finetuning
+    rectangle "Model\nvalidation\n[validation.py]" as validation
+    
+    running --> deactivation
+    deactivation --> selection
+    selection --> finetuning
+    finetuning --> validation
+    
+    rectangle "Model\ninference\n[PPO.predict()]" as inference
+    rectangle "Model\nactivation\n[PPO.load()]" as activation
+    rectangle "Model\ndeployment\n[_model_cache]" as deployment
+    rectangle "Model\nmonitoring\n[learning_loop.py]" as monitoring
+    rectangle "Model\nupdate\n[retrain]" as update
+    
+    inference --> activation
+    activation --> deployment
+    deployment --> monitoring
+    monitoring --> update
+    update --> validation
+}
+
+' Data Layer
+package "data Mgmt." <<data>> {
+    rectangle "Physical\nnetwork\n[rf_adapter.py]" as physical
+    rectangle "Digital\ntwin\n[spatial_model.py]" as digital_twin
+    rectangle "Data\ncollection\n[ai_data_collector.py]" as collection
+    rectangle "Data\nprocessing\n[broadcast_data_loader.py]" as processing
+    rectangle "Data\nStorage\n[kpis.db]" as data_storage
+    
+    physical --> digital_twin
+    digital_twin --> collection
+    collection --> processing
+    processing --> data_storage
+}
+
+' Cross-phase connections
+transfer ..> mgmt : delivers
+registration ..> running : enables
+validation ..> training : feeds back
+data_storage ..> training : provides data
+
+@enduml

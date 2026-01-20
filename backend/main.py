@@ -73,3 +73,12 @@ app.include_router(cell_tower_router, prefix="/cell-towers", tags=["Cell Tower D
 # Real FCC Broadcast Data Integration
 from .broadcast_data_router import router as broadcast_router
 app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast Data (FCC)"])
+
+# ============================================================================
+# Training Experience Buffer (Continuous Learning)
+# ============================================================================
+# Stores state-action-reward tuples for offline retraining
+
+from .experience_buffer import router as experience_router
+app.include_router(experience_router, prefix="/experiences", tags=["Training Experience Buffer"])
+

@@ -1,0 +1,66 @@
+@startuml AINN_Agentic_Framework
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+skinparam class {
+    BackgroundColor<<llm>> #E8EAF6
+    BackgroundColor<<memory>> #E3F2FD
+    BackgroundColor<<tool>> #FFF3E0
+    BackgroundColor<<resource>> #F1F8E9
+    BackgroundColor<<management>> #FCE4EC
+    BackgroundColor<<external>> #ECEFF1
+    BorderColor #333333
+}
+
+title Figure 3: Proposed Agentic AI Framework\n(Intent-Driven ATSC 3.0 Cognitive Broadcasting)
+
+' Top level - Network Management
+rectangle "Network\nManagement\nPersonnel" as network_mgmt
+
+' Main LLM AI Agent block
+rectangle "LLM AI Agent" as llm_agent <<llm>> {
+    rectangle "Memory\n[ai_data_collector.py]" as memory <<memory>> {
+        rectangle "Knowledge\nbase\n[BroadcastKnowledgeStore]" as knowledge
+        rectangle "Large\nLanguage\nModel\n[demand_predictor.py]" as llm_model
+        rectangle "Resource\npool\n[API Endpoints]" as resource_pool
+    }
+    
+    rectangle "Tool\npool\n[optimizer.py,\nsimulator.py]" as tool_pool <<tool>>
+}
+
+' External connections
+rectangle "OTT\nApplication\nAI Agent\n[Frontend Dashboard]" as ott <<external>>
+rectangle "External\nTool\n[FCC Data Parser]" as ext_tool <<external>>
+rectangle "External\nResource\n[OpenCellID Data]" as ext_resource <<external>>
+
+' Other Network AI Agent
+rectangle "Other\nNetwork\nAI Agent.\n[rl_agent.py]" as other_agent <<external>>
+rectangle "Network\nTool\n[Digital Twin]" as network_tool <<tool>>
+rectangle "Network\nResource\n[Spatial Grid]" as network_resource <<resource>>
+
+' Management modules
+rectangle "Conflict\nManagement\n[approval_engine.py]" as conflict_mgmt <<management>>
+rectangle "Security\nManagement\n[emergency_atsc3.py]" as security_mgmt <<management>>
+rectangle "Performance\nManagement\n[kpi_engine.py]" as perf_mgmt <<management>>
+
+' Connections
+network_mgmt --> llm_agent
+
+ott --> llm_agent
+ext_tool --> llm_agent
+ext_resource --> llm_agent
+
+llm_agent --> other_agent
+other_agent --> network_tool
+other_agent --> network_resource
+
+llm_agent --> conflict_mgmt
+llm_agent --> security_mgmt
+llm_agent --> perf_mgmt
+
+memory --> knowledge
+memory --> llm_model
+memory --> resource_pool
+
+@enduml

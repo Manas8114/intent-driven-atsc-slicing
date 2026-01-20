@@ -1,0 +1,102 @@
+@startuml AINN_Layered_Architecture
+!define RECTANGLE class
+
+skinparam backgroundColor #FEFEFE
+skinparam roundcorner 10
+skinparam class {
+    BackgroundColor<<management>> #E3F2FD
+    BackgroundColor<<network>> #FFF8E1
+    BackgroundColor<<infrastructure>> #F3E5F5
+    BackgroundColor<<agent>> #E8F5E9
+    BorderColor #333333
+}
+
+title Figure 1: Proposed Architecture of AI-Native Broadcast Network\n(Intent-Driven ATSC 3.0 Slicing)
+
+package "Management & Orchestration Layer" <<management>> {
+    rectangle "Management and\nOrchestration Layer" as mol {
+        rectangle "Network management and\norchestration central AI Agent" as central_ai
+    }
+    
+    rectangle "Network Management\nAI Agent\n[ai_engine.py]" as nm_agent <<agent>>
+    rectangle "Resource Orchestration\nAI Agent\n[optimizer.py]" as ro_agent <<agent>>
+    rectangle "Capability Exposure\nAI Agent\n[visualization_router.py]" as ce_agent <<agent>>
+}
+
+package "Network Function Layer" <<network>> {
+    rectangle "Access Network" as access {
+        rectangle "AI Function" as ai_func {
+            rectangle "AN AI Agent\n[rl_agent.py]" as an_agent <<agent>>
+        }
+        rectangle "Data Mgmt./ctrl\n[simulation_state.py]" as data_mgmt
+        rectangle "Model LCM\n[learning_loop.py]" as model_lcm
+        rectangle "Digital Twin\n[spatial_model.py]" as digital_twin
+        rectangle "Comp. service\n[demand_predictor.py]" as comp_service
+    }
+    
+    rectangle "Intelligent\nTerminal Device" as terminal {
+        rectangle "Application\nAI Agent\n[Frontend React]" as app_agent <<agent>>
+        rectangle "Protocol Stack" as proto_stack
+    }
+    
+    rectangle "Base Station" as base_station {
+        rectangle "Protocol Stack\n[baseband_interface.py]" as bs_proto
+        rectangle "Base Station\nAI Agent\n[broadcast_telemetry.py]" as bs_agent <<agent>>
+    }
+    
+    rectangle "Core Network" as core {
+        rectangle "CN AI Agent\n[approval_engine.py]" as cn_agent <<agent>>
+        rectangle "AMT, SMF...\n[intent_service.py]" as amt
+        rectangle "UPF\n[kpi_engine.py]" as upf
+    }
+    
+    rectangle "Cloud Application" as cloud {
+        rectangle "AI Agent\n[ai_data_collector.py]" as cloud_agent <<agent>>
+    }
+}
+
+package "Infrastructure Layer" <<infrastructure>> {
+    rectangle "Virtual\nResource" as virtual {
+        rectangle "Communication Resource\n[rf_adapter.py]" as comm_res
+        rectangle "Computing Resource\n[PPO Model Inference]" as comp_res
+        rectangle "Data Resource\n[FCC/OpenCellID Data]" as data_res
+    }
+    
+    rectangle "Physical\nResource" as physical {
+        rectangle "Radio Unit\n(Simulated)" as radio
+        rectangle "Gateway\n(API Server)" as gateway
+        rectangle "Router\n(FastAPI)" as router
+        rectangle "Terminal SoC\n(Browser)" as terminal_soc
+        rectangle "CPU/GPU\n(Torch)" as cpu
+        rectangle "Memory\n(NumPy Arrays)" as memory
+    }
+    
+    note right of physical
+        Cloud | Edge | Far-Edge | Terminal
+    end note
+}
+
+' Connections
+central_ai --> nm_agent
+central_ai --> ro_agent
+central_ai --> ce_agent
+
+nm_agent --> an_agent : orchestrates
+ro_agent --> bs_agent : allocates
+ce_agent --> cloud_agent : exposes
+
+an_agent --> digital_twin : validates
+an_agent --> model_lcm : learns
+data_mgmt --> digital_twin
+model_lcm --> data_mgmt
+
+base_station --> access : connects
+terminal --> access : connects
+core --> base_station : manages
+cloud --> core : integrates
+
+virtual --> comm_res
+virtual --> comp_res
+virtual --> data_res
+
+@enduml

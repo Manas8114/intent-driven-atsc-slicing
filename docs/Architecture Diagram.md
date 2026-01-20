@@ -252,3 +252,39 @@ sequenceDiagram
 3. **Separation of Concerns** - AI intelligence is decoupled from RF transmission
 4. **Explainability** - Every AI decision includes reasoning and confidence scores
 5. **Emergency Override** - Deterministic emergency paths bypass normal approval when lives are at risk
+
+---
+
+## ITU FG-AINN Architecture Alignment
+
+This system conforms to the **ITU Focus Group on AI for Future Networks (FG-AINN)** architecture framework:
+
+| ITU Framework | Our Implementation | Diagram |
+|---------------|-------------------|---------|
+| **Layered AI-Native Network** | 3-Layer Broadcast Control Plane | [AINN_Layered_Architecture.puml](./AINN_Layered_Architecture.puml) |
+| **Agentic AI Framework** | Cognitive Broadcasting System | [AINN_Agentic_Framework.puml](./AINN_Agentic_Framework.puml) |
+| **Model LCM Framework** | RL Model Lifecycle Management | [AINN_Model_LCM.puml](./AINN_Model_LCM.puml) |
+
+### Layer Mapping
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│ Management & Orchestration Layer                            │
+│   [ai_engine.py] [optimizer.py] [visualization_router.py]   │
+├─────────────────────────────────────────────────────────────┤
+│ Network Function Layer                                       │
+│   [rl_agent.py] [learning_loop.py] [spatial_model.py]       │
+│   [broadcast_telemetry.py] [approval_engine.py]             │
+├─────────────────────────────────────────────────────────────┤
+│ Infrastructure Layer                                         │
+│   [rf_adapter.py] [baseband_interface.py] [FCC/Cell Data]   │
+└─────────────────────────────────────────────────────────────┘
+```
+
+For detailed component mapping, see [AINN_Architecture_Mapping.md](./AINN_Architecture_Mapping.md).
+
+### References
+
+- ITU-T FG-AINN-I-116-R2: AI-Native Network Architecture
+- ITU-T FG-AINN-I-139: Agentic AI Framework and Model LCM
+- [Comparison Baselines](./Comparison_Baselines.md): System evaluation against static ATSC and unicast alternatives
