@@ -27,6 +27,15 @@ import threading
 
 router = APIRouter()
 
+# Circular dependency handling: Import manager only when needed, or use a better pattern.
+# For now, we will perform the import inside the function but outside the loop if possible, 
+# or just keep it efficient.
+# Actually, the best practice is to move it to the top if possible, but manager might depend on learning_loop?
+# Checking file structure, manager usually depends on router. 
+# Let's keep it local but cleaner, or try top level. 
+# "from .websocket_manager import manager"
+
+
 
 # ============================================================================
 # Data Models
@@ -195,7 +204,6 @@ class LearningLoopTracker:
         # Check for milestones
         self._check_for_milestones(intent, action, actual_kpis)
         
-        # 🧠 CLOSED-LOOP LEARNING: Trigger model update every 10 decisions
         if self.total_decisions > 0 and self.total_decisions % 10 == 0:
             try:
                 from backend.rl_agent import train_online_from_buffer
@@ -212,48 +220,84 @@ class LearningLoopTracker:
             except Exception as e:
                 print(f"Auto-training skipped: {e}")
         
+        # 🔗 REAL-TIME BROADCAST: Send decision to WebSocket for ThinkingTrace
+        try:
+            # Since this method might be called from sync context, we need to handle async safe execution
+            # If there's a running loop, create task. If not (unlikely in FastAPI app), run.
+            msg = {
+                "type": "ai_decision",
+                "data": outcome
+            }
+            try:
+                # Import manager here to avoid circular imports if any, but do it cleanly
+                from .websocket_manager import manager
+                
+                loop = asyncio.get_running_loop()
+                loop.create_task(manager.broadcast(msg))
+            except RuntimeError:
+                # No running loop (e.g., testing), ignore or run sync if possible
+                pass
+        except Exception as e:
+            print(f"Failed to broadcast decision: {e}")
+
         return reward
     
     def _compute_reward(
         self, 
         predicted: Dict[str, float], 
         actual: Dict[str, float]
-    ) -> float:
+    ) -> tuple[float, Dict[str, float]]:
         """Compute the learning reward signal."""
         reward = 0.0
+        components = {}
         
         # Coverage component (most important)
         coverage_actual = actual.get("coverage", 0.0)
         coverage_pred = predicted.get("coverage", 0.0)
+        
+        cov_reward = 0.0
         if coverage_actual >= 0.95:
-            reward += 2.0  # Bonus for excellent coverage
+            cov_reward = 2.0  # Bonus for excellent coverage
         elif coverage_actual >= 0.80:
-            reward += 1.0
+            cov_reward = 1.0
         else:
-            reward -= 1.0  # Penalty for low coverage
+            cov_reward = -1.0  # Penalty for low coverage
+        reward += cov_reward
+        components["coverage"] = cov_reward
         
         # Prediction accuracy component
+        acc_reward = 0.0
         if coverage_pred > 0:
             accuracy = 1.0 - abs(coverage_actual - coverage_pred) / coverage_pred
-            reward += accuracy * 0.5
+            acc_reward = accuracy * 0.5
+            reward += acc_reward
+        components["accuracy"] = acc_reward
         
         # Alert reliability component
         alert_rel = actual.get("alert_reliability", 0.0)
+        alert_reward = 0.0
         if alert_rel >= 0.99:
-            reward += 1.5
+            alert_reward = 1.5
         elif alert_rel >= 0.95:
-            reward += 0.5
+            alert_reward = 0.5
+        reward += alert_reward
+        components["alert_reliability"] = alert_reward
         
         # Congestion reduction component
         cong_reduction = actual.get("congestion_reduction", 0.0)
-        reward += cong_reduction * 1.0
+        cong_reward = cong_reduction * 1.0
+        reward += cong_reward
+        components["congestion"] = cong_reward
         
         # Mobile stability bonus
         mobile_stability = actual.get("mobile_stability", 0.0)
+        mob_reward = 0.0
         if mobile_stability > 0.85:
-            reward += 0.5
+            mob_reward = 0.5
+            reward += mob_reward
+        components["mobile_stability"] = mob_reward
         
-        return round(reward, 3)
+        return round(reward, 3), components
     
     def _evaluate_success(
         self, 
@@ -593,6 +637,22 @@ def record_and_learn(
     Returns the reward signal for potential RL agent training.
     """
     tracker = get_learning_tracker()
+    
+    # 🔗 SYSTEM COHESION: If actual_kpis are generic/simulated, 
+    # try to enrich them with REAL data from the KPI Engine (which now reads from ReceiverAgent)
+    try:
+        if "coverage" not in actual_kpis or actual_kpis.get("coverage") == 0:
+            from .kpi_engine import get_kpi_engine
+            real_stats = get_kpi_engine().get_live_kpis()
+            
+            # Enrich actual_kpis with real system state
+            if real_stats['coverage'] > 0 or real_stats['packet_loss_rate'] > 0:
+                actual_kpis["coverage"] = real_stats.get('coverage', 0) / 100.0
+                actual_kpis["alert_reliability"] = real_stats.get('alert_reliability', 0)
+                actual_kpis["packet_loss"] = real_stats.get('packet_loss_rate', 0)
+    except Exception as e:
+        print(f"Failed to enrich learning data: {e}")
+
     return tracker.record_decision_outcome(
         decision_id=decision_id,
         intent=intent,

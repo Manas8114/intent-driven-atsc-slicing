@@ -143,20 +143,24 @@ export function CognitiveBrain() {
     useEffect(() => {
         if (lastMessage?.type === 'state_update' && lastMessage.data) {
             const data = lastMessage.data as Record<string, unknown>;
-            // Merge WebSocket state with existing state
-            if (cognitiveState) {
-                setCognitiveState(prev => prev ? {
+
+            setCognitiveState(prev => {
+                // Only update if we have a valid previous state (don't overwrite loading state)
+                if (!prev) return prev;
+
+                return {
                     ...prev,
                     learning: {
                         ...prev.learning,
                         total_decisions: (data.total_decisions as number) || prev.learning.total_decisions,
                         reward_trend: (data.reward_trend as string) || prev.learning.reward_trend,
                     }
-                } : prev);
-            }
+                };
+            });
+
             setLastWsUpdate(new Date());
         }
-    }, [lastMessage, cognitiveState]);
+    }, [lastMessage]);
 
     // Fetch cognitive state every 2 seconds (REST fallback + full state)
     useEffect(() => {

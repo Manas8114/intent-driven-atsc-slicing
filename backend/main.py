@@ -161,6 +161,19 @@ async def periodic_state_broadcast():
             await asyncio.sleep(5)  # Back off on error
 
 @app.on_event("startup")
+async def start_receiver_agent():
+    """Start the background receiver agent."""
+    from .receiver_agent import get_receiver_agent
+    get_receiver_agent().start()
+
+@app.on_event("shutdown")
+async def stop_receiver_agent():
+    """Stop the receiver agent."""
+    from .receiver_agent import get_receiver_agent
+    get_receiver_agent().stop()
+
+
+@app.on_event("startup")
 async def start_periodic_broadcast():
     """Start the periodic WebSocket broadcast background task."""
     import asyncio

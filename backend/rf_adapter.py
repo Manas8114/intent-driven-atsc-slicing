@@ -410,6 +410,8 @@ class RFAdapter:
         
         # Log the transmission
         self._transmission_log.append(result)
+        if len(self._transmission_log) > 1000:
+            self._transmission_log.pop(0)
         
         return result
     

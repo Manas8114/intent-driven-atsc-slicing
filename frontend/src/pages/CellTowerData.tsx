@@ -132,72 +132,6 @@ export function CellTowerData() {
         fetchAll();
     }, [fetchAll]);
 
-    // ========================================================================
-    // Sub-components
-    // ========================================================================
-
-    const RadioTypeBar = ({ type, count, total }: { type: string; count: number; total: number }) => {
-        const percentage = (count / total) * 100;
-        const colors: Record<string, string> = {
-            GSM: 'bg-blue-500',
-            LTE: 'bg-green-500',
-            UMTS: 'bg-purple-500',
-            CDMA: 'bg-orange-500',
-            NR: 'bg-cyan-500'
-        };
-
-        return (
-            <div className="flex items-center gap-3 py-2">
-                <span className="w-16 text-sm font-medium text-slate-700">{type}</span>
-                <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
-                    <div
-                        className={`h-full ${colors[type] || 'bg-slate-400'} transition-all duration-500`}
-                        style={{ width: `${percentage}%` }}
-                    />
-                </div>
-                <span className="w-20 text-right text-sm text-slate-600">
-                    {count.toLocaleString()} ({percentage.toFixed(1)}%)
-                </span>
-            </div>
-        );
-    };
-
-    const StatCard = ({ icon: Icon, label, value, subtext }: {
-        icon: React.ElementType;
-        label: string;
-        value: string | number;
-        subtext?: string
-    }) => (
-        <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
-            <div className="flex items-center gap-3 mb-2">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                    <Icon className="h-5 w-5 text-blue-600" />
-                </div>
-                <span className="text-sm text-slate-500">{label}</span>
-            </div>
-            <div className="text-2xl font-bold text-slate-800">{value}</div>
-            {subtext && <div className="text-xs text-slate-400 mt-1">{subtext}</div>}
-        </div>
-    );
-
-    const RiskBadge = ({ risk }: { risk: 'high' | 'medium' | 'low' }) => {
-        const styles = {
-            high: 'bg-red-100 text-red-700 border-red-200',
-            medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-            low: 'bg-green-100 text-green-700 border-green-200'
-        };
-
-        return (
-            <span className={`px-3 py-1 rounded-full text-sm font-medium border ${styles[risk]}`}>
-                {risk.toUpperCase()} Risk
-            </span>
-        );
-    };
-
-    // ========================================================================
-    // Render
-    // ========================================================================
-
     if (loading) {
         return (
             <div className="flex items-center justify-center h-64">
@@ -564,3 +498,65 @@ export function CellTowerData() {
         </div>
     );
 }
+
+// ========================================================================
+// Sub-components
+// ========================================================================
+
+const RadioTypeBar = ({ type, count, total }: { type: string; count: number; total: number }) => {
+    const percentage = (count / total) * 100;
+    const colors: Record<string, string> = {
+        GSM: 'bg-blue-500',
+        LTE: 'bg-green-500',
+        UMTS: 'bg-purple-500',
+        CDMA: 'bg-orange-500',
+        NR: 'bg-cyan-500'
+    };
+
+    return (
+        <div className="flex items-center gap-3 py-2">
+            <span className="w-16 text-sm font-medium text-slate-700">{type}</span>
+            <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
+                <div
+                    className={`h-full ${colors[type] || 'bg-slate-400'} transition-all duration-500`}
+                    style={{ width: `${percentage}%` }} // eslint-disable-line react-dom/no-unsafe-inline-styles
+                />
+            </div>
+            <span className="w-20 text-right text-sm text-slate-600">
+                {count.toLocaleString()} ({percentage.toFixed(1)}%)
+            </span>
+        </div>
+    );
+};
+
+const StatCard = ({ icon: Icon, label, value, subtext }: {
+    icon: React.ElementType;
+    label: string;
+    value: string | number;
+    subtext?: string
+}) => (
+    <div className="bg-white rounded-xl border border-slate-200 p-4 shadow-sm">
+        <div className="flex items-center gap-3 mb-2">
+            <div className="p-2 bg-blue-50 rounded-lg">
+                <Icon className="h-5 w-5 text-blue-600" />
+            </div>
+            <span className="text-sm text-slate-500">{label}</span>
+        </div>
+        <div className="text-2xl font-bold text-slate-800">{value}</div>
+        {subtext && <div className="text-xs text-slate-400 mt-1">{subtext}</div>}
+    </div>
+);
+
+const RiskBadge = ({ risk }: { risk: 'high' | 'medium' | 'low' }) => {
+    const styles = {
+        high: 'bg-red-100 text-red-700 border-red-200',
+        medium: 'bg-yellow-100 text-yellow-700 border-yellow-200',
+        low: 'bg-green-100 text-green-700 border-green-200'
+    };
+
+    return (
+        <span className={`px-3 py-1 rounded-full text-sm font-medium border ${styles[risk]}`}>
+            {risk.toUpperCase()} Risk
+        </span>
+    );
+};

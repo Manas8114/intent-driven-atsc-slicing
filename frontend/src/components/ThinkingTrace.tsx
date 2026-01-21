@@ -66,9 +66,9 @@ export function ThinkingTrace() {
                                     <p className="text-xs text-slate-400">Total Reward</p>
                                     <p className={cn(
                                         "font-mono text-lg font-bold",
-                                        latestThought.reward_signal > 0 ? "text-green-400" : "text-red-400"
+                                        (latestThought.reward_signal || 0) > 0 ? "text-green-400" : "text-red-400"
                                     )}>
-                                        {latestThought.reward_signal > 0 ? '+' : ''}{latestThought.reward_signal.toFixed(2)}
+                                        {(latestThought.reward_signal || 0) > 0 ? '+' : ''}{(latestThought.reward_signal || 0).toFixed(2)}
                                     </p>
                                 </div>
                             </div>
@@ -78,10 +78,10 @@ export function ThinkingTrace() {
                                 <div className="space-y-2">
                                     <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Reward Components</p>
                                     <div className="space-y-1">
-                                        <RewardBar label="Coverage" value={latestThought.reward_components.coverage} max={2} color="bg-emerald-500" icon={<Signal className="w-3 h-3" />} />
-                                        <RewardBar label="Reliability" value={latestThought.reward_components.reliability} max={1.5} color="bg-blue-500" icon={<AlertTriangle className="w-3 h-3" />} />
-                                        <RewardBar label="Accuracy" value={latestThought.reward_components.accuracy} max={1} color="bg-purple-500" icon={<Target className="w-3 h-3" />} />
-                                        <RewardBar label="Congestion" value={latestThought.reward_components.congestion} max={1} color="bg-orange-500" icon={<Zap className="w-3 h-3" />} />
+                                        <RewardBar label="Coverage" value={latestThought.reward_components?.coverage || 0} max={2} color="bg-emerald-500" icon={<Signal className="w-3 h-3" />} />
+                                        <RewardBar label="Reliability" value={latestThought.reward_components?.reliability || 0} max={1.5} color="bg-blue-500" icon={<AlertTriangle className="w-3 h-3" />} />
+                                        <RewardBar label="Accuracy" value={latestThought.reward_components?.accuracy || 0} max={1} color="bg-purple-500" icon={<Target className="w-3 h-3" />} />
+                                        <RewardBar label="Congestion" value={latestThought.reward_components?.congestion || 0} max={1} color="bg-orange-500" icon={<Zap className="w-3 h-3" />} />
                                     </div>
                                 </div>
                             )}
@@ -101,28 +101,40 @@ export function ThinkingTrace() {
                 </CardContent>
             </Card>
 
-            {/* Historical Log */}
             <Card className="flex-1 min-h-0 bg-slate-900/30 flex flex-col">
                 <CardHeader className="py-3 border-b border-white/10">
                     <CardTitle className="text-xs font-medium uppercase text-slate-500">Decision Trace</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                     <div className="divide-y divide-white/5">
-                        {thoughtLog.map((log) => (
-                            <div key={log.decision_id} className="p-3 hover:bg-white/5 transition-colors">
-                                <div className="flex justify-between items-start mb-1">
-                                    <span className="text-xs font-mono text-slate-500">{new Date(log.timestamp).toLocaleTimeString()}</span>
-                                    <span className={cn(
-                                        "text-xs font-bold px-1.5 py-0.5 rounded",
-                                        log.reward_signal >= 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-                                    )}>
-                                        {log.reward_signal.toFixed(2)}
-                                    </span>
+                        {thoughtLog.map((log, index) => {
+                            // Date Validation
+                            let timeStr = "--:--:--";
+                            try {
+                                if (log.timestamp) {
+                                    const d = new Date(log.timestamp);
+                                    if (!isNaN(d.getTime())) {
+                                        timeStr = d.toLocaleTimeString();
+                                    }
+                                }
+                            } catch (e) { /* ignore date error */ }
+
+                            return (
+                                <div key={log.decision_id || `trace-${index}`} className="p-3 hover:bg-white/5 transition-colors">
+                                    <div className="flex justify-between items-start mb-1">
+                                        <span className="text-xs font-mono text-slate-500">{timeStr}</span>
+                                        <span className={cn(
+                                            "text-xs font-bold px-1.5 py-0.5 rounded",
+                                            (log.reward_signal || 0) >= 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                                        )}>
+                                            {(log.reward_signal || 0).toFixed(2)}
+                                        </span>
+                                    </div>
+                                    <p className="text-sm text-slate-300 mb-1">{log.intent || "Unknown Intent"}</p>
+                                    <p className="text-xs text-slate-500 line-clamp-2">{log.learning_contribution}</p>
                                 </div>
-                                <p className="text-sm text-slate-300 mb-1">{log.intent}</p>
-                                <p className="text-xs text-slate-500 line-clamp-2">{log.learning_contribution}</p>
-                            </div>
-                        ))}
+                            )
+                        })}
                         {thoughtLog.length === 0 && (
                             <div className="p-4 text-center text-xs text-slate-600">
                                 No history available

@@ -60,16 +60,9 @@ export function InteractiveIndiaMap({
     const [hoveredCity, setHoveredCity] = useState<string | null>(null);
     const { lastMessage } = useWebSocket();
     const [liveIntents, setLiveIntents] = useState<IntentSignal[]>([]);
-    const [scanLine, setScanLine] = useState(0);
     const [aiFocusRegion, setAiFocusRegion] = useState<string | null>(null);
-
-    // Animation loop for scan line
-    useEffect(() => {
-        const interval = setInterval(() => {
-            setScanLine(prev => (prev + 1) % 100);
-        }, 50);
-        return () => clearInterval(interval);
-    }, []);
+    // CSS-based scan line instead of JS interval
+    // const [scanLine, setScanLine] = useState(0); 
 
     // Process WebSocket for visual flair & Digital Twin Sync
     useEffect(() => {
@@ -250,14 +243,24 @@ export function InteractiveIndiaMap({
                     );
                 })}
 
-                {/* Scanning Line Effect */}
+                {/* Scanning Line Effect (CSS Assisted) */}
                 <line
-                    x1="0" y1={scanLine * 8}
-                    x2="800" y2={scanLine * 8}
+                    x1="0" y1="0"
+                    x2="700" y2="0"
                     stroke="rgba(34, 211, 238, 0.1)"
                     strokeWidth="2"
-                    style={{ pointerEvents: 'none' }}
-                />
+                    style={{
+                        pointerEvents: 'none',
+                        animation: 'scanline 2s linear infinite'
+                    }}
+                >
+                    <style>{`
+                        @keyframes scanline {
+                            0% { transform: translateY(0px); }
+                            100% { transform: translateY(800px); }
+                        }
+                    `}</style>
+                </line>
             </svg>
 
             {/* Overlay Info (Top Right) */}

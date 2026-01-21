@@ -167,10 +167,13 @@ class RealTimeKPIEngine:
         """
         Update statistics from libatsc3 bridge.
         
-        Attempts to read from native library, falls back to simulation.
+        Attempts to read from native library, falls back to ReceiverAgent,
+        then to pure random simulation if neither are available.
         """
+        from .libatsc3_bridge import ATSC3Bridge
+        
+        bridge_active = False
         try:
-            from .libatsc3_bridge import ATSC3Bridge
             bridge = ATSC3Bridge()
             
             if bridge.is_native_available():
@@ -184,9 +187,42 @@ class RealTimeKPIEngine:
                 self.alc_packets_received = stats.alc_packets_received
                 self.alc_packets_parsed = stats.alc_packets_parsed
                 self.packet_loss_rate = stats.packet_loss_rate
-        except Exception:
-            # Use simulated data if bridge not available
+                bridge_active = True
+        except Exception as e:
+            # Use fallback if bridge error
+            print(f"ATSC3Bridge Unavailable: {e}")
             pass
+            
+        # If no native bridge, use ReceiverAgent (The "Real" Simulation)
+        if not bridge_active:
+            try:
+                from .receiver_agent import get_receiver_agent
+                agent = get_receiver_agent()
+                metrics = agent.get_metrics()
+                
+                # If agent has data, use it
+                if metrics:
+                    # Map agent metrics to packet stats
+                    # Simulating packet counts based on time running for realism
+                    # In a real app these would be monotonic counters from the receiver
+                    
+                    self.packet_loss_rate = 1.0 - metrics.get("service_acquisition_success_ratio", 1.0)
+                    
+                    # Synthesize packet counters based on loss rate
+                    if self.packet_loss_rate > 0.9:
+                         # Total loss
+                         pass 
+                    else:
+                         self.mmtp_packets_received += 10 # Increment counter
+                         if self.packet_loss_rate > 0:
+                             self.mmtp_packets_missing += int(10 * self.packet_loss_rate)
+                    
+                    # Also update core KPIs if they are being simulated here
+                    self.coverage = metrics.get("service_acquisition_success_ratio", 0.0) * 100.0
+                    
+            except Exception as e:
+                # print(f"Receiver agent fallback failed: {e}")
+                pass
         
         # Calculate packet loss rate
         if self.mmtp_packets_received > 0:
@@ -345,14 +381,13 @@ def get_kpi_engine() -> RealTimeKPIEngine:
 @router.get("/", response_model=List[KPIRecord])
 async def get_kpis(limit: int = 100) -> List[Dict[str, Any]]:
     """Return the most recent KPI records (up to *limit*)."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM kpis ORDER BY timestamp DESC LIMIT ?", (limit,)
-    )
-    rows = cur.fetchall()
-    conn.close()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT * FROM kpis ORDER BY timestamp DESC LIMIT ?", (limit,)
+        )
+        rows = cur.fetchall()
     return [dict(row) for row in rows]
 
 
@@ -362,24 +397,23 @@ async def record_kpi(record: KPIRecord) -> Dict[str, str]:
 
     In a full system the simulator would call this endpoint after each evaluated action.
     """
-    conn = sqlite3.connect(DB_PATH)
-    cur = conn.cursor()
     try:
-        cur.execute(
-            "INSERT INTO kpis (timestamp, coverage, alert_reliability, latency_ms, spectral_efficiency) VALUES (?,?,?,?,?)",
-            (
-                record.timestamp,
-                record.coverage,
-                record.alert_reliability,
-                record.latency_ms,
-                record.spectral_efficiency,
-            ),
-        )
-        conn.commit()
+        with sqlite3.connect(DB_PATH) as conn:
+            cur = conn.cursor()
+            cur.execute(
+                "INSERT INTO kpis (timestamp, coverage, alert_reliability, latency_ms, spectral_efficiency) VALUES (?,?,?,?,?)",
+                (
+                    record.timestamp,
+                    record.coverage,
+                    record.alert_reliability,
+                    record.latency_ms,
+                    record.spectral_efficiency,
+                ),
+            )
+            conn.commit()
     except sqlite3.IntegrityError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    finally:
-        conn.close()
+    # Connection closes automatically here
     return {"status": "recorded"}
 
 
@@ -401,14 +435,13 @@ async def get_packet_stats() -> Dict[str, Any]:
 @router.get("/packets/history", response_model=List[PacketStatsRecord])
 async def get_packet_stats_history(limit: int = 100) -> List[Dict[str, Any]]:
     """Get historical packet statistics."""
-    conn = sqlite3.connect(DB_PATH)
-    conn.row_factory = sqlite3.Row
-    cur = conn.cursor()
-    cur.execute(
-        "SELECT * FROM packet_stats ORDER BY timestamp DESC LIMIT ?", (limit,)
-    )
-    rows = cur.fetchall()
-    conn.close()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT * FROM packet_stats ORDER BY timestamp DESC LIMIT ?", (limit,)
+        )
+        rows = cur.fetchall()
     return [dict(row) for row in rows]
 
 
