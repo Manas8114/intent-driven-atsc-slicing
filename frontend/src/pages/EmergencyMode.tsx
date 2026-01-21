@@ -1,7 +1,6 @@
-import React, { useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { AlertTriangle, Siren, ShieldCheck, Radio, CheckCircle, Smartphone } from 'lucide-react';
+import { AlertTriangle, Siren, CheckCircle } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
 

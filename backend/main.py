@@ -148,8 +148,8 @@ async def periodic_state_broadcast():
             
             state = {
                 "total_decisions": learning.total_decisions,
-                "success_rate": learning.get_improvement_stats().success_rate if learning.total_decisions > 0 else 0,
-                "reward_trend": learning.get_improvement_stats().reward_trend if learning.total_decisions > 0 else "stable",
+                "success_rate": learning.get_improvement_stats().get("success_rate", 0) if learning.total_decisions > 0 else 0,
+                "reward_trend": learning.get_improvement_stats().get("reward_trend", "stable") if learning.total_decisions > 0 else "stable",
                 "connected_clients": manager.connection_count,
                 "latency_ms": latency.get_latest_metrics().total_decision_cycle_ms if latency.get_latest_metrics() else 0,
             }

@@ -1,11 +1,9 @@
-import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ArrowRight, Check, ShieldAlert, Zap, Loader2, XCircle } from 'lucide-react';
-import { cn } from '../lib/utils';
+import { ArrowRight, Check, ShieldAlert, Loader2, XCircle } from 'lucide-react';
 import { useSystem } from '../context/SystemContext';
 
 export function Explainability() {
-    const { phase, activeIntent, safetyLock, lastDecisionTime } = useSystem();
+    const { phase } = useSystem();
     const isThinking = phase === 'parsing' || phase === 'optimizing' || phase === 'safety_check';
 
     // Mock decision history (Historic)

@@ -1,9 +1,11 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, type CSSProperties } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import {
     Gauge, TrendingUp, Clock, Zap, Signal,
     CheckCircle, XCircle, RefreshCw, BarChart3
 } from 'lucide-react';
+
+import './Benchmarks.css';
 
 // Types
 interface BenchmarkResult {
@@ -35,16 +37,13 @@ function GaugeChart({
         <div className="flex flex-col items-center">
             <div className="relative w-40 h-20 overflow-hidden">
                 {/* Background arc */}
-                <div className="absolute w-40 h-40 rounded-full border-8 border-slate-200"
-                    style={{ clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)' }} />
+                <div className="absolute w-40 h-40 rounded-full border-8 border-slate-200 gauge-background-arc" />
                 {/* Value arc */}
                 <div
-                    className={`absolute w-40 h-40 rounded-full border-8 ${color} transition-all duration-1000`}
+                    className={`absolute w-40 h-40 rounded-full border-8 ${color} transition-all duration-1000 gauge-value-arc`}
                     style={{
-                        clipPath: 'polygon(0 0, 100% 0, 100% 50%, 0 50%)',
-                        transform: `rotate(${rotation - 90}deg)`,
-                        transformOrigin: 'center center'
-                    }}
+                        '--gauge-rotation': `${rotation - 90}deg`
+                    } as CSSProperties}
                 />
                 {/* Center value */}
                 <div className="absolute inset-0 flex items-end justify-center pb-2">
@@ -84,8 +83,8 @@ function ComparisonBar({
                     <span className="text-xs text-slate-500 w-16">Baseline</span>
                     <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                            className={`h-full ${baselineColor} transition-all duration-1000 flex items-center justify-end pr-2`}
-                            style={{ width: `${baselineWidth}%` }}
+                            className={`h-full ${baselineColor} transition-all duration-1000 flex items-center justify-end pr-2 comparison-bar-fill`}
+                            style={{ '--bar-width': `${baselineWidth}%` } as CSSProperties}
                         >
                             <span className="text-xs font-bold text-white">{result.baseline.toFixed(1)}{result.unit}</span>
                         </div>
@@ -95,8 +94,8 @@ function ComparisonBar({
                     <span className="text-xs text-slate-500 w-16">AI System</span>
                     <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
                         <div
-                            className={`h-full ${aiColor} transition-all duration-1000 flex items-center justify-end pr-2`}
-                            style={{ width: `${aiWidth}%` }}
+                            className={`h-full ${aiColor} transition-all duration-1000 flex items-center justify-end pr-2 comparison-bar-fill`}
+                            style={{ '--bar-width': `${aiWidth}%` } as CSSProperties}
                         >
                             <span className="text-xs font-bold text-white">{result.aiSystem.toFixed(1)}{result.unit}</span>
                         </div>

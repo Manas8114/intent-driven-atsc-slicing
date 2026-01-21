@@ -242,7 +242,7 @@ class CellTowerDataset:
             "sampled_rows": len(df),
             "radio_types": df['radio'].value_counts().to_dict(),
             "countries": {
-                mcc: {
+                str(mcc): {
                     "name": MCC_COUNTRY_MAP.get(mcc, "Unknown"),
                     "count": int(count)
                 }

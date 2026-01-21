@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 
 export interface WebSocketMessage {
-    type: 'connected' | 'state_update' | 'ai_decision' | 'alert' | 'kpi_update' | 'hurdle_response';
+    type: 'connected' | 'state_update' | 'ai_decision' | 'alert' | 'kpi_update' | 'hurdle_response' | 'scenario_event';
     timestamp: string;
     data: Record<string, unknown>;
 }

@@ -23,7 +23,7 @@ The simulation is part of the closed-loop control system:
 import numpy as np
 from dataclasses import dataclass, field
 from typing import List, Dict, Tuple, Optional
-from .channel_model import received_power
+from .channel_model import received_power, get_path_loss_db
 
 
 @dataclass
@@ -101,9 +101,11 @@ class SpatialGrid:
     evaluate configuration quality and by engineers for approval decisions.
     """
 
-    def __init__(self, size_km: float = 10.0, num_users: int = 100, 
+    def __init__(self, size_km: float = 10.0, num_users: int = 100,
                  num_mobile: int = 0, mobile_speed_range: Tuple[float, float] = (30.0, 80.0),
-                 sumo_data_path: Optional[str] = None):
+                 sumo_data_path: Optional[str] = None,
+                 # Default tower location: near Delhi, India
+                 tower_lat: float = 28.6139, tower_lon: float = 77.2090):
         """
         Initialize the spatial grid with static and mobile users.
         
@@ -113,9 +115,13 @@ class SpatialGrid:
             num_mobile: Number of mobile users (vehicles)
             mobile_speed_range: (min, max) speed in km/h for mobile users
             sumo_data_path: Optional path to SUMO .net.xml file for data-driven mode
+            tower_lat: Latitude of the broadcast tower
+            tower_lon: Longitude of the broadcast tower
         """
         self.size_km = size_km
         self.num_users = num_users
+        self.tower_lat = tower_lat
+        self.tower_lon = tower_lon
         self.num_mobile = num_mobile
         self.mobile_speed_range = mobile_speed_range
         self.data_source = "random"  # Track data provenance
@@ -147,6 +153,15 @@ class SpatialGrid:
         
         # Simulation time tracking
         self.simulation_time_s = 0.0
+
+    def _km_to_latlon(self, x_km: float, y_km: float) -> Tuple[float, float]:
+        """Convert grid coordinates (km) to latitude and longitude."""
+        lat_conversion = 1 / 111.32  # Degrees per km
+        lon_conversion = 1 / (111.32 * np.cos(np.radians(self.tower_lat)))
+
+        lat = self.tower_lat + (y_km * lat_conversion)
+        lon = self.tower_lon + (x_km * lon_conversion)
+        return lat, lon
     
     def load_real_cell_interference(
         self,
@@ -362,11 +377,18 @@ class SpatialGrid:
         Returns:
             Dict with coverage metrics for static and mobile users
         """
-        # Calculate SNR for static users
-        # Calculate SNR for static users (Vectorized)
-        rx_pwr = received_power(tx_power_dbm, frequency_mhz, self.distances)
-        rx_pwr -= channel_impairment_db
-        static_snr_values = rx_pwr - noise_floor_dbm
+        # Calculate SNR for static users using terrain-based path loss
+        static_snr_values = []
+        for i, loc in enumerate(self.ue_locations):
+            rx_lat, rx_lon = self._km_to_latlon(loc[0], loc[1])
+            path_loss = get_path_loss_db(
+                frequency_mhz,
+                self.tower_lat, self.tower_lon, tx_height_m=30.0,
+                rx_lat=rx_lat, rx_lon=rx_lon, rx_height_m=1.5
+            )
+            rx_pwr = tx_power_dbm - path_loss - channel_impairment_db
+            snr = rx_pwr - noise_floor_dbm
+            static_snr_values.append(snr)
         static_snr_values = np.array(static_snr_values)
         
         # Calculate SNR for mobile users (with velocity-based degradation)
@@ -375,9 +397,13 @@ class SpatialGrid:
         
         if include_mobile and self.mobile_users:
             for user in self.mobile_users:
-                d = user.get_distance_from_tower()
-                rx_pwr = received_power(tx_power_dbm, frequency_mhz, d)
-                rx_pwr -= channel_impairment_db
+                rx_lat, rx_lon = self._km_to_latlon(user.x_km, user.y_km)
+                path_loss = get_path_loss_db(
+                    frequency_mhz,
+                    self.tower_lat, self.tower_lon, tx_height_m=30.0,
+                    rx_lat=rx_lat, rx_lon=rx_lon, rx_height_m=1.5
+                )
+                rx_pwr = tx_power_dbm - path_loss - channel_impairment_db
                 
                 # Mobility degradation: fast-moving users experience more fading
                 # Doppler effect and handover overhead
@@ -433,11 +459,17 @@ class SpatialGrid:
         statuses = []
         
         # Static users
-        for i, (loc, dist) in enumerate(zip(self.ue_locations, self.distances)):
-            rx_pwr = received_power(tx_power_dbm, frequency_mhz, dist)
-            rx_pwr -= channel_impairment_db
+        for i, loc in enumerate(self.ue_locations):
+            rx_lat, rx_lon = self._km_to_latlon(loc[0], loc[1])
+            path_loss = get_path_loss_db(
+                frequency_mhz,
+                self.tower_lat, self.tower_lon, tx_height_m=30.0,
+                rx_lat=rx_lat, rx_lon=rx_lon, rx_height_m=1.5
+            )
+            rx_pwr = tx_power_dbm - path_loss - channel_impairment_db
             snr = rx_pwr - noise_floor_dbm
             
+            dist = np.hypot(loc[0], loc[1])
             is_connected = snr >= min_snr_db
             video_state = self._get_video_state(snr, min_snr_db)
             
@@ -457,9 +489,14 @@ class SpatialGrid:
         # Mobile users
         if include_mobile:
             for user in self.mobile_users:
+                rx_lat, rx_lon = self._km_to_latlon(user.x_km, user.y_km)
+                path_loss = get_path_loss_db(
+                    frequency_mhz,
+                    self.tower_lat, self.tower_lon, tx_height_m=30.0,
+                    rx_lat=rx_lat, rx_lon=rx_lon, rx_height_m=1.5
+                )
+                rx_pwr = tx_power_dbm - path_loss - channel_impairment_db
                 dist = user.get_distance_from_tower()
-                rx_pwr = received_power(tx_power_dbm, frequency_mhz, dist)
-                rx_pwr -= channel_impairment_db
                 
                 # Velocity penalty
                 velocity_penalty_db = user.velocity_kmh * 0.03

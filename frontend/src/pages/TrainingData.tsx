@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import {
     Database, Download, RefreshCw, HardDrive,
-    TrendingUp, Clock, Activity, Trash2
+    TrendingUp, Clock, Activity
 } from 'lucide-react';
 
 // Types

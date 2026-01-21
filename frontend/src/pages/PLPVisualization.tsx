@@ -1,7 +1,7 @@
-import React, { useEffect, useState, useMemo } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { useSystem } from '../context/SystemContext';
-import { MapPin, Wifi, ZapOff } from 'lucide-react';
+import { MapPin, ZapOff } from 'lucide-react';
 
 export function PLPVisualization() {
     const { activeIntent, activeHurdle, phase } = useSystem();

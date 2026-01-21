@@ -1,0 +1,19 @@
+/* Gauge Component Styles */
+.gauge-background-arc {
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+}
+
+.gauge-value-arc {
+    clip-path: polygon(0 0, 100% 0, 100% 50%, 0 50%);
+    transform-origin: center center;
+    /* Rotation will be handled via inline style or CSS variable if we fully abstract it,
+       but usually transform for dynamic rotation is passed inline. 
+       However, to strictly avoid inline *property definitions*, we can use a variable. */
+    transform: rotate(var(--gauge-rotation));
+}
+
+/* Comparison Bar Styles */
+.comparison-bar-fill {
+    /* Width will be handled via CSS variable */
+    width: var(--bar-width);
+}

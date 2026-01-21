@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import {
     Car, Radio, AlertTriangle, CloudFog,
     ChevronLeft, ChevronRight, Activity,
@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
+import { ThinkingTrace } from './ThinkingTrace';
 
 // Cognitive stress scenarios aligned with Backend Chaos Director
 const COGNITIVE_SCENARIOS = [
@@ -48,10 +49,37 @@ interface CognitiveEvent {
 export function HurdlePanel() {
     const { triggerHurdle, triggerEmergency, phase, activeHurdle, addLog } = useSystem();
     const [isOpen, setIsOpen] = useState(true);
+    // Keeping this state for legacy reasons/if we switch back, but primarily using ThinkingTrace now
     const [cognitiveEvents, setCognitiveEvents] = useState<CognitiveEvent[]>([]);
     const [lastTriggeredScenario, setLastTriggeredScenario] = useState<string | null>(null);
+    const [isAutoPlay, setIsAutoPlay] = useState(false);
+    const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
     const isBusy = phase !== 'idle' && phase !== 'broadcasting' && phase !== 'emergency';
+
+    // Auto-Play Logic
+    useEffect(() => {
+        if (isAutoPlay) {
+            let index = 0;
+            // Immediate trigger
+            handleScenarioTrigger(COGNITIVE_SCENARIOS[0]);
+
+            const interval = setInterval(() => {
+                index = (index + 1) % COGNITIVE_SCENARIOS.length;
+                handleScenarioTrigger(COGNITIVE_SCENARIOS[index]);
+            }, 8000); // Cycle every 8 seconds
+
+            autoPlayRef.current = interval;
+        } else {
+            if (autoPlayRef.current) {
+                clearInterval(autoPlayRef.current);
+                autoPlayRef.current = null;
+            }
+        }
+        return () => {
+            if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+        };
+    }, [isAutoPlay]);
 
     const handleScenarioTrigger = async (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
         // Only one hurdle at a time
@@ -69,7 +97,7 @@ export function HurdlePanel() {
             }
         }
 
-        // Log cognitive stress event
+        // Log cognitive stress event (Legacy local log)
         const event: CognitiveEvent = {
             timestamp: new Date(),
             scenario: scenario.label,
@@ -121,8 +149,8 @@ export function HurdlePanel() {
 
     return (
         <div className={cn(
-            "fixed right-0 top-20 bottom-8 z-40 bg-white border-l border-slate-200 shadow-xl transition-all duration-300 flex flex-col",
-            isOpen ? "w-96" : "w-12"
+            "fixed right-0 top-20 bottom-8 z-40 bg-white border-l border-slate-200 shadow-xl transition-all duration-300 flex flex-col scale-90 origin-top-right", // Added scale-90 to fit more content
+            isOpen ? "w-[450px]" : "w-12" // Widened to 450px to fit charts
         )}>
             {/* Toggle Handle */}
             <button
@@ -147,97 +175,77 @@ export function HurdlePanel() {
             </div>
 
             {/* Content */}
-            <div className={cn("flex-1 overflow-y-auto", !isOpen && "hidden")}>
-                {/* Scenario Buttons */}
-                <div className="p-4 space-y-3">
-                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-3">
-                        Trigger Scenario
-                    </p>
-
-                    {COGNITIVE_SCENARIOS.map((scenario) => (
+            <div className={cn("flex-1 flex flex-col min-h-0", !isOpen && "hidden")}>
+                {/* Scenario Buttons - Fixed Height Area */}
+                <div className="p-4 space-y-2 flex-shrink-0 border-b border-slate-100 bg-slate-50/50">
+                    <div className="flex justify-between items-center mb-2">
+                        <p className="text-xs text-slate-500 font-medium uppercase tracking-wider">
+                            Chaos Director
+                        </p>
                         <button
-                            key={scenario.id}
-                            disabled={isBusy}
-                            onClick={() => handleScenarioTrigger(scenario)}
+                            onClick={() => setIsAutoPlay(!isAutoPlay)}
                             className={cn(
-                                "w-full text-left p-3 rounded-lg border transition-all duration-200 flex flex-col gap-1 group relative",
-                                activeHurdle === scenario.id ? "ring-2 ring-offset-1 ring-purple-400" : "",
-                                scenario.color,
-                                isBusy && "opacity-50 cursor-not-allowed"
+                                "text-[10px] px-2 py-0.5 rounded-full border font-bold transition-all",
+                                isAutoPlay
+                                    ? "bg-emerald-500 text-white border-emerald-600 animate-pulse"
+                                    : "bg-white text-slate-500 border-slate-200 hover:border-slate-300"
                             )}
                         >
-                            <div className="flex items-center gap-2 font-semibold text-sm">
-                                <scenario.icon className="h-4 w-4" />
-                                {scenario.label}
-                            </div>
-                            <div className="text-[10px] opacity-70 ml-6">
-                                {scenario.desc}
-                            </div>
-                            {activeHurdle === scenario.id && (
-                                <div className="absolute top-2 right-2 flex items-center gap-1">
-                                    <span className="text-[9px] font-bold text-purple-700 uppercase">Active</span>
-                                    <span className="flex h-2 w-2">
-                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
-                                        <span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span>
-                                    </span>
-                                </div>
-                            )}
+                            {isAutoPlay ? '⏸ AUTO-PILOT ON' : '▶ ENABLE AUTO-PILOT'}
                         </button>
-                    ))}
+                    </div>
 
-                    <div className="h-px bg-slate-200 my-4" />
+                    <div className="grid grid-cols-2 gap-2">
+                        {COGNITIVE_SCENARIOS.map((scenario) => (
+                            <button
+                                key={scenario.id}
+                                disabled={isBusy}
+                                onClick={() => handleScenarioTrigger(scenario)}
+                                className={cn(
+                                    "text-left p-2 rounded-lg border transition-all duration-200 flex flex-col gap-1 relative",
+                                    activeHurdle === scenario.id ? "ring-2 ring-purple-400 bg-white shadow-md" : "hover:bg-white hover:shadow-sm",
+                                    scenario.color,
+                                    isBusy && "opacity-50 cursor-not-allowed"
+                                )}
+                            >
+                                <div className="flex items-center gap-1.5 font-bold text-xs">
+                                    <scenario.icon className="h-3 w-3" />
+                                    {scenario.label}
+                                </div>
+                                {activeHurdle === scenario.id && (
+                                    <span className="absolute top-1 right-1 flex h-1.5 w-1.5">
+                                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span>
+                                        <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-purple-500"></span>
+                                    </span>
+                                )}
+                            </button>
+                        ))}
+                    </div>
 
                     {/* Emergency Button */}
                     <button
                         disabled={isBusy}
                         onClick={handleEmergencyEscalation}
-                        className="w-full text-left p-4 rounded-lg border border-red-200 bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg shadow-red-500/20"
+                        className="w-full text-left p-2 rounded-lg border border-red-200 bg-red-600 text-white hover:bg-red-700 transition-colors shadow shadow-red-500/20 flex items-center justify-between"
                     >
-                        <div className="flex items-center gap-2 font-bold text-sm">
-                            <AlertTriangle className="h-5 w-5 animate-pulse" />
-                            ESCALATE TO EMERGENCY
+                        <div className="flex items-center gap-2 font-bold text-xs">
+                            <AlertTriangle className="h-4 w-4 animate-pulse" />
+                            EMERGENCY OVERRIDE
                         </div>
-                        <p className="text-[10px] text-red-100 mt-1 ml-7">
-                            Bypass approval for immediate public safety response
+                        <p className="text-[10px] text-red-100 uppercase font-bold tracking-wider">
+                            Safety Critical
                         </p>
                     </button>
                 </div>
 
-                {/* Live AI Response */}
-                {cognitiveEvents.length > 0 && (
-                    <div className="border-t border-slate-100 p-4">
-                        <div className="flex items-center gap-2 mb-3">
-                            <Zap className="h-4 w-4 text-yellow-500" />
-                            <span className="text-xs font-bold text-slate-700 uppercase tracking-wider">
-                                Live AI Response
-                            </span>
-                        </div>
-
-                        <div className="space-y-2 max-h-48 overflow-y-auto">
-                            {cognitiveEvents.map((event, i) => (
-                                <div
-                                    key={i}
-                                    className={cn(
-                                        "p-3 rounded-lg border text-xs",
-                                        i === 0 ? "bg-purple-50 border-purple-200 animate-in slide-in-from-top-2" : "bg-slate-50 border-slate-200"
-                                    )}
-                                >
-                                    <div className="flex items-center justify-between mb-1">
-                                        <span className="font-semibold text-slate-800">{event.scenario}</span>
-                                        <span className="text-slate-400">
-                                            {event.timestamp.toLocaleTimeString()}
-                                        </span>
-                                    </div>
-                                    <p className="text-purple-700 italic">{event.aiAction}</p>
-                                    <div className="flex items-center gap-1 mt-1 text-slate-500">
-                                        <TrendingUp className="h-3 w-3" />
-                                        {event.kpiImpact}
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                {/* Thinking Trace - Flex Grow Area */}
+                <div className="flex-1 min-h-0 bg-slate-900 overflow-hidden relative border-t border-slate-300">
+                    {/* Dark/Light mode considerations handled inside ThinkingTrace or passing className */}
+                    {/* Forcing dark mode context for the trace as designed */}
+                    <div className="absolute inset-0 p-4 overflow-y-auto scrollbar-hide">
+                        <ThinkingTrace />
                     </div>
-                )}
+                </div>
             </div>
 
             {/* Collapsed State */}

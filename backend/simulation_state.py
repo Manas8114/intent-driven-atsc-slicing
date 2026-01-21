@@ -43,6 +43,15 @@ class SimulationState:
         self.active_scenario: Optional[str] = None
         self.active_scenario_label: Optional[str] = None
         
+        # === Digital Twin State ===
+        self.focus_region: Optional[str] = None
+        
+    def set_focus_region(self, region_id: Optional[str]):
+        """Set the active focus region for AI optimization."""
+        self.focus_region = region_id
+        # In a real system, this would trigger specific optimization constraints
+        # For demo, it primarily acts as a 'cursor' for the AI's attention context
+        
     def inject_scenario(self, scenario_type: str) -> Dict[str, Any]:
         """
         Inject a simulated degradation scenario.
@@ -79,6 +88,7 @@ class SimulationState:
             "impact": impact,
             "timestamp": 1234567890 # Placeholder, caller usually timestamps
         }
+    def update_unicast_metrics(self):
         """Update unicast congestion metrics from the network model."""
         metrics = self._unicast_model.calculate_congestion(
             mobile_user_ratio=self.mobile_user_ratio

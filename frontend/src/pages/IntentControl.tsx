@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
-import { Send, CheckCircle, AlertCircle, Settings2, ShieldCheck, Signal, ArrowRight, X } from 'lucide-react';
+import { Send, CheckCircle, Settings2, ShieldCheck, Signal, ArrowRight, X } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
 

@@ -41,6 +41,7 @@ class DecisionOutcome(BaseModel):
     predicted_kpis: Dict[str, float]
     actual_kpis: Dict[str, float]
     reward_signal: float  # Computed learning signal
+    reward_components: Dict[str, float] = {}   # Breakdown of the reward
     success: bool
     learning_contribution: str  # What this taught the system
 
@@ -143,7 +144,7 @@ class LearningLoopTracker:
         now = datetime.now()
         
         # Compute reward signal
-        reward = self._compute_reward(predicted_kpis, actual_kpis)
+        reward, components = self._compute_reward(predicted_kpis, actual_kpis)
         
         # Determine success
         success = self._evaluate_success(predicted_kpis, actual_kpis)
@@ -162,6 +163,7 @@ class LearningLoopTracker:
             "predicted_kpis": predicted_kpis,
             "actual_kpis": actual_kpis,
             "reward_signal": reward,
+            "reward_components": components,
             "success": success,
             "learning_contribution": learning_contribution
         }

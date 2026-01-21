@@ -84,7 +84,7 @@ async def broadcast_state_update(state: Dict[str, Any]):
     })
 
 
-async def broadcast_ai_decision(decision_id: str, intent: str, action: Dict[str, Any], explanation: str):
+async def broadcast_ai_decision(decision_id: str, intent: str, action: Dict[str, Any], explanation: str, focus_region: str = None):
     """Broadcast an AI decision event."""
     await manager.broadcast({
         "type": "ai_decision",
@@ -92,7 +92,8 @@ async def broadcast_ai_decision(decision_id: str, intent: str, action: Dict[str,
             "decision_id": decision_id,
             "intent": intent,
             "action": action,
-            "explanation": explanation
+            "explanation": explanation,
+            "focus_region": focus_region
         }
     })
 

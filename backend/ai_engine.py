@@ -658,11 +658,16 @@ async def make_decision(request: DecisionRequest):
     try:
         from .websocket_manager import broadcast_ai_decision
         import asyncio
+        
+        # Get focus region for context
+        focus_region = sim_state.focus_region
+        
         asyncio.create_task(broadcast_ai_decision(
             decision_id=approval_id,
             intent=policy_type,
             action=recommended_config,
-            explanation=explanation
+            explanation=explanation,
+            focus_region=focus_region
         ))
     except Exception as e:
         print(f"WebSocket broadcast failed (non-critical): {e}")
@@ -674,6 +679,31 @@ async def make_decision(request: DecisionRequest):
         approval_id=approval_id,
         risk_level=risk_assessment['level']
     )
+
+# ============================================================================
+# Digital Twin Interaction Endpoint
+# ============================================================================
+
+class FocusRequest(BaseModel):
+    region_id: Optional[str]
+
+@router.post("/focus")
+async def set_focus_region(request: FocusRequest):
+    """
+    Set the AI's 'attention' to a specific region/city.
+    This demonstrates the Digital Twin concept: User interaction directs AI processing.
+    """
+    from .simulation_state import get_simulation_state
+    
+    sim_state = get_simulation_state()
+    sim_state.set_focus_region(request.region_id)
+    
+    # Return confirmation for UI feedback
+    return {
+        "status": "focus_updated",
+        "region_id": request.region_id,
+        "message": f"AI attention redirected to {request.region_id}" if request.region_id else "AI focus reset to global"
+    }
 
 
 # ============================================================================

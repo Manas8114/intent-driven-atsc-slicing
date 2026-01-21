@@ -215,14 +215,16 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                 {/* Main Content Area */}
                 <main className="flex-1 overflow-auto relative scrollbar-hide">
                     {/* Background Backdrop - Centered India Map */}
-                    <div className="fixed inset-0 z-0 flex items-center justify-center opacity-30 dark:opacity-20 pointer-events-none transition-opacity duration-1000">
+                    <div className="fixed inset-0 z-0 flex items-center justify-center opacity-40 dark:opacity-25 pointer-events-none transition-opacity duration-1000">
                         <InteractiveIndiaMap className="w-[120%] h-[120%] pointer-events-none scale-110" />
                     </div>
 
                     {/* Content Overlay - Professional Glassmorphism */}
                     <div className={cn(
                         "relative z-10 mx-auto w-full max-w-7xl px-6 py-8 transition-all duration-500",
-                        darkMode ? "bg-slate-950/40" : "bg-white/40"
+                        darkMode
+                            ? "bg-slate-950/60 backdrop-blur-sm"
+                            : "bg-white/70 backdrop-blur-sm"
                     )}>
                         {children}
                     </div>
