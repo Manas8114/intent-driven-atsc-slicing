@@ -32,11 +32,17 @@ import os
 
 # ... (imports)
 
-# Allow frontend (http://localhost:5173) to access API
-# In production, restrict to specific origins via CORS_ORIGINS env var
-cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
-if os.getenv("ALLOW_ALL_ORIGINS", "False").lower() == "true":
-    cors_origins = ["*"]
+# Allow frontend to access API
+# Relaxed for hackathon/debugging to allow localhost/127.0.0.1
+cors_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:8000",
+    "*"  # TEMPORARY: Allow all for debugging connectivity
+]
+
+# if os.getenv("ALLOW_ALL_ORIGINS", "True").lower() == "true": # Default to True for now
+#     cors_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,
@@ -45,6 +51,106 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+@app.on_event("startup")
+async def log_all_routes():
+    """Debug: Log all registered routes to help diagnose 404s."""
+    print("🛣️  Registered Routes:")
+    for route in app.routes:
+        if hasattr(route, "path"):
+            print(f"   - {route.path} [{','.join(route.methods) if hasattr(route, 'methods') else ''}]")
+
+# ============================================================================
+# WebSocket Endpoint for Real-Time Updates
+# ============================================================================
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time updates.
+    
+    Clients can connect to receive:
+    - System state updates
+    - AI decision notifications
+    - Alert broadcasts
+    - KPI metric changes
+    
+    Message format: JSON with 'type' and 'data' fields
+    """
+    await manager.connect(websocket)
+    try:
+        # Send initial connection confirmation
+        await manager.send_personal(websocket, {
+            "type": "connected",
+            "data": {"message": "Connected to AI-Native Broadcast Intelligence Platform"}
+        })
+        
+        # Keep connection alive and handle incoming messages
+        while True:
+            data = await websocket.receive_text()
+            # Echo or handle client messages if needed
+            # For now, the server primarily broadcasts to clients
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        await manager.disconnect(websocket)
+
+# Core routers
+app.include_router(intent_router, prefix="/intent", tags=["Intent Service"])
+app.include_router(ai_router, prefix="/ai", tags=["AI Engine"])
+app.include_router(kpi_router, prefix="/kpi", tags=["KPI Engine"])
+app.include_router(approval_router, prefix="/approval", tags=["Approval Workflow"])
+
+# Environment control
+from .environment_router import router as env_router
+app.include_router(env_router, prefix="/env", tags=["Environment Control"])
+
+# Visualization and RF abstraction
+app.include_router(viz_router, prefix="/viz", tags=["Visualization (Simulated)"])
+app.include_router(rf_router, prefix="/rf", tags=["RF Adapter (Simulation Only)"])
+
+# Broadcast-grade telemetry
+app.include_router(telemetry_router, prefix="/telemetry", tags=["Broadcast Telemetry"])
+
+# ============================================================================
+# AI Intelligence Layer (Cognitive Broadcasting)
+# ============================================================================
+# These modules implement the "brain" of the AI-native broadcast system:
+# - Knowledge Store: Continuous learning from broadcast feedback
+# - Demand Predictor: Proactive scheduling and mode selection
+# - Learning Loop: Explicit feedback loop with improvement tracking
+
+app.include_router(knowledge_router, tags=["AI Knowledge Store"])
+app.include_router(demand_router, tags=["AI Demand Prediction"])
+app.include_router(learning_router, tags=["AI Learning Loop"])
+app.include_router(bootstrap_router, prefix="/bootstrap", tags=["Bootstrap Uncertainty"])
+
+# Real-world data integration
+from .cell_tower_router import router as cell_tower_router
+app.include_router(cell_tower_router, prefix="/cell-towers", tags=["Cell Tower Data"])
+
+# Real FCC Broadcast Data Integration
+from .broadcast_data_router import router as broadcast_router
+app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast Data (FCC)"])
+
+# ============================================================================
+# Training Experience Buffer (Continuous Learning)
+# ============================================================================
+# Stores state-action-reward tuples for offline retraining
+
+from .experience_buffer import router as experience_router
+app.include_router(experience_router, prefix="/experiences", tags=["Training Experience Buffer"])
+
+
+# ============================================================================
+# Startup Event: Seed Demo Data
+# ============================================================================
+# Automatically seeds demonstration data on startup for hackathon demos.
+# This ensures the learning timeline and bootstrap analysis have data immediately.
+
+# Background task for periodic WebSocket broadcasts
+_broadcast_task = None
 
 # ... (rest of the file until seeding)
 
