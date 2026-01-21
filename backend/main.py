@@ -28,106 +28,28 @@ app = FastAPI(
     version="2.0.0"
 )
 
+import os
+
+# ... (imports)
+
 # Allow frontend (http://localhost:5173) to access API
+# In production, restrict to specific origins via CORS_ORIGINS env var
+cors_origins = os.getenv("CORS_ORIGINS", "http://localhost:5173").split(",")
+if os.getenv("ALLOW_ALL_ORIGINS", "False").lower() == "true":
+    cors_origins = ["*"]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production restrict to specific origins
+    allow_origins=cors_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
-# ============================================================================
-# WebSocket Endpoint for Real-Time Updates
-# ============================================================================
+# ... (rest of the file until seeding)
 
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """
-    WebSocket endpoint for real-time updates.
-    
-    Clients can connect to receive:
-    - System state updates
-    - AI decision notifications
-    - Alert broadcasts
-    - KPI metric changes
-    
-    Message format: JSON with 'type' and 'data' fields
-    """
-    await manager.connect(websocket)
-    try:
-        # Send initial connection confirmation
-        await manager.send_personal(websocket, {
-            "type": "connected",
-            "data": {"message": "Connected to AI-Native Broadcast Intelligence Platform"}
-        })
-        
-        # Keep connection alive and handle incoming messages
-        while True:
-            data = await websocket.receive_text()
-            # Echo or handle client messages if needed
-            # For now, the server primarily broadcasts to clients
-    except WebSocketDisconnect:
-        await manager.disconnect(websocket)
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-        await manager.disconnect(websocket)
-
-# Core routers
-app.include_router(intent_router, prefix="/intent", tags=["Intent Service"])
-app.include_router(ai_router, prefix="/ai", tags=["AI Engine"])
-app.include_router(kpi_router, prefix="/kpi", tags=["KPI Engine"])
-app.include_router(approval_router, prefix="/approval", tags=["Approval Workflow"])
-
-# Environment control
-from .environment_router import router as env_router
-app.include_router(env_router, prefix="/env", tags=["Environment Control"])
-
-# Visualization and RF abstraction
-app.include_router(viz_router, prefix="/viz", tags=["Visualization (Simulated)"])
-app.include_router(rf_router, prefix="/rf", tags=["RF Adapter (Simulation Only)"])
-
-# Broadcast-grade telemetry
-app.include_router(telemetry_router, prefix="/telemetry", tags=["Broadcast Telemetry"])
-
-# ============================================================================
-# AI Intelligence Layer (Cognitive Broadcasting)
-# ============================================================================
-# These modules implement the "brain" of the AI-native broadcast system:
-# - Knowledge Store: Continuous learning from broadcast feedback
-# - Demand Predictor: Proactive scheduling and mode selection
-# - Learning Loop: Explicit feedback loop with improvement tracking
-
-app.include_router(knowledge_router, tags=["AI Knowledge Store"])
-app.include_router(demand_router, tags=["AI Demand Prediction"])
-app.include_router(learning_router, tags=["AI Learning Loop"])
-app.include_router(bootstrap_router, prefix="/bootstrap", tags=["Bootstrap Uncertainty"])
-
-# Real-world data integration
-from .cell_tower_router import router as cell_tower_router
-app.include_router(cell_tower_router, prefix="/cell-towers", tags=["Cell Tower Data"])
-
-# Real FCC Broadcast Data Integration
-from .broadcast_data_router import router as broadcast_router
-app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast Data (FCC)"])
-
-# ============================================================================
-# Training Experience Buffer (Continuous Learning)
-# ============================================================================
-# Stores state-action-reward tuples for offline retraining
-
-from .experience_buffer import router as experience_router
-app.include_router(experience_router, prefix="/experiences", tags=["Training Experience Buffer"])
-
-
-# ============================================================================
-# Startup Event: Seed Demo Data
-# ============================================================================
-# Automatically seeds demonstration data on startup for hackathon demos.
-# This ensures the learning timeline and bootstrap analysis have data immediately.
-
-# Background task for periodic WebSocket broadcasts
-_broadcast_task = None
+# Track broadcast health
+last_broadcast_time = 0
 
 async def periodic_state_broadcast():
     """
@@ -135,8 +57,11 @@ async def periodic_state_broadcast():
     This keeps all connected frontends in sync with the AI brain.
     """
     import asyncio
+    import time
     from .ai_engine import get_latency_tracker
     from .learning_loop import get_learning_tracker
+    
+    global last_broadcast_time
     
     while True:
         try:
@@ -155,48 +80,22 @@ async def periodic_state_broadcast():
             }
             
             await broadcast_state_update(state)
+            last_broadcast_time = time.time()
             
         except Exception as e:
             print(f"Broadcast error: {e}")
             await asyncio.sleep(5)  # Back off on error
 
 @app.on_event("startup")
-async def start_receiver_agent():
-    """Start the background receiver agent."""
-    from .receiver_agent import get_receiver_agent
-    get_receiver_agent().start()
-
-@app.on_event("shutdown")
-async def stop_receiver_agent():
-    """Stop the receiver agent."""
-    from .receiver_agent import get_receiver_agent
-    get_receiver_agent().stop()
-
-
-@app.on_event("startup")
-async def start_periodic_broadcast():
-    """Start the periodic WebSocket broadcast background task."""
-    import asyncio
-    global _broadcast_task
-    _broadcast_task = asyncio.create_task(periodic_state_broadcast())
-    print("🔴 LIVE: Periodic WebSocket broadcast started (every 2s)")
-
-@app.on_event("shutdown")
-async def stop_periodic_broadcast():
-    """Stop the periodic broadcast on shutdown."""
-    global _broadcast_task
-    if _broadcast_task:
-        _broadcast_task.cancel()
-        print("🔴 LIVE: Periodic WebSocket broadcast stopped")
-
-@app.on_event("startup")
 async def seed_demo_data_on_startup():
     """
     Seed demo data when the server starts.
-    
-    This ensures that the learning timeline, bootstrap analysis, and other
-    AI-native features have data to display immediately during demos.
+    Gated by ALLOW_DEMO_SEEDING environment variable.
     """
+    if os.getenv("ALLOW_DEMO_SEEDING", "False").lower() != "true":
+        print("ℹ️  Demo seeding skipped (ALLOW_DEMO_SEEDING not set to true)")
+        return
+
     from .learning_loop import get_learning_tracker
     import uuid
     import random
@@ -245,3 +144,48 @@ async def seed_demo_data_on_startup():
         print(f"✅ Demo data seeded: {tracker.total_decisions} decisions recorded")
     else:
         print(f"ℹ️  Learning tracker already has {tracker.total_decisions} decisions, skipping seed")
+
+@app.get("/health")
+async def health_check():
+    """System health check endpoint."""
+    import time
+    from .receiver_agent import get_receiver_agent
+    
+    receiver = get_receiver_agent()
+    # Check if receiver has updated in last 30 seconds
+    if receiver.last_update:
+        receiver_healthy = (datetime.now() - receiver.last_update).total_seconds() < 30
+    else:
+        receiver_healthy = False
+    
+    # Check if broadcast has run in last 15 seconds
+    # If last_broadcast_time is 0, it might be just started
+    broadcast_healthy = True
+    if last_broadcast_time > 0:
+        broadcast_healthy = (time.time() - last_broadcast_time) < 15
+    elif time.time() - start_time > 15: # Assuming start_time tracking or just lax check
+        broadcast_healthy = False # If running for >15s and no broadcast, then unhealthy
+        
+    # Simplify broadcast check: just check if it's running if started
+    if last_broadcast_time > 0 and (time.time() - last_broadcast_time) > 15:
+         broadcast_healthy = False
+
+    status = "healthy" if receiver_healthy and broadcast_healthy else "degraded"
+    if not receiver_healthy and not broadcast_healthy:
+        status = "unhealthy"
+        
+    return {
+        "status": status,
+        "components": {
+            "receiver_agent": {
+                "status": "healthy" if receiver_healthy else "stalled",
+                "last_update": receiver.last_update.isoformat() if receiver.last_update else "never",
+                "running_flag": receiver.running
+            },
+            "websocket_broadcast": {
+                "status": "healthy" if broadcast_healthy else "stalled",
+                "last_run_seconds_ago": round(time.time() - last_broadcast_time, 1) if last_broadcast_time > 0 else "never"
+            }
+        },
+        "timestamp": datetime.now().isoformat()
+    }

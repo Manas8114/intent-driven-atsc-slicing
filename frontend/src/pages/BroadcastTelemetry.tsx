@@ -17,6 +17,7 @@ import {
     AlertTriangle
 } from 'lucide-react';
 import { cn } from '../lib/utils';
+import { API_BASE } from '../lib/api';
 import '../styles/telemetry.css';
 import { DataExportControls } from '../components/DataExportControls';
 
@@ -279,8 +280,8 @@ export function BroadcastTelemetry() {
         try {
             // Fetch both telemetry and offloading data in parallel
             const [telemetryRes, offloadingRes] = await Promise.all([
-                fetch('http://localhost:8000/telemetry/all'),
-                fetch('http://localhost:8000/telemetry/offloading')
+                fetch(`${API_BASE}/telemetry/all`),
+                fetch(`${API_BASE}/telemetry/offloading`)
             ]);
 
             if (telemetryRes.ok) {

@@ -1,5 +1,6 @@
 import { Component, type ReactNode, type ErrorInfo } from 'react';
 import { AlertTriangle, RefreshCw } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 interface Props {
     children: ReactNode;
@@ -38,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
         // Log to demo events (optional backend logging)
         try {
-            fetch('http://localhost:8000/env/demo-events', {
+            fetch(`${API_BASE}/env/demo-events`, {
                 method: 'GET'
             }).catch(() => { });
         } catch (e) {

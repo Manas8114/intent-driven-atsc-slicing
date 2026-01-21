@@ -7,6 +7,7 @@ import {
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
 import { ThinkingTrace } from './ThinkingTrace';
+import { API_BASE } from '../lib/api';
 
 // Cognitive stress scenarios aligned with Backend Chaos Director
 const COGNITIVE_SCENARIOS = [
@@ -87,7 +88,7 @@ export function HurdlePanel() {
             // Clear previous hurdle first
             triggerHurdle('clear');
             try {
-                await fetch('http://localhost:8000/ai/inject-scenario', {
+                await fetch(`${API_BASE}/ai/inject-scenario`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ scenario: 'clear' })
@@ -116,7 +117,7 @@ export function HurdlePanel() {
 
         // Call Backend API
         try {
-            await fetch('http://localhost:8000/ai/inject-scenario', {
+            await fetch(`${API_BASE}/ai/inject-scenario`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scenario: scenario.id })

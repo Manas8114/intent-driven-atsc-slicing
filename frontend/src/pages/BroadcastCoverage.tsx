@@ -35,7 +35,7 @@ interface BroadcastStats {
     is_real_data: boolean;
 }
 
-const API_BASE = 'http://localhost:8000';
+import { API_BASE } from '../lib/api';
 
 const SERVICE_TYPES = ['All', 'FM', 'AM', 'TV'];
 const PRESET_LOCATIONS = [

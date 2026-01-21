@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import { API_BASE } from '../lib/api';
 
 export type SystemPhase = 'idle' | 'parsing' | 'optimizing' | 'safety_check' | 'reconfiguring' | 'broadcasting' | 'emergency';
 
@@ -54,7 +55,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     const triggerHurdle = async (hurdle: string) => {
         if (hurdle === 'reset') {
             try {
-                await fetch('http://127.0.0.1:8000/env/reset', { method: 'POST' });
+                await fetch(`${API_BASE}/env/reset`, { method: 'POST' });
                 setActiveHurdle(null);
                 setAdaptationExplanation(null);
                 addLog("Environment Reset: Conditions normalized.");
@@ -72,7 +73,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
         setPhase('parsing'); // "Sensing"
         let data: any = null;
         try {
-            const res = await fetch('http://127.0.0.1:8000/env/hurdle', {
+            const res = await fetch(`${API_BASE}/env/hurdle`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ hurdle: hurdle })
@@ -95,7 +96,9 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
         try {
             // Re-run decision with current intent (or specific reaction logic)
             // Ideally we'd have a specific "react" endpoint, but "decision" works if it reads Env.
-            const decisionRes = await fetch('http://127.0.0.1:8000/ai/decision', {
+            // Re-run decision with current intent (or specific reaction logic)
+            // Ideally we'd have a specific "react" endpoint, but "decision" works if it reads Env.
+            const decisionRes = await fetch(`${API_BASE}/ai/decision`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

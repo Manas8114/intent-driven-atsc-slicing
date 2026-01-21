@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Activity, SignalHigh } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { API_BASE } from '../lib/api';
 
 /**
  * City data with position and broadcast metadata
@@ -100,7 +101,7 @@ export function InteractiveIndiaMap({
 
         // Digital Twin Interaction: Tell AI to focus here
         try {
-            await fetch('http://localhost:8000/ai/focus', {
+            await fetch(`${API_BASE}/ai/focus`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ region_id: city.id })

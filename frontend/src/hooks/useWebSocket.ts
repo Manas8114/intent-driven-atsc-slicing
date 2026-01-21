@@ -13,7 +13,9 @@ interface UseWebSocketReturn {
     reconnect: () => void;
 }
 
-const WS_URL = 'ws://127.0.0.1:8000/ws';
+import { WS_BASE } from '../lib/api';
+
+const WS_URL = `${WS_BASE}/ws`;
 const RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 

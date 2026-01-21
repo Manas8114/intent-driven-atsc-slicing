@@ -4,6 +4,7 @@ import {
     Database, Download, RefreshCw, HardDrive,
     TrendingUp, Clock, Activity
 } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 // Types
 interface BufferStats {
@@ -34,8 +35,8 @@ export function TrainingData() {
     const fetchData = async () => {
         try {
             const [statsRes, recentRes] = await Promise.all([
-                fetch('http://localhost:8000/experiences/stats'),
-                fetch('http://localhost:8000/experiences/recent?n=20')
+                fetch(`${API_BASE}/experiences/stats`),
+                fetch(`${API_BASE}/experiences/recent?n=20`)
             ]);
             setStats(await statsRes.json());
             setRecentExperiences(await recentRes.json());
@@ -49,7 +50,7 @@ export function TrainingData() {
     const handleExport = async () => {
         setExporting(true);
         try {
-            const res = await fetch('http://localhost:8000/experiences/export', {
+            const res = await fetch(`${API_BASE}/experiences/export`, {
                 method: 'POST'
             });
             const data = await res.json();
@@ -64,7 +65,7 @@ export function TrainingData() {
 
     const handleSave = async () => {
         try {
-            await fetch('http://localhost:8000/experiences/save', { method: 'POST' });
+            await fetch(`${API_BASE}/experiences/save`, { method: 'POST' });
             alert('Experiences saved to disk.');
         } catch (err) {
             console.error('Save failed:', err);

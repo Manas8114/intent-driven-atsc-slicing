@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Card, CardContent } from '../components/ui/Card';
 import { Map, Layers, Users, Car, Radio, RefreshCw, Info } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 // Types for heatmap data
 interface HeatmapData {
@@ -70,7 +71,7 @@ export function KnowledgeMap() {
 
     const fetchData = async () => {
         try {
-            const response = await fetch('http://localhost:8000/knowledge/heatmap');
+            const response = await fetch(`${API_BASE}/knowledge/heatmap`);
             if (!response.ok) throw new Error('Failed to fetch knowledge map');
             const data = await response.json();
             setHeatmapData(data);

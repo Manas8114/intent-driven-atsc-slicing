@@ -3,6 +3,7 @@ import {
     Radio, MapPin, AlertTriangle, Activity, RefreshCw,
     Signal, Wifi, TrendingUp, ChevronDown, ChevronUp, Info
 } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 // ============================================================================
 // Types
@@ -75,8 +76,6 @@ export function CellTowerData() {
     const [queryLon, setQueryLon] = useState(13.405);
     const [queryRadius, setQueryRadius] = useState(30);
     const [expandedSection, setExpandedSection] = useState<string | null>('radio');
-
-    const API_BASE = 'http://localhost:8000';
 
     const fetchStatus = useCallback(async () => {
         try {

@@ -4,6 +4,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { RefreshCw, ShieldCheck, Zap, Radio, Activity, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/utils';
+import { API_BASE } from '../lib/api';
 
 // --- Sub-components ---
 
@@ -79,34 +80,24 @@ export function KPIDashboard() {
     const [loading, setLoading] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
-    const generateMockData = () => {
-        const now = Date.now();
-        return Array.from({ length: 30 }, (_, i) => ({
-            timestamp: now - (30 - i) * 2000,
-            coverage: 88 + Math.random() * 8,
-            reliability: 96 + Math.random() * 3.9,
-            spectral_efficiency: 3.5 + Math.random() * 2.5,
-            latency: 35 + Math.random() * 15,
-            throughput: 450 + Math.random() * 200,
-        }));
-    };
+    const [error, setError] = useState<boolean>(false);
 
     const fetchData = async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8000/kpi/?limit=30');
+            const res = await fetch(`${API_BASE}/kpi/?limit=30`);
             if (res.ok) {
                 const json = await res.json();
                 if (json.length > 0) {
                     setData(json.reverse());
-                } else {
-                    setData(generateMockData());
+                    setError(false);
                 }
             } else {
-                setData(generateMockData());
+                setError(true);
             }
         } catch (e) {
-            setData(generateMockData());
+            console.error("Failed to fetch KPI data", e);
+            setError(true);
         } finally {
             setLoading(false);
             setLastUpdated(new Date());
@@ -131,6 +122,12 @@ export function KPIDashboard() {
 
     return (
         <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+            {error && (
+                <div className="p-4 rounded-lg bg-red-500/10 border border-red-500/20 text-red-400 flex items-center gap-2">
+                    <ShieldCheck className="h-5 w-5" />
+                    <span className="font-medium">Connection Lost: Backend service is unavailable. Metrics may be outdated.</span>
+                </div>
+            )}
             {/* Header Section */}
             <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-6 glass-card-dark border-slate-800/50 rounded-2xl">
                 <div className="flex items-center gap-4">

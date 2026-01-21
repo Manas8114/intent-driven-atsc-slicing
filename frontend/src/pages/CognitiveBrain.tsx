@@ -8,6 +8,7 @@ import {
     AlertTriangle, CheckCircle, Gauge, Car,
     Lightbulb, Eye, Target, Clock, Timer
 } from 'lucide-react';
+import { API_BASE } from '../lib/api';
 
 // Types for cognitive state
 interface CognitiveState {
@@ -166,7 +167,7 @@ export function CognitiveBrain() {
     useEffect(() => {
         const fetchState = async () => {
             try {
-                const response = await fetch('http://localhost:8000/ai/cognitive-state');
+                const response = await fetch(`${API_BASE}/ai/cognitive-state`);
                 if (!response.ok) throw new Error('Failed to fetch cognitive state');
                 const data = await response.json();
                 setCognitiveState(data);

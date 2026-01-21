@@ -413,3 +413,6 @@ Proper form labeling is essential for:
 Screen reader users - They can understand what each field is for
 Motor-impaired users - Clicking the label also focuses the input (larger click target)
 SEO and standards compliance - Meets WCAG accessibility guidelines
+
+The "Honest" Constructive Critique
+If you take this beyond the hackathon, the biggest hurdle will be Simulation vs. Reality. Currently, the AI is learning in a perfect digital environment. In a real RF environment, multi-path interference and hardware latency are "noisy" in ways simulations rarely capture. To make this production-ready, your next big push would be "Sim-to-Real" transfer learning—training on hardware data.
