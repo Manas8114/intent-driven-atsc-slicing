@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
 import { Terminal } from 'lucide-react';
-import { API_BASE } from '../../lib/api';
 
 interface ThinkingStep {
     timestamp: string;
@@ -33,7 +32,7 @@ export function ThinkingTrace() {
         const fetchThinkingSteps = async () => {
             try {
                 // Fetch current cognitive state
-                const response = await fetch(`${API_BASE}/ai/cognitive-state`);
+                const response = await fetch('http://localhost:8000/ai/cognitive-state');
                 const state = await response.json();
 
                 const now = new Date();

@@ -179,44 +179,8 @@ class TerrainInterface:
         """
         if self._is_loaded and self.terrain_data.path_loss_grid is not None:
             # Interpolate from loaded data
-            # 1. Convert (x, y) km to grid indices (assuming origin is 0,0 relative to transmitter)
-            # grid_resolution_m is in meters, x_km/y_km in km
-            
-            # Shift by origin if needed (though current simplified model assumes Tx at 0,0 locally)
-            grid_x = (x_km * 1000.0) / self.terrain_data.grid_resolution_m
-            grid_y = (y_km * 1000.0) / self.terrain_data.grid_resolution_m
-            
-            grid = self.terrain_data.path_loss_grid
-            rows, cols = grid.shape
-            
-            # Check bounds (bilinear needs upper neighbor)
-            if 0 <= grid_y < rows - 1 and 0 <= grid_x < cols - 1:
-                # Indices
-                r1 = int(np.floor(grid_y))
-                c1 = int(np.floor(grid_x))
-                r2 = r1 + 1
-                c2 = c1 + 1
-                
-                # Fractions
-                tr = grid_y - r1
-                tc = grid_x - c1
-                
-                # Values
-                v11 = grid[r1, c1]
-                v12 = grid[r1, c2]
-                v21 = grid[r2, c1]
-                v22 = grid[r2, c2]
-                
-                # Interpolate
-                # P(y,x) = (1-tr)(1-tc)V11 + (1-tr)(tc)V12 + (tr)(1-tc)V21 + (tr)(tc)V22
-                interp_val = (
-                    (1 - tr) * (1 - tc) * v11 +
-                    (1 - tr) * tc * v12 +
-                    tr * (1 - tc) * v21 +
-                    tr * tc * v22
-                )
-                
-                return float(interp_val)
+            # TODO: Implement bilinear interpolation from grid
+            pass
         
         # Fallback: Free-space path loss model
         distance_km = max(0.1, np.sqrt(x_km**2 + y_km**2))

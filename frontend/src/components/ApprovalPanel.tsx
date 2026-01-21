@@ -3,7 +3,6 @@ import { Card, CardContent } from './ui/Card';
 import { CheckCircle, XCircle, Zap } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { ApprovalCard } from './ui/ApprovalCard';
-import { API_BASE } from '../lib/api';
 import { EngineerAuth } from './ui/EngineerAuth';
 import { DeploymentHistory } from './ui/DeploymentHistory';
 
@@ -56,8 +55,8 @@ export function ApprovalPanel({ className }: DeploymentApprovalConsoleProps) {
         setError(null);
         try {
             const [pendingRes, allRes] = await Promise.all([
-                fetch(`${API_BASE}/approval/pending`),
-                fetch(`${API_BASE}/approval/all`)
+                fetch('http://localhost:8000/approval/pending'),
+                fetch('http://localhost:8000/approval/all')
             ]);
 
             if (pendingRes.ok) {
@@ -87,7 +86,7 @@ export function ApprovalPanel({ className }: DeploymentApprovalConsoleProps) {
         const approvalId = pendingApprovals[0].id;
 
         try {
-            const res = await fetch(`${API_BASE}/approval/approve`, {
+            const res = await fetch('http://localhost:8000/approval/approve', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -120,7 +119,7 @@ export function ApprovalPanel({ className }: DeploymentApprovalConsoleProps) {
         const approvalId = pendingApprovals[0].id;
 
         try {
-            const res = await fetch(`${API_BASE}/approval/reject`, {
+            const res = await fetch('http://localhost:8000/approval/reject', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({

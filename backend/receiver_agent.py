@@ -104,8 +104,6 @@ class ReceiverAgent:
             except Exception as e:
                 print(f"❌ Receiver Agent Error: {e}")
                 time.sleep(1.0) # Backoff on error
-            
-        print("📡 Receiver Agent: Loop stopped")
                 
     def get_metrics(self) -> Dict[str, Any]:
         """Get the latest receiver metrics safely."""

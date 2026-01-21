@@ -5,7 +5,6 @@ import {
     CheckCircle, ArrowUpRight,
     ArrowDownRight, Minus, RefreshCw
 } from 'lucide-react';
-import { API_BASE } from '../lib/api';
 
 // Types
 interface LearningTimeline {
@@ -108,9 +107,9 @@ export function LearningTimeline() {
     const fetchData = async () => {
         try {
             const [timelineRes, statsRes, compareRes] = await Promise.all([
-                fetch(`${API_BASE}/learning/timeline`),
-                fetch(`${API_BASE}/learning/improvements`),
-                fetch(`${API_BASE}/learning/before-after`)
+                fetch('http://localhost:8000/learning/timeline'),
+                fetch('http://localhost:8000/learning/improvements'),
+                fetch('http://localhost:8000/learning/before-after')
             ]);
 
             setTimeline(await timelineRes.json());

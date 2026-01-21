@@ -9,8 +9,6 @@
 
 // API Base URL - uses environment variable or defaults to localhost
 export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
-// WebSocket Base URL - matches API_BASE but with ws protocol
-export const WS_BASE = import.meta.env.VITE_WS_URL || 'ws://localhost:8000';
 
 /**
  * Fetch with automatic retry and exponential backoff.
