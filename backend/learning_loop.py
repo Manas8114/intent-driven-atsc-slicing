@@ -17,6 +17,8 @@ The feedback loop:
 This visibility is what makes the system AI-Native.
 """
 
+import asyncio
+
 from fastapi import APIRouter
 from pydantic import BaseModel, Field
 from typing import Dict, Any, List, Optional

@@ -39,6 +39,8 @@ class ReceiverAgent:
         self.latest_metrics = {}
         self.packet_loss_history = []
         self.last_update = datetime.now()
+        # 🔗 NEW: Physics calculation log for frontend visualization
+        self.last_calculation_log: Dict[str, Any] = {}
         
     def start(self):
         """Start the receiver agent in a background thread."""
@@ -63,7 +65,6 @@ class ReceiverAgent:
         
         while self.running:
             try:
-                # 1. Get current broadcast configuration
                 # 1. Get current broadcast configuration & Environment Context
                 sim_state = get_simulation_state()
                 from .environment import get_env_state
@@ -82,19 +83,44 @@ class ReceiverAgent:
                 # If Chaos Director sets noise floor to -85dBm, we USE it here.
                 
                 # Base Power - Path Loss - Shadows
+                tx_power = config.get("power_dbm", 35)
                 path_loss = 20 * env_state.path_loss_exponent # Simplified log distance
                 shadowing = env_state.channel_gain_impairment
-                rx_power = config.get("power_dbm", 35) - path_loss - shadowing
+                rx_power = tx_power - path_loss - shadowing
                 
                 # Calculate SNR using the environment's noise floor
                 noise_floor = env_state.noise_floor_dbm
-                current_snr = rx_power - noise_floor + random.gauss(0, 1) # Add slight thermal noise variance
+                thermal_noise = random.gauss(0, 1)  # Slight thermal noise variance
+                current_snr = rx_power - noise_floor + thermal_noise
                 
                 metrics = calculate_receiver_metrics(config, snr_db=current_snr, is_emergency=is_emergency)
                 
                 # 4. Update internal state
                 self.latest_metrics = {m.name: m.value for m in metrics}
                 self.last_update = datetime.now()
+                
+                # 🔗 NEW: Store physics calculation log for frontend "God View"
+                self.last_calculation_log = {
+                    "timestamp": self.last_update.isoformat(),
+                    "inputs": {
+                        "tx_power_dbm": round(tx_power, 2),
+                        "path_loss_exponent": round(env_state.path_loss_exponent, 2),
+                        "path_loss_db": round(path_loss, 2),
+                        "shadowing_db": round(shadowing, 2),
+                        "noise_floor_dbm": round(noise_floor, 2),
+                        "thermal_noise_db": round(thermal_noise, 2),
+                        "modulation": config.get("modulation", "QPSK"),
+                        "is_emergency": is_emergency,
+                    },
+                    "outputs": {
+                        "rx_power_dbm": round(rx_power, 2),
+                        "snr_db": round(current_snr, 2),
+                        "service_acquisition": round(self.latest_metrics.get("service_acquisition_success_ratio", 0) * 100, 1),
+                    },
+                    "quality": "good" if current_snr > 15 else ("fair" if current_snr > 8 else "poor"),
+                    "hurdle": env_state.active_hurdle,
+                    "scenario": env_state.active_scenario_label
+                }
                 
                 # 5. Feedback loop (Optional: could trigger re-optimization if SNR drops too low)
                 # For now, we just log occasionally
@@ -108,7 +134,12 @@ class ReceiverAgent:
     def get_metrics(self) -> Dict[str, Any]:
         """Get the latest receiver metrics safely."""
         return self.latest_metrics
+    
+    def get_calculation_log(self) -> Dict[str, Any]:
+        """Get the latest physics calculation log for frontend visualization."""
+        return self.last_calculation_log
 
 # Global accessor
 def get_receiver_agent() -> ReceiverAgent:
     return ReceiverAgent()
+

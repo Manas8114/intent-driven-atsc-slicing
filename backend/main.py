@@ -91,6 +91,27 @@ app.include_router(rf_router, prefix="/rf", tags=["RF Adapter (Simulation Only)"
 app.include_router(telemetry_router, prefix="/telemetry", tags=["Broadcast Telemetry"])
 
 # ============================================================================
+# Real-time Physics Telemetry Endpoint (for "God View" visualization)
+# ============================================================================
+@app.get("/api/telemetry/physics", tags=["Broadcast Telemetry"])
+async def get_physics_telemetry():
+    """
+    Get real-time physics calculation log from the ReceiverAgent.
+    
+    Returns the exact inputs (TX power, path loss, shadowing) and 
+    outputs (RX power, SNR) used in the signal quality calculation.
+    This powers the frontend "God View" visualization.
+    """
+    from .receiver_agent import get_receiver_agent
+    agent = get_receiver_agent()
+    return {
+        "status": "ok",
+        "physics_log": agent.get_calculation_log(),
+        "metrics": agent.get_metrics(),
+        "last_update": agent.last_update.isoformat() if agent.last_update else None
+    }
+
+# ============================================================================
 # AI Intelligence Layer (Cognitive Broadcasting)
 # ============================================================================
 # These modules implement the "brain" of the AI-native broadcast system:
@@ -245,3 +266,15 @@ async def seed_demo_data_on_startup():
         print(f"✅ Demo data seeded: {tracker.total_decisions} decisions recorded")
     else:
         print(f"ℹ️  Learning tracker already has {tracker.total_decisions} decisions, skipping seed")
+
+@app.on_event("startup")
+async def start_autonomous_agent_task():
+    """Start the autonomous AI agent."""
+    from .autonomous_agent import start_autonomous_agent
+    start_autonomous_agent()
+
+@app.on_event("shutdown")
+async def stop_autonomous_agent_task():
+    """Stop the autonomous AI agent."""
+    from .autonomous_agent import stop_autonomous_agent
+    stop_autonomous_agent()

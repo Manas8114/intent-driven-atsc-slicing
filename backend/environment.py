@@ -44,6 +44,7 @@ class EnvironmentState(BaseModel):
     
     # Active Hurdle Name (for UI/Logging)
     active_hurdle: Optional[str] = None
+    active_scenario_label: Optional[str] = None
 
 
 # Global Singleton
@@ -134,7 +135,8 @@ def apply_hurdle(hurdle_name: str) -> str:
         update_env_state({
             "demo_mode_enabled": demo_mode,
             "simulation_speed": sim_speed,
-            "active_hurdle": hurdle_name
+            "active_hurdle": hurdle_name,
+            "active_scenario_label": None # Will be set below
         })
     
     if hurdle_name == "reset":
@@ -143,14 +145,16 @@ def apply_hurdle(hurdle_name: str) -> str:
         reset_env_state()
         update_env_state({
             "demo_mode_enabled": demo_mode,
-            "simulation_speed": sim_speed
+            "simulation_speed": sim_speed,
+            "active_scenario_label": "Normal Operation"
         })
         return "Environment reset to baseline."
     
     elif hurdle_name == "coverage_drop":
         update_env_state({
             "channel_gain_impairment": 10.0,
-            "path_loss_exponent": 3.5
+            "path_loss_exponent": 3.5,
+            "active_scenario_label": "Severe Monsoon (Attenuation)"
         })
         desc = "Increased path loss to 3.5 and added 10dB shadowing loss."
         log_demo_event("hurdle", f"Coverage Drop: {desc}")
@@ -158,7 +162,8 @@ def apply_hurdle(hurdle_name: str) -> str:
 
     elif hurdle_name == "interference":
         update_env_state({
-            "noise_floor_dbm": -85.0
+            "noise_floor_dbm": -85.0,
+            "active_scenario_label": "Jamming / Interference"
         })
         desc = "Raised noise floor to -85dBm (Severe Interference)."
         log_demo_event("hurdle", f"Interference Spike: {desc}")
@@ -166,7 +171,8 @@ def apply_hurdle(hurdle_name: str) -> str:
 
     elif hurdle_name == "spectrum_reduction":
         update_env_state({
-            "available_bandwidth_mhz": 4.0
+            "available_bandwidth_mhz": 4.0,
+            "active_scenario_label": "Spectrum Crunch"
         })
         desc = "Capped available bandwidth to 4.0 MHz."
         log_demo_event("hurdle", f"Spectrum Crunch: {desc}")
@@ -174,7 +180,8 @@ def apply_hurdle(hurdle_name: str) -> str:
 
     elif hurdle_name == "traffic_surge":
         update_env_state({
-            "traffic_load_level": 3.0
+            "traffic_load_level": 3.0,
+            "active_scenario_label": "Flash Crowd Event"
         })
         desc = "Public service traffic load increased to 300%."
         log_demo_event("hurdle", f"Traffic Surge: {desc}")
@@ -182,7 +189,8 @@ def apply_hurdle(hurdle_name: str) -> str:
 
     elif hurdle_name == "emergency_escalation":
         update_env_state({
-            "is_emergency_active": True
+            "is_emergency_active": True,
+            "active_scenario_label": "Emergency Alert (AEAT)"
         })
         desc = "Emergency Alert System triggered. Priority set to CRITICAL."
         log_demo_event("hurdle", f"Emergency Escalation: {desc}")
@@ -191,7 +199,8 @@ def apply_hurdle(hurdle_name: str) -> str:
     elif hurdle_name == "cellular_congestion":
         update_env_state({
             "cellular_congestion_level": 0.85,
-            "traffic_load_level": 2.5
+            "traffic_load_level": 2.5,
+            "active_scenario_label": "Cellular Network Congestion"
         })
         desc = "Cellular network congestion spiked to 85%. Offloading recommended."
         log_demo_event("hurdle", f"Cellular Congestion: {desc}")
@@ -200,7 +209,8 @@ def apply_hurdle(hurdle_name: str) -> str:
     elif hurdle_name == "mobility_surge":
         update_env_state({
             "mobile_user_ratio": 0.6,
-            "average_velocity_kmh": 75.0
+            "average_velocity_kmh": 75.0,
+            "active_scenario_label": "High Mobility Surge"
         })
         desc = "Mobile users increased to 60% at 75 km/h average speed."
         log_demo_event("hurdle", f"Mobility Surge: {desc}")

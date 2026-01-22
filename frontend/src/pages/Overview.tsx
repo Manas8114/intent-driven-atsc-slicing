@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Activity, Radio, Cpu, Server, Signal, User, ShieldCheck, Tv, BarChart3 } from 'lucide-react';
+import { IntentLogTerminal } from '../components/IntentLogTerminal';
 
 export function Overview() {
     return (
@@ -89,6 +90,22 @@ export function Overview() {
                 </CardContent>
             </Card>
 
+            {/* Real-time Physics Telemetry Terminal */}
+            <Card>
+                <CardHeader>
+                    <CardTitle className="flex items-center gap-2">
+                        <Radio className="w-5 h-5 text-green-500" />
+                        Live Physics Telemetry
+                    </CardTitle>
+                    <p className="text-sm text-slate-500 mt-1">
+                        Real-time signal calculations from the ReceiverAgent - proving the system is processing actual physics data.
+                    </p>
+                </CardHeader>
+                <CardContent>
+                    <IntentLogTerminal />
+                </CardContent>
+            </Card>
+
             <style>{`
         @keyframes shimmer {
           0% { transform: translateX(-100%); }
@@ -98,3 +115,4 @@ export function Overview() {
         </div>
     );
 }
+

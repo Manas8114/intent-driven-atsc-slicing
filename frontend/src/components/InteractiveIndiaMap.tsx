@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import { Activity, SignalHigh } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { DeviceMetricPopup } from './DeviceMetricPopup';
 
 /**
  * City data with position and broadcast metadata
@@ -48,8 +49,21 @@ const CITIES: City[] = [
     { id: 'lucknow', name: 'Lucknow', x: 350, y: 230, major: false, population: '4M', towers: 310, coverage: 89, signalStrength: 'medium' }
 ];
 
+// Pre-computed network connections (avoid Math.random in render)
+const NETWORK_CONNECTIONS = [
+    { source: 'delhi', target: 'jaipur' },
+    { source: 'delhi', target: 'lucknow' },
+    { source: 'mumbai', target: 'pune' },
+    { source: 'mumbai', target: 'ahmedabad' },
+    { source: 'bengaluru', target: 'chennai' },
+    { source: 'bengaluru', target: 'hyderabad' },
+    { source: 'kolkata', target: 'delhi' },
+    { source: 'hyderabad', target: 'chennai' },
+    { source: 'pune', target: 'hyderabad' },
+];
+
 /**
- * InteractiveIndiaMap - Premium NOC Mode
+ * InteractiveIndiaMap - Premium NOC Mode with Device Metrics
  */
 export function InteractiveIndiaMap({
     onCitySelect,
@@ -58,11 +72,17 @@ export function InteractiveIndiaMap({
     className = ''
 }: InteractiveIndiaMapProps) {
     const [hoveredCity, setHoveredCity] = useState<string | null>(null);
+    const [hoveredPosition, setHoveredPosition] = useState<{ x: number; y: number } | null>(null);
     const { lastMessage } = useWebSocket();
     const [liveIntents, setLiveIntents] = useState<IntentSignal[]>([]);
     const [aiFocusRegion, setAiFocusRegion] = useState<string | null>(null);
-    // CSS-based scan line instead of JS interval
-    // const [scanLine, setScanLine] = useState(0); 
+
+    // Memoize city lookup
+    const cityMap = useMemo(() => {
+        const map = new Map<string, City>();
+        CITIES.forEach(city => map.set(city.id, city));
+        return map;
+    }, []);
 
     // Process WebSocket for visual flair & Digital Twin Sync
     useEffect(() => {
@@ -76,7 +96,6 @@ export function InteractiveIndiaMap({
                 setAiFocusRegion(null);
             }
 
-            // ... existing visualization logic
             const majorCities = ['delhi', 'mumbai', 'chennai', 'kolkata', 'bengaluru', 'hyderabad'];
             const cityId = majorCities[Math.floor(Math.random() * majorCities.length)];
 
@@ -86,7 +105,7 @@ export function InteractiveIndiaMap({
 
             const newIntent: IntentSignal = {
                 id: `live-${Date.now()}`,
-                cityId: decision.focus_region || cityId, // Prioritize actual focus
+                cityId: decision.focus_region || cityId,
                 type: intentType,
                 timestamp: Date.now(),
                 deviceCount: Math.floor(Math.random() * 5000) + 500
@@ -95,24 +114,46 @@ export function InteractiveIndiaMap({
         }
     }, [lastMessage]);
 
-    const handleCityClick = async (city: City) => {
+    const handleCityClick = useCallback(async (city: City) => {
         if (onCitySelect) onCitySelect(city);
 
-        // Digital Twin Interaction: Tell AI to focus here
         try {
             await fetch('http://localhost:8000/ai/focus', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ region_id: city.id })
             });
-            console.log(`Sent AI focus request for: ${city.id}`);
         } catch (e) {
             console.error("Failed to set AI focus", e);
         }
-    };
+    }, [onCitySelect]);
+
+    const handleCityHover = useCallback((city: City | null, event?: React.MouseEvent) => {
+        if (city && event) {
+            const rect = (event.currentTarget as SVGElement).closest('svg')?.getBoundingClientRect();
+            if (rect) {
+                setHoveredPosition({
+                    x: event.clientX - rect.left,
+                    y: event.clientY - rect.top
+                });
+            }
+        }
+        setHoveredCity(city?.id || null);
+    }, []);
 
     // Merge intents
-    const displayIntents = [...externalIntents, ...liveIntents];
+    const displayIntents = useMemo(() => [...externalIntents, ...liveIntents], [externalIntents, liveIntents]);
+
+    // Memoize active intent lookup
+    const activeIntentMap = useMemo(() => {
+        const map = new Map<string, IntentSignal>();
+        displayIntents.forEach(intent => {
+            if (!map.has(intent.cityId)) {
+                map.set(intent.cityId, intent);
+            }
+        });
+        return map;
+    }, [displayIntents]);
 
     return (
         <div className={`relative w-full h-full overflow-hidden ${className}`}>
@@ -150,32 +191,31 @@ export function InteractiveIndiaMap({
                     stroke="#0891b2"
                     strokeWidth="1.5"
                     strokeDasharray="5,5"
-                    className="animate-pulse-slow"
                 />
 
-                {/* Connections (Network Topology) */}
+                {/* Connections (Network Topology) - Pre-computed for performance */}
                 <g className="opacity-30">
-                    {CITIES.map((source, i) => (
-                        CITIES.slice(i + 1).map((target, j) => {
-                            if (Math.random() > 0.7) return null; // Random connections
-                            const isActive = displayIntents.some(intent => intent.cityId === source.id || intent.cityId === target.id);
-                            return (
-                                <line
-                                    key={`${source.id}-${target.id}`}
-                                    x1={source.x} y1={source.y}
-                                    x2={target.x} y2={target.y}
-                                    stroke={isActive ? "#22d3ee" : "#1e293b"}
-                                    strokeWidth={isActive ? 2 : 0.5}
-                                    className={isActive ? "animate-pulse" : ""}
-                                />
-                            );
-                        })
-                    ))}
+                    {NETWORK_CONNECTIONS.map((conn) => {
+                        const source = cityMap.get(conn.source);
+                        const target = cityMap.get(conn.target);
+                        if (!source || !target) return null;
+
+                        const isActive = activeIntentMap.has(conn.source) || activeIntentMap.has(conn.target);
+                        return (
+                            <line
+                                key={`${conn.source}-${conn.target}`}
+                                x1={source.x} y1={source.y}
+                                x2={target.x} y2={target.y}
+                                stroke={isActive ? "#22d3ee" : "#1e293b"}
+                                strokeWidth={isActive ? 2 : 0.5}
+                            />
+                        );
+                    })}
                 </g>
 
                 {/* Cities */}
                 {CITIES.map(city => {
-                    const activeIntent = displayIntents.find(i => i.cityId === city.id);
+                    const activeIntent = activeIntentMap.get(city.id);
                     const isHovered = hoveredCity === city.id;
                     const isSelected = selectedCityId === city.id;
                     const isAiFocused = aiFocusRegion === city.id;
@@ -184,24 +224,23 @@ export function InteractiveIndiaMap({
                         <g
                             key={city.id}
                             style={{ cursor: 'pointer' }}
-                            onMouseEnter={() => setHoveredCity(city.id)}
-                            onMouseLeave={() => setHoveredCity(null)}
+                            onMouseEnter={(e) => handleCityHover(city, e)}
+                            onMouseLeave={() => handleCityHover(null)}
                             onClick={() => handleCityClick(city)}
                         >
-                            {/* Pulse Effect for Active/Major/Focused */}
-                            {(activeIntent || city.major || isAiFocused) && (
+                            {/* Pulse Effect for Active/Major/Focused - Reduced animation */}
+                            {(activeIntent || isAiFocused) && (
                                 <circle
                                     cx={city.x} cy={city.y}
-                                    r={activeIntent ? 30 : isAiFocused ? 40 : 15}
-                                    fill={activeIntent?.type === 'emergency' ? "url(#emergencyGlow)" : isAiFocused ? "url(#focusGlow)" : "url(#cityGlow)"}
-                                    className="animate-ping"
-                                    style={{ animationDuration: activeIntent ? '1.5s' : isAiFocused ? '1s' : '3s' }}
+                                    r={activeIntent ? 30 : 40}
+                                    fill={activeIntent?.type === 'emergency' ? "url(#emergencyGlow)" : "url(#focusGlow)"}
+                                    opacity="0.6"
                                 />
                             )}
 
                             {/* Target Reticle for AI Focus */}
                             {isAiFocused && (
-                                <g className="animate-spin-slow origin-center" style={{ transformBox: 'fill-box', transformOrigin: 'center' }}>
+                                <g>
                                     <circle cx={city.x} cy={city.y} r="22" fill="none" stroke="#a855f7" strokeWidth="1" strokeDasharray="4,4" />
                                     <line x1={city.x - 25} y1={city.y} x2={city.x - 10} y2={city.y} stroke="#a855f7" strokeWidth="1" />
                                     <line x1={city.x + 10} y1={city.y} x2={city.x + 25} y2={city.y} stroke="#a855f7" strokeWidth="1" />
@@ -251,7 +290,7 @@ export function InteractiveIndiaMap({
                     strokeWidth="2"
                     style={{
                         pointerEvents: 'none',
-                        animation: 'scanline 2s linear infinite'
+                        animation: 'scanline 4s linear infinite'
                     }}
                 >
                     <style>{`
@@ -263,10 +302,20 @@ export function InteractiveIndiaMap({
                 </line>
             </svg>
 
+            {/* Device Metric Popup on Hover */}
+            {hoveredCity && hoveredPosition && (
+                <DeviceMetricPopup
+                    deviceId={hoveredCity}
+                    deviceName={cityMap.get(hoveredCity)?.name || hoveredCity}
+                    position={hoveredPosition}
+                    onClose={() => setHoveredCity(null)}
+                />
+            )}
+
             {/* Overlay Info (Top Right) */}
             <div className="absolute top-4 right-4 bg-slate-900/80 backdrop-blur p-4 rounded-lg border border-slate-700 shadow-2xl">
                 <div className="flex items-center gap-2 mb-2">
-                    <Activity className="w-4 h-4 text-cyan-400 animate-pulse" />
+                    <Activity className="w-4 h-4 text-cyan-400" />
                     <h3 className="text-xs font-bold text-slate-300 uppercase">Live Network Status</h3>
                 </div>
                 <div className="grid grid-cols-2 gap-4 text-xs font-mono">
@@ -281,3 +330,4 @@ export function InteractiveIndiaMap({
         </div>
     );
 }
+
