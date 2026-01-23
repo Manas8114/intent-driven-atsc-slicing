@@ -167,12 +167,15 @@ class TerrainInterface:
                 limit = 500
                 points = []
                 for shape in sf.shapes()[:limit]: 
+                    # Defensive check: ensure shape has points before accessing
+                    if not shape.points or len(shape.points) == 0:
+                        continue
                     # Assume points have Z or we just map 2D layout
-                     points.append({
-                         'x': shape.points[0][0], 
-                         'y': shape.points[0][1], 
-                         'elevation': 250.0 # Placeholder if no Z, or extract from attributes
-                     })
+                    points.append({
+                        'x': shape.points[0][0], 
+                        'y': shape.points[0][1], 
+                        'elevation': 250.0 # Placeholder if no Z, or extract from attributes
+                    })
                 
                 self.terrain_data.elevation_points = points
                 self.terrain_data.source = "srtm_real_world"
