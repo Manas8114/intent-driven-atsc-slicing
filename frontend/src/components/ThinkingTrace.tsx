@@ -31,7 +31,11 @@ export function ThinkingTrace() {
     useEffect(() => {
         if (lastMessage?.type === 'ai_decision') {
             const decision = lastMessage.data as unknown as AIDecision;
-            setThoughtLog(prev => [decision, ...prev].slice(0, 50)); // Keep last 50
+            setThoughtLog(prev => {
+                // Deduplicate by decision_id to prevent duplicate keys
+                const filtered = prev.filter(d => d.decision_id !== decision.decision_id);
+                return [decision, ...filtered].slice(0, 50); // Keep last 50
+            });
         }
     }, [lastMessage]);
 
