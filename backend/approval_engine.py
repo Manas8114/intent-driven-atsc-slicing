@@ -193,6 +193,17 @@ class ApprovalEngine:
         
         with self._records_lock:
             self._records[record_id] = record
+            
+            # Cap records to prevent memory leak (keep max 500)
+            if len(self._records) > 500:
+                # Remove oldest DEPLOYED or REJECTED records first
+                removable = [
+                    (k, v) for k, v in self._records.items()
+                    if v.state in (ApprovalState.DEPLOYED, ApprovalState.REJECTED)
+                ]
+                removable.sort(key=lambda x: x[1].created_at)
+                if removable:
+                    del self._records[removable[0][0]]
         
         self._log_audit_event("RECOMMENDATION_SUBMITTED", record_id, {
             "is_emergency": is_emergency,
@@ -354,6 +365,9 @@ class ApprovalEngine:
             "record_id": record_id,
             "details": details
         })
+        # Cap audit log to prevent memory leak (keep last 1000 entries)
+        if len(self._audit_log) > 1000:
+            self._audit_log.pop(0)
 
 
 # Global singleton instance

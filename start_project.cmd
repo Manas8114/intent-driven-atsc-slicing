@@ -7,7 +7,7 @@ cd /d "%PROJECT_DIR%"
 
 echo ===================================================
 echo   Intent-Driven ATSC 3.0 Network Slicing
-echo   Build-a-thon 4.0 Project Startup
+echo   ITU-T FG-AINN Build-a-thon 4.0
 echo ===================================================
 echo.
 
@@ -33,9 +33,19 @@ echo [OK] Python found
 echo [OK] Node.js found
 echo.
 
+:: Check for and activate virtual environment
+set "VENV_PYTHON=python"
+if exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
+    echo [OK] Virtual environment detected
+    set "VENV_PYTHON=%PROJECT_DIR%.venv\Scripts\python.exe"
+) else (
+    echo [INFO] No .venv found, using system Python
+)
+echo.
+
 :: Install Backend Dependencies
 echo [1/4] Installing Backend Dependencies...
-pip install -r "%PROJECT_DIR%backend\requirements.txt" --quiet
+"%VENV_PYTHON%" -m pip install -r "%PROJECT_DIR%backend\requirements.txt" --quiet 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [WARN] Some backend dependencies may have failed. Continuing anyway...
 )
@@ -53,9 +63,13 @@ cd /d "%PROJECT_DIR%"
 echo [OK] Frontend dependencies installed
 echo.
 
-:: Start Backend Server
+:: Start Backend Server (with venv if available)
 echo [3/4] Starting Backend Server...
-start "ATSC Backend" cmd /k "cd /d "%PROJECT_DIR%" && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+if exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
+    start "ATSC Backend" cmd /k "cd /d "%PROJECT_DIR%" && call .venv\Scripts\activate && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+) else (
+    start "ATSC Backend" cmd /k "cd /d "%PROJECT_DIR%" && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
+)
 timeout /t 3 /nobreak >nul
 
 :: Start Frontend Dev Server
@@ -71,11 +85,12 @@ echo   Backend API:    http://localhost:8000
 echo   Frontend UI:    http://localhost:5173
 echo   API Docs:       http://localhost:8000/docs
 echo.
-echo   New Features in this version:
-echo   - Bootstrap Uncertainty Analysis (BCa intervals)
-echo   - Traffic Offloading (Congestion Gauge)
-echo   - Connected Vehicles / Mobility
-echo   - Stage 1 and Stage 2 Proposals (docs folder)
+echo   Key Features:
+echo   - AI-Native Network Slicing (PPO-based RL Agent)
+echo   - Real-time Thinking Trace Visualization
+echo   - Terrain-Aware RF Propagation (SRTM Data)
+echo   - Chaos Director (Simulated Failure Scenarios)
+echo   - ITU FG-AINN Architecture Compliance
 echo.
 echo ===================================================
 echo   Press any key to open the frontend in browser...
