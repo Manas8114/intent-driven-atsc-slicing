@@ -76,8 +76,15 @@ def _load_terrain_grid(data_path: Optional[str] = None) -> Optional[Dict]:
         shapes = sf.shapes()
         records = sf.records()
 
-        points = np.array([s.points[0] for s in shapes])
-        elevations = np.array([r[2] for r in records])
+        # Filter out shapes with empty points to prevent 'list index out of range'
+        valid_data = [(s, r) for s, r in zip(shapes, records) if s.points and len(s.points) > 0]
+        
+        if not valid_data:
+            logging.warning("No valid terrain shapes found in SRTM data. Falling back to Hata model.")
+            return None
+        
+        points = np.array([s.points[0] for s, r in valid_data])
+        elevations = np.array([r[2] if len(r) > 2 else 250.0 for s, r in valid_data])
 
         lons = np.unique(points[:, 0])
         lats = np.unique(points[:, 1])
