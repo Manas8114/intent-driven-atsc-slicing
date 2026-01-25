@@ -50,11 +50,25 @@ HURDLE_MAP = {
     "mobility_surge": 7, "monsoon": 8, "flash_crowd": 9, "tower_failure": 10
 }
 
+# Operator Intent Map - The GOAL, not the configuration
+# This is what gets broadcast - receivers auto-adjust based on intent
+INTENT_MAP = {
+    "maximize_coverage": 0,      # Reach as many users as possible
+    "maximize_throughput": 1,    # High data rate priority
+    "minimize_latency": 2,       # Real-time applications
+    "emergency_response": 3,     # Emergency broadcast priority
+    "power_efficient": 4,        # Battery/power conservation
+    "rural_priority": 5,         # Focus on underserved areas
+    "urban_dense": 6,            # High-density urban optimization
+    "balanced": 7,               # Default balanced mode
+}
+
 # Reverse maps for decoding
 DELIVERY_MODE_REVERSE = {v: k for k, v in DELIVERY_MODE_MAP.items()}
 MODULATION_REVERSE = {v: k for k, v in MODULATION_MAP.items()}
 CODING_RATE_REVERSE = {v: k for k, v in CODING_RATE_MAP.items()}
 HURDLE_REVERSE = {v: k if k else "none" for k, v in HURDLE_MAP.items()}
+INTENT_REVERSE = {v: k for k, v in INTENT_MAP.items()}
 
 
 class BLEPacket(BaseModel):
@@ -100,9 +114,12 @@ def encode_ai_state(state: AIStateForBLE) -> bytes:
     emergency = 1 if state.is_emergency else 0
     
     # Pack into binary format
-    # Format: 8 bytes of data + 2 bytes timestamp + 2 bytes hurdle + 8 bytes reserved
-    packet = struct.pack(
-        '>BBBBBBBBHH8s',  # Big-endian, 8 uint8, 2 uint16, 8 bytes padding
+    # Format: 8 bytes of data + 2 bytes timestamp + 2 bytes hurdle + 6 bytes reserved + 2 bytes CRC
+    # Reserved reduced to 6 bytes to make room for CRC
+    
+    # 1. Pack the Data and Header (First 12 Bytes)
+    header_data = struct.pack(
+        '>BBBBBBBBHH',  # Big-endian, 8 uint8, 2 uint16
         BLE_PACKET_VERSION,     # [0] Version
         delivery_mode,          # [1] Delivery mode
         coverage,               # [2] Coverage %
@@ -113,8 +130,21 @@ def encode_ai_state(state: AIStateForBLE) -> bytes:
         emergency,              # [7] Emergency flag
         timestamp,              # [8-9] Timestamp
         hurdle,                 # [10-11] Hurdle code
-        b'\x00' * 8             # [12-19] Reserved
     )
+    
+    # 2. Calculate CRC16-CCITT (0xFFFF init, 0x1021 poly)
+    crc = 0xFFFF
+    for byte in header_data:
+        crc ^= (byte << 8)
+        for _ in range(8):
+            if crc & 0x8000:
+                crc = (crc << 1) ^ 0x1021
+            else:
+                crc = crc << 1
+            crc &= 0xFFFF
+            
+    # 3. Final Packet = Header + Reserved(6) + CRC(2)
+    packet = header_data + (b'\x00' * 6) + struct.pack('>H', crc)
     
     return packet
 
@@ -281,3 +311,111 @@ async def decode_packet(hex_string: str):
         return {"status": "success", "decoded": decoded}
     except Exception as e:
         return {"status": "error", "message": str(e)}
+
+
+def get_current_intent() -> str:
+    """
+    Determine current operator intent based on system state.
+    Intent = the GOAL, not the configuration.
+    """
+    try:
+        from .environment import get_env_state
+        env = get_env_state()
+        
+        # Map system state to operator intent
+        if env.is_emergency_active:
+            return "emergency_response"
+        elif env.active_hurdle in ["flash_crowd", "traffic_surge"]:
+            return "maximize_throughput"
+        elif env.active_hurdle in ["coverage_drop", "tower_failure"]:
+            return "maximize_coverage"
+        elif env.active_hurdle in ["monsoon", "interference"]:
+            return "rural_priority"
+        elif env.active_hurdle == "cellular_congestion":
+            return "urban_dense"
+        else:
+            return "balanced"
+    except Exception:
+        return "balanced"
+
+
+def get_intent_adjustments(intent: str) -> dict:
+    """
+    Get automatic adjustments receivers should make based on intent.
+    """
+    adjustments = {
+        "maximize_coverage": {
+            "priority": "COVERAGE",
+            "power_mode": "MAXIMUM",
+            "modulation": "ROBUST (QPSK)",
+            "behavior": "Extend reach to all users"
+        },
+        "maximize_throughput": {
+            "priority": "SPEED",
+            "power_mode": "ADAPTIVE",
+            "modulation": "HIGH-ORDER (256QAM)",
+            "behavior": "Prioritize data rate"
+        },
+        "minimize_latency": {
+            "priority": "LATENCY",
+            "power_mode": "STANDARD",
+            "modulation": "BALANCED (64QAM)",
+            "behavior": "Real-time optimization"
+        },
+        "emergency_response": {
+            "priority": "EMERGENCY",
+            "power_mode": "MAXIMUM",
+            "modulation": "ROBUST (QPSK)",
+            "behavior": "Override all - emergency broadcast"
+        },
+        "power_efficient": {
+            "priority": "EFFICIENCY",
+            "power_mode": "MINIMUM",
+            "modulation": "ADAPTIVE",
+            "behavior": "Conserve power resources"
+        },
+        "rural_priority": {
+            "priority": "RURAL",
+            "power_mode": "MAXIMUM",
+            "modulation": "ROBUST (QPSK)",
+            "behavior": "Focus on underserved areas"
+        },
+        "urban_dense": {
+            "priority": "URBAN",
+            "power_mode": "ADAPTIVE",
+            "modulation": "HIGH-ORDER (256QAM)",
+            "behavior": "High-density optimization"
+        },
+        "balanced": {
+            "priority": "BALANCED",
+            "power_mode": "STANDARD",
+            "modulation": "BALANCED (64QAM)",
+            "behavior": "Normal operation"
+        }
+    }
+    return adjustments.get(intent, adjustments["balanced"])
+
+
+@router.get("/intent")
+async def get_operator_intent():
+    """
+    Get the current operator intent - the GOAL being broadcast.
+    
+    Intent tells receivers what the network is trying to achieve.
+    Receivers automatically adjust their priorities to match.
+    
+    This is the key concept: broadcast the GOAL, not the configuration.
+    """
+    intent = get_current_intent()
+    adjustments = get_intent_adjustments(intent)
+    
+    return {
+        "intent": intent,
+        "intent_code": INTENT_MAP.get(intent, 7),
+        "display_name": intent.replace("_", " ").upper(),
+        "description": adjustments["behavior"],
+        "auto_adjustments": adjustments,
+        "timestamp": int(time.time()),
+        "concept": "Intent = the GOAL. Receivers auto-adjust based on this intent."
+    }
+

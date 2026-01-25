@@ -1,5 +1,6 @@
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
+from datetime import datetime
 
 from .intent_service import router as intent_router
 from .ai_engine import router as ai_router
@@ -58,21 +59,35 @@ async def websocket_endpoint(websocket: WebSocket):
     await manager.connect(websocket)
     try:
         # Send initial connection confirmation
-        await manager.send_personal(websocket, {
-            "type": "connected",
-            "data": {"message": "Connected to AI-Native Broadcast Intelligence Platform"}
+        await websocket.send_json({
+            "type": "connection_established",
+            "data": {
+                "message": "Connected to AI-Native Broadcast Intelligence Platform",
+                "timestamp": str(datetime.utcnow())
+            }
         })
         
-        # Keep connection alive and handle incoming messages
+        # Listen for incoming messages (e.g., from Advertiser App)
         while True:
-            data = await websocket.receive_text()
-            # Echo or handle client messages if needed
-            # For now, the server primarily broadcasts to clients
+            data = await websocket.receive_json()
+            
+            # Message Relay Logic
+            if data.get("type") == "broadcast_packet":
+                # Advertiser is broadcasting a packet
+                # Relay to ALL connected clients (Receivers will hear this)
+                await manager.broadcast({
+                    "type": "air_interface_packet",
+                    "data": data.get("data")
+                })
+                
     except WebSocketDisconnect:
         await manager.disconnect(websocket)
     except Exception as e:
         print(f"WebSocket error: {e}")
-        await manager.disconnect(websocket)
+        try:
+            await manager.disconnect(websocket)
+        except:
+            pass
 
 # Core routers
 app.include_router(intent_router, prefix="/intent", tags=["Intent Service"])

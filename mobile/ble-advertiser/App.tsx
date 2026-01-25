@@ -7,6 +7,7 @@ import {
     ScrollView,
     Alert,
     Platform,
+    Share,
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
@@ -30,26 +31,67 @@ interface BLEPacket {
     size_bytes: number;
 }
 
+interface OperatorIntent {
+    intent: string;
+    intent_code: number;
+    display_name: string;
+    description: string;
+    auto_adjustments: {
+        priority: string;
+        power_mode: string;
+        modulation: string;
+        behavior: string;
+    };
+}
+
 export default function App() {
     const [isAdvertising, setIsAdvertising] = useState(false);
     const [state, setState] = useState<AIState | null>(null);
     const [packet, setPacket] = useState<BLEPacket | null>(null);
+    const [intent, setIntent] = useState<OperatorIntent | null>(null);
     const [error, setError] = useState<string | null>(null);
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
+    const [ws, setWs] = useState<WebSocket | null>(null);
+
+    // WebSocket Connection
+    useEffect(() => {
+        const socket = new WebSocket(BACKEND_URL.replace('http', 'ws') + '/ws');
+
+        socket.onopen = () => {
+            console.log('Advertiser: WebSocket Connected');
+            setWs(socket);
+        };
+
+        socket.onclose = () => {
+            console.log('Advertiser: WebSocket Disconnected');
+            setWs(null);
+        };
+
+        socket.onerror = (e) => {
+            console.log('Advertiser: WebSocket Error', e);
+        };
+
+        return () => {
+            socket.close();
+        };
+    }, []);
 
     // Fetch state from backend
     const fetchState = useCallback(async () => {
         try {
-            const [stateRes, packetRes] = await Promise.all([
+            const [stateRes, packetRes, intentRes] = await Promise.all([
                 fetch(`${BACKEND_URL}/ble/state`),
                 fetch(`${BACKEND_URL}/ble/packet`),
+                fetch(`${BACKEND_URL}/ble/intent`),
             ]);
 
-            if (stateRes.ok && packetRes.ok) {
+            if (stateRes.ok && packetRes.ok && intentRes.ok) {
                 const stateData = await stateRes.json();
                 const packetData = await packetRes.json();
+                const intentData = await intentRes.json();
                 setState(stateData);
                 setPacket(packetData);
+                setIntent(intentData);
                 setLastUpdate(new Date());
                 setError(null);
             } else {
@@ -60,15 +102,29 @@ export default function App() {
         }
     }, []);
 
-    // Poll for updates when advertising
+    // Poll for updates from backend (System State)
     useEffect(() => {
         fetchState();
+        const interval = setInterval(fetchState, 2000);
+        return () => clearInterval(interval);
+    }, [fetchState]);
 
-        if (isAdvertising) {
-            const interval = setInterval(fetchState, 2000);
-            return () => clearInterval(interval);
+    // BROADCASTING Loop (Transmission)
+    // Sends packet through WebSocket to all listening receivers
+    useEffect(() => {
+        if (isAdvertising && ws && packet && ws.readyState === WebSocket.OPEN) {
+            const broadcastInterval = setInterval(() => {
+                // TRANSMIT PACKET
+                ws.send(JSON.stringify({
+                    type: 'broadcast_packet',
+                    data: packet.hex_string
+                }));
+                console.log('Tx: Sent Packet');
+            }, 1000); // 1Hz Broadcast Rate
+
+            return () => clearInterval(broadcastInterval);
         }
-    }, [isAdvertising, fetchState]);
+    }, [isAdvertising, ws, packet]);
 
     // Start/Stop advertising
     const toggleAdvertising = async () => {
@@ -93,6 +149,44 @@ export default function App() {
             );
         } else {
             setIsAdvertising(false);
+        }
+    };
+
+    // Share OPERATOR INTENT via Bluetooth using Android Intent
+    // Intent = the GOAL, not the configuration
+    const shareViaBluetooth = async () => {
+        if (!intent) {
+            Alert.alert('No Intent', 'Wait for operator intent to load before sharing.');
+            return;
+        }
+
+        try {
+            // Key concept: We broadcast the INTENT (goal), not the config
+            const message = `🎯 OPERATOR INTENT BROADCAST\n\n` +
+                `═══════════════════════════════\n` +
+                `📡 NETWORK GOAL: ${intent.display_name}\n` +
+                `═══════════════════════════════\n\n` +
+                `${intent.description}\n\n` +
+                `🔧 AUTO-ADJUSTMENTS:\n` +
+                `  • Priority: ${intent.auto_adjustments.priority}\n` +
+                `  • Power Mode: ${intent.auto_adjustments.power_mode}\n` +
+                `  • Modulation: ${intent.auto_adjustments.modulation}\n\n` +
+                `💡 Receivers automatically adjust their\n` +
+                `   priorities to match this goal.\n\n` +
+                `Intent Code: ${intent.intent_code}\n` +
+                `━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n` +
+                `Sent from ATSC Broadcast AI Demo`;
+
+            const result = await Share.share({
+                message: message,
+                title: `Network Goal: ${intent.display_name}`,
+            });
+
+            if (result.action === Share.sharedAction) {
+                Alert.alert('Intent Broadcast', 'Network goal sent via Bluetooth!');
+            }
+        } catch (error) {
+            Alert.alert('Error', `Failed to share: ${error}`);
         }
     };
 
@@ -123,6 +217,23 @@ export default function App() {
                     {isAdvertising ? '⏹ STOP BROADCASTING' : '▶ START BROADCASTING'}
                 </Text>
             </TouchableOpacity>
+
+            {/* INTENT Display - The GOAL being broadcast */}
+            {intent && (
+                <View style={styles.intentContainer}>
+                    <Text style={styles.intentLabel}>🎯 OPERATOR INTENT</Text>
+                    <Text style={styles.intentValue}>{intent.display_name}</Text>
+                    <Text style={styles.intentDescription}>{intent.description}</Text>
+                    <View style={styles.intentAdjustments}>
+                        <Text style={styles.adjustmentTitle}>Auto-Adjustments:</Text>
+                        <Text style={styles.adjustmentItem}>• Priority: {intent.auto_adjustments.priority}</Text>
+                        <Text style={styles.adjustmentItem}>• Power: {intent.auto_adjustments.power_mode}</Text>
+                    </View>
+                    <TouchableOpacity style={styles.shareButton} onPress={shareViaBluetooth}>
+                        <Text style={styles.shareButtonText}>📲 Share Intent via Bluetooth</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
 
             {/* State Display */}
             <ScrollView style={styles.stateContainer}>
@@ -171,6 +282,14 @@ export default function App() {
                     <View style={styles.packetContainer}>
                         <Text style={styles.packetTitle}>BLE Packet ({packet.size_bytes} bytes)</Text>
                         <Text style={styles.packetHex}>{packet.hex_string}</Text>
+
+                        {/* Share via Bluetooth Button */}
+                        <TouchableOpacity
+                            style={styles.shareButton}
+                            onPress={shareViaBluetooth}
+                        >
+                            <Text style={styles.shareButtonText}>📲 Share via Bluetooth</Text>
+                        </TouchableOpacity>
                     </View>
                 )}
 
@@ -367,5 +486,62 @@ const styles = StyleSheet.create({
         color: '#475569',
         fontSize: 10,
         textAlign: 'center',
+    },
+    shareButton: {
+        backgroundColor: '#3b82f6',
+        paddingVertical: 12,
+        paddingHorizontal: 16,
+        borderRadius: 8,
+        marginTop: 12,
+        alignItems: 'center',
+    },
+    shareButtonText: {
+        color: '#fff',
+        fontSize: 14,
+        fontWeight: 'bold',
+    },
+    // Intent Display Styles
+    intentContainer: {
+        backgroundColor: '#14532d',
+        marginHorizontal: 20,
+        padding: 16,
+        borderRadius: 12,
+        marginBottom: 16,
+        borderWidth: 2,
+        borderColor: '#22c55e',
+    },
+    intentLabel: {
+        color: '#86efac',
+        fontSize: 12,
+        fontWeight: 'bold',
+        marginBottom: 4,
+    },
+    intentValue: {
+        color: '#22c55e',
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom: 8,
+    },
+    intentDescription: {
+        color: '#bbf7d0',
+        fontSize: 14,
+        marginBottom: 12,
+    },
+    intentAdjustments: {
+        backgroundColor: '#0f3d1c',
+        padding: 10,
+        borderRadius: 8,
+        marginBottom: 12,
+    },
+    adjustmentTitle: {
+        color: '#86efac',
+        fontSize: 11,
+        fontWeight: 'bold',
+        marginBottom: 6,
+    },
+    adjustmentItem: {
+        color: '#d1fae5',
+        fontSize: 12,
+        marginBottom: 2,
     },
 });
