@@ -86,11 +86,34 @@ def _load_terrain_grid(data_path: Optional[str] = None) -> Optional[Dict]:
         points = np.array([s.points[0] for s, r in valid_data])
         elevations = np.array([r[2] if len(r) > 2 else 250.0 for s, r in valid_data])
 
+        # Get unique coordinates
         lons = np.unique(points[:, 0])
         lats = np.unique(points[:, 1])
+        
+        # Validate: Delaunay triangulation requires at least 4 non-collinear points
+        # Also need at least 2 unique values in each dimension for a proper grid
+        if len(lons) < 2 or len(lats) < 2:
+            logging.warning(
+                f"Insufficient terrain grid dimensions (lons={len(lons)}, lats={len(lats)}). "
+                "Need at least 2x2 grid. Falling back to Hata model."
+            )
+            return None
+        
+        if len(points) < 4:
+            logging.warning(
+                f"Insufficient terrain points ({len(points)}). "
+                "Delaunay triangulation requires at least 4 points. Falling back to Hata model."
+            )
+            return None
 
         grid_lon, grid_lat = np.meshgrid(lons, lats)
-        grid_elevation = griddata(points, elevations, (grid_lon, grid_lat), method='linear')
+        
+        # Use 'nearest' method first as fallback if 'linear' fails (avoids QHull issues)
+        try:
+            grid_elevation = griddata(points, elevations, (grid_lon, grid_lat), method='linear')
+        except Exception as qhull_error:
+            logging.warning(f"Linear interpolation failed ({qhull_error}), using 'nearest' method.")
+            grid_elevation = griddata(points, elevations, (grid_lon, grid_lat), method='nearest')
 
         # Handle NaNs from gridding by filling with the mean elevation
         mean_elevation = np.nanmean(grid_elevation)
