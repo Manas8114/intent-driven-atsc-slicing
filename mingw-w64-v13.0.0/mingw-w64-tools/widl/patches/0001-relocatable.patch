@@ -1,0 +1,45 @@
+diff --git a/mingw-w64-tools/widl/src/widl.c b/mingw-w64-tools/widl/src/widl.c
+index 6eb81d128..ef9ced031 100644
+--- a/mingw-w64-tools/widl/src/widl.c
++++ b/mingw-w64-tools/widl/src/widl.c
+@@ -635,7 +635,7 @@ static void option_callback( int optc, char *optarg )
+ 
+ int open_typelib( const char *name )
+ {
+-    static const char *default_dirs[] = { LIBDIR "/wine", "/usr/lib/wine", "/usr/local/lib/wine" };
++    static const char *default_dirs[] = { LIBDIR };
+     struct target win_target = { target.cpu, PLATFORM_WINDOWS };
+     const char *pe_dir = get_arch_dir( win_target );
+     int fd;
+@@ -666,8 +666,7 @@ int open_typelib( const char *name )
+     {
+         if (libdir)
+         {
+-            TRYOPEN( strmake( "%s/wine%s/%s", libdir, pe_dir, name ));
+-            TRYOPEN( strmake( "%s/wine/%s", libdir, name ));
++            TRYOPEN( strmake( "%s/%s", libdir, name ));
+         }
+         for (i = 0; i < ARRAY_SIZE(default_dirs); i++)
+         {
+@@ -697,18 +696,16 @@ int main(int argc,char *argv[])
+ 
+   if (stdinc)
+   {
+-      static const char *incl_dirs[] = { INCLUDEDIR, "/usr/include", "/usr/local/include" };
++      static const char *incl_dirs[] = { INCLUDEDIR };
+ 
+       if (includedir)
+       {
+-          wpp_add_include_path( strmake( "%s/wine/msvcrt", includedir ));
+-          wpp_add_include_path( strmake( "%s/wine/windows", includedir ));
++          wpp_add_include_path( includedir );
+       }
+       for (i = 0; i < ARRAY_SIZE(incl_dirs); i++)
+       {
+           if (i && !strcmp( incl_dirs[i], incl_dirs[0] )) continue;
+-          wpp_add_include_path( strmake( "%s%s/wine/msvcrt", sysroot, incl_dirs[i] ));
+-          wpp_add_include_path( strmake( "%s%s/wine/windows", sysroot, incl_dirs[i] ));
++          wpp_add_include_path( strmake( "%s%s", sysroot, incl_dirs[i] ));
+       }
+   }
+ 

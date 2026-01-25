@@ -1,0 +1,367 @@
+
+---
+events:
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineSystem.cmake:205 (message)"
+      - "CMakeLists.txt:4 (project)"
+    message: |
+      The system is: Windows - 10.0.26200 - AMD64
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:4 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/gcc.exe 
+      Build flags: 
+      Id flags:  
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "a.exe"
+      
+      The C compiler identification could not be found in:
+        C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/3.29.0/CompilerIdC/a.exe
+      
+  -
+    kind: "message-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:17 (message)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCompilerId.cmake:64 (__determine_compiler_id_test)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCCompiler.cmake:123 (CMAKE_DETERMINE_COMPILER_ID)"
+      - "CMakeLists.txt:4 (project)"
+    message: |
+      Compiling the C compiler identification source file "CMakeCCompilerId.c" succeeded.
+      Compiler: C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/gcc.exe 
+      Build flags: 
+      Id flags: -c 
+      
+      The output was:
+      0
+      
+      
+      Compilation of the C compiler identification source "CMakeCCompilerId.c" produced "CMakeCCompilerId.o"
+      
+      The C compiler identification is GNU, found in:
+        C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/3.29.0/CompilerIdC/CMakeCCompilerId.o
+      
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeDetermineCompilerABI.cmake:64 (try_compile)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:26 (CMAKE_DETERMINE_COMPILER_ABI)"
+      - "CMakeLists.txt:4 (project)"
+    checks:
+      - "Detecting C compiler ABI info"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-5vapgh"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-5vapgh"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_ABI_COMPILED"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-5vapgh'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_a8c3a/fast
+        make  -f CMakeFiles\\cmTC_a8c3a.dir\\build.make CMakeFiles/cmTC_a8c3a.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-5vapgh'
+        Building C object CMakeFiles/cmTC_a8c3a.dir/CMakeCCompilerABI.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe   -v -o CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\share\\cmake-3.29\\Modules\\CMakeCCompilerABI.c
+        Using built-in specs.
+        COLLECT_GCC=C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe
+        Target: x86_64-w64-mingw32
+        Configured with: /gcc-13.2.0/configure --prefix=/w64devkit --with-sysroot=/w64devkit/x86_64-w64-mingw32 --with-native-system-header-dir=/include --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --enable-static --disable-shared --with-pic --with-gmp-include=/deps/include --with-gmp-lib=/deps/lib --with-mpc-include=/deps/include --with-mpc-lib=/deps/lib --with-mpfr-include=/deps/include --with-mpfr-lib=/deps/lib --enable-languages=c,c++ --enable-libgomp --enable-threads=posix --enable-version-specific-runtime-libs --disable-dependency-tracking --disable-multilib --disable-nls --disable-win32-registry --enable-mingw-wildcard CFLAGS_FOR_TARGET=-Os CXXFLAGS_FOR_TARGET=-Os LDFLAGS_FOR_TARGET=-s CFLAGS=-Os CXXFLAGS=-Os LDFLAGS=-s
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.2.0 (GCC) 
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_a8c3a.dir\\'
+         C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/cc1.exe -quiet -v -iprefix C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/ -isysroot C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../x86_64-w64-mingw32 -D_REENTRANT C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\share\\cmake-3.29\\Modules\\CMakeCCompilerABI.c -quiet -dumpdir CMakeFiles\\cmTC_a8c3a.dir\\ -dumpbase CMakeCCompilerABI.c.c -dumpbase-ext .c -mtune=generic -march=x86-64 -version -o C:\\Users\\msgok\\AppData\\Local\\Temp\\cc9bynsl.s
+        GNU C17 (GCC) version 13.2.0 (x86_64-w64-mingw32)
+        	compiled by GNU C version 13.2.0, GMP version 6.2.1, MPFR version 4.1.0, MPC version 1.2.1, isl version none
+        GGC heuristics: --param ggc-min-expand=100 --param ggc-min-heapsize=131072
+        ignoring duplicate directory "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/lib/gcc/../../lib/gcc/x86_64-w64-mingw32/13.2.0/include"
+        ignoring nonexistent directory "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../x86_64-w64-mingw32/w64devkit/lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../include"
+        ignoring duplicate directory "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/lib/gcc/../../lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed"
+        ignoring duplicate directory "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/lib/gcc/../../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/include"
+        ignoring nonexistent directory "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../x86_64-w64-mingw32/mingw/include"
+        #include "..." search starts here:
+        #include <...> search starts here:
+         C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/include
+         C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/include-fixed
+         C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/include
+        End of search list.
+        Compiler executable checksum: 25d06e4d73ec1991744ea84fbd003cb9
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_a8c3a.dir\\'
+         as -v -o CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.obj C:\\Users\\msgok\\AppData\\Local\\Temp\\cc9bynsl.s
+        GNU assembler version 2.40 (x86_64-w64-mingw32) using BFD version (GNU Binutils) 2.40
+        COMPILER_PATH=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/
+        LIBRARY_PATH=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../
+        COLLECT_GCC_OPTIONS='-v' '-o' 'CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.obj' '-c' '-mtune=generic' '-march=x86-64' '-dumpdir' 'CMakeFiles\\cmTC_a8c3a.dir\\CMakeCCompilerABI.c.'
+        Linking C executable cmTC_a8c3a.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_a8c3a.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_a8c3a.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_a8c3a.dir/objects.a @CMakeFiles\\cmTC_a8c3a.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe  -v -Wl,-v -Wl,--whole-archive CMakeFiles\\cmTC_a8c3a.dir/objects.a -Wl,--no-whole-archive -o cmTC_a8c3a.exe -Wl,--out-implib,libcmTC_a8c3a.dll.a -Wl,--major-image-version,0,--minor-image-version,0
+        Using built-in specs.
+        COLLECT_GCC=C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe
+        COLLECT_LTO_WRAPPER=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/lto-wrapper.exe
+        Target: x86_64-w64-mingw32
+        Configured with: /gcc-13.2.0/configure --prefix=/w64devkit --with-sysroot=/w64devkit/x86_64-w64-mingw32 --with-native-system-header-dir=/include --target=x86_64-w64-mingw32 --host=x86_64-w64-mingw32 --enable-static --disable-shared --with-pic --with-gmp-include=/deps/include --with-gmp-lib=/deps/lib --with-mpc-include=/deps/include --with-mpc-lib=/deps/lib --with-mpfr-include=/deps/include --with-mpfr-lib=/deps/lib --enable-languages=c,c++ --enable-libgomp --enable-threads=posix --enable-version-specific-runtime-libs --disable-dependency-tracking --disable-multilib --disable-nls --disable-win32-registry --enable-mingw-wildcard CFLAGS_FOR_TARGET=-Os CXXFLAGS_FOR_TARGET=-Os LDFLAGS_FOR_TARGET=-s CFLAGS=-Os CXXFLAGS=-Os LDFLAGS=-s
+        Thread model: posix
+        Supported LTO compression algorithms: zlib
+        gcc version 13.2.0 (GCC) 
+        COMPILER_PATH=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/
+        LIBRARY_PATH=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/;C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_a8c3a.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_a8c3a.'
+         C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/collect2.exe -plugin C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/liblto_plugin.dll -plugin-opt=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/lto-wrapper.exe -plugin-opt=-fresolution=C:\\Users\\msgok\\AppData\\Local\\Temp\\ccF4sqtw.res -plugin-opt=-pass-through=-lmingw32 -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lmoldname -plugin-opt=-pass-through=-lmingwex -plugin-opt=-pass-through=-lmsvcrt -plugin-opt=-pass-through=-lkernel32 -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-ladvapi32 -plugin-opt=-pass-through=-lshell32 -plugin-opt=-pass-through=-luser32 -plugin-opt=-pass-through=-lkernel32 -plugin-opt=-pass-through=-lmingw32 -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lmoldname -plugin-opt=-pass-through=-lmingwex -plugin-opt=-pass-through=-lmsvcrt -plugin-opt=-pass-through=-lkernel32 --sysroot=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_a8c3a.exe C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/crtbegin.o -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0 -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_a8c3a.dir/objects.a --no-whole-archive --out-implib libcmTC_a8c3a.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmoldname -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmoldname -lmingwex -lmsvcrt -lkernel32 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/crtend.o
+        collect2 version 13.2.0
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin/ld.exe -plugin C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/liblto_plugin.dll -plugin-opt=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../libexec/gcc/x86_64-w64-mingw32/13.2.0/lto-wrapper.exe -plugin-opt=-fresolution=C:\\Users\\msgok\\AppData\\Local\\Temp\\ccF4sqtw.res -plugin-opt=-pass-through=-lmingw32 -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lmoldname -plugin-opt=-pass-through=-lmingwex -plugin-opt=-pass-through=-lmsvcrt -plugin-opt=-pass-through=-lkernel32 -plugin-opt=-pass-through=-lpthread -plugin-opt=-pass-through=-ladvapi32 -plugin-opt=-pass-through=-lshell32 -plugin-opt=-pass-through=-luser32 -plugin-opt=-pass-through=-lkernel32 -plugin-opt=-pass-through=-lmingw32 -plugin-opt=-pass-through=-lgcc -plugin-opt=-pass-through=-lmoldname -plugin-opt=-pass-through=-lmingwex -plugin-opt=-pass-through=-lmsvcrt -plugin-opt=-pass-through=-lkernel32 --sysroot=C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../x86_64-w64-mingw32 -m i386pep -Bdynamic -o cmTC_a8c3a.exe C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib/crt2.o C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/crtbegin.o -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0 -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib/../lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../../../x86_64-w64-mingw32/lib -LC:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/../../.. -v --whole-archive CMakeFiles\\cmTC_a8c3a.dir/objects.a --no-whole-archive --out-implib libcmTC_a8c3a.dll.a --major-image-version 0 --minor-image-version 0 -lmingw32 -lgcc -lmoldname -lmingwex -lmsvcrt -lkernel32 -lpthread -ladvapi32 -lshell32 -luser32 -lkernel32 -lmingw32 -lgcc -lmoldname -lmingwex -lmsvcrt -lkernel32 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/../lib/gcc/x86_64-w64-mingw32/13.2.0/crtend.o
+        GNU ld (GNU Binutils) 2.40
+        COLLECT_GCC_OPTIONS='-v' '-o' 'cmTC_a8c3a.exe' '-mtune=generic' '-march=x86-64' '-dumpdir' 'cmTC_a8c3a.'
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-5vapgh'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CMakeTestCCompiler.cmake:56 (try_compile)"
+      - "CMakeLists.txt:4 (project)"
+    checks:
+      - "Check for working C compiler: C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/gcc.exe"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-vwwxsq"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-vwwxsq"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "CMAKE_C_COMPILER_WORKS"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-vwwxsq'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_5aa05/fast
+        make  -f CMakeFiles\\cmTC_5aa05.dir\\build.make CMakeFiles/cmTC_5aa05.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-vwwxsq'
+        Building C object CMakeFiles/cmTC_5aa05.dir/testCCompiler.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe    -o CMakeFiles\\cmTC_5aa05.dir\\testCCompiler.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-vwwxsq\\testCCompiler.c
+        Linking C executable cmTC_5aa05.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_5aa05.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_5aa05.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_5aa05.dir/objects.a @CMakeFiles\\cmTC_5aa05.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_5aa05.dir/objects.a -Wl,--no-whole-archive -o cmTC_5aa05.exe -Wl,--out-implib,libcmTC_5aa05.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_5aa05.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-vwwxsq'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckIncludeFile.cmake:90 (try_compile)"
+      - "CMakeLists.txt:22 (check_include_file)"
+    checks:
+      - "Looking for sys/types.h"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-odu1ub"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-odu1ub"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_SYS_TYPES_H"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-odu1ub'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_d450c/fast
+        make  -f CMakeFiles\\cmTC_d450c.dir\\build.make CMakeFiles/cmTC_d450c.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-odu1ub'
+        Building C object CMakeFiles/cmTC_d450c.dir/CheckIncludeFile.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe    -o CMakeFiles\\cmTC_d450c.dir\\CheckIncludeFile.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-odu1ub\\CheckIncludeFile.c
+        Linking C executable cmTC_d450c.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_d450c.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_d450c.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_d450c.dir/objects.a @CMakeFiles\\cmTC_d450c.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_d450c.dir/objects.a -Wl,--no-whole-archive -o cmTC_d450c.exe -Wl,--out-implib,libcmTC_d450c.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_d450c.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-odu1ub'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckIncludeFile.cmake:90 (try_compile)"
+      - "CMakeLists.txt:23 (check_include_file)"
+    checks:
+      - "Looking for stdint.h"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-n8xvgh"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-n8xvgh"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_STDINT_H"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-n8xvgh'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_24459/fast
+        make  -f CMakeFiles\\cmTC_24459.dir\\build.make CMakeFiles/cmTC_24459.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-n8xvgh'
+        Building C object CMakeFiles/cmTC_24459.dir/CheckIncludeFile.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe    -o CMakeFiles\\cmTC_24459.dir\\CheckIncludeFile.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-n8xvgh\\CheckIncludeFile.c
+        Linking C executable cmTC_24459.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_24459.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_24459.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_24459.dir/objects.a @CMakeFiles\\cmTC_24459.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_24459.dir/objects.a -Wl,--no-whole-archive -o cmTC_24459.exe -Wl,--out-implib,libcmTC_24459.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_24459.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-n8xvgh'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckIncludeFile.cmake:90 (try_compile)"
+      - "CMakeLists.txt:24 (check_include_file)"
+    checks:
+      - "Looking for stddef.h"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-jtw9ds"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-jtw9ds"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_STDDEF_H"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-jtw9ds'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_bd3e9/fast
+        make  -f CMakeFiles\\cmTC_bd3e9.dir\\build.make CMakeFiles/cmTC_bd3e9.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-jtw9ds'
+        Building C object CMakeFiles/cmTC_bd3e9.dir/CheckIncludeFile.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe    -o CMakeFiles\\cmTC_bd3e9.dir\\CheckIncludeFile.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-jtw9ds\\CheckIncludeFile.c
+        Linking C executable cmTC_bd3e9.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_bd3e9.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_bd3e9.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_bd3e9.dir/objects.a @CMakeFiles\\cmTC_bd3e9.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_bd3e9.dir/objects.a -Wl,--no-whole-archive -o cmTC_bd3e9.exe -Wl,--out-implib,libcmTC_bd3e9.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_bd3e9.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-jtw9ds'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckTypeSize.cmake:146 (try_compile)"
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckTypeSize.cmake:271 (__check_type_size_impl)"
+      - "CMakeLists.txt:42 (check_type_size)"
+    checks:
+      - "Check size of off64_t"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-qygs6j"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-qygs6j"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_OFF64_T"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-qygs6j'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_4464f/fast
+        make  -f CMakeFiles\\cmTC_4464f.dir\\build.make CMakeFiles/cmTC_4464f.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-qygs6j'
+        Building C object CMakeFiles/cmTC_4464f.dir/OFF64_T.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -DHAVE_STDDEF_H -DHAVE_STDINT_H -DHAVE_SYS_TYPES_H -D_LARGEFILE64_SOURCE=1   -o CMakeFiles\\cmTC_4464f.dir\\OFF64_T.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-qygs6j\\OFF64_T.c
+        Linking C executable cmTC_4464f.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_4464f.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_4464f.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_4464f.dir/objects.a @CMakeFiles\\cmTC_4464f.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_4464f.dir/objects.a -Wl,--no-whole-archive -o cmTC_4464f.exe -Wl,--out-implib,libcmTC_4464f.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_4464f.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-qygs6j'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckFunctionExists.cmake:86 (try_compile)"
+      - "CMakeLists.txt:51 (check_function_exists)"
+    checks:
+      - "Looking for fseeko"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-prenmv"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-prenmv"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "HAVE_FSEEKO"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-prenmv'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_48b6c/fast
+        make  -f CMakeFiles\\cmTC_48b6c.dir\\build.make CMakeFiles/cmTC_48b6c.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-prenmv'
+        Building C object CMakeFiles/cmTC_48b6c.dir/CheckFunctionExists.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe   -DCHECK_FUNCTION_EXISTS=fseeko -o CMakeFiles\\cmTC_48b6c.dir\\CheckFunctionExists.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-prenmv\\CheckFunctionExists.c
+        Linking C executable cmTC_48b6c.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_48b6c.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_48b6c.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_48b6c.dir/objects.a @CMakeFiles\\cmTC_48b6c.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe  -DCHECK_FUNCTION_EXISTS=fseeko -Wl,--whole-archive CMakeFiles\\cmTC_48b6c.dir/objects.a -Wl,--no-whole-archive -o cmTC_48b6c.exe -Wl,--out-implib,libcmTC_48b6c.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_48b6c.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-prenmv'
+        
+      exitCode: 0
+  -
+    kind: "try_compile-v1"
+    backtrace:
+      - "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/share/cmake-3.29/Modules/CheckIncludeFile.cmake:90 (try_compile)"
+      - "CMakeLists.txt:59 (check_include_file)"
+    checks:
+      - "Looking for unistd.h"
+    directories:
+      source: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-srnyj0"
+      binary: "C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-srnyj0"
+    cmakeVariables:
+      CMAKE_C_FLAGS: ""
+      CMAKE_C_FLAGS_DEBUG: "-g"
+      CMAKE_EXE_LINKER_FLAGS: ""
+    buildResult:
+      variable: "Z_HAVE_UNISTD_H"
+      cached: true
+      stdout: |
+        Change Dir: 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-srnyj0'
+        
+        Run Build Command(s): C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/cmake-3.29.0-windows-x86_64/bin/cmake.exe -E env VERBOSE=1 C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/w64devkit/w64devkit/bin/mingw32-make.exe -f Makefile cmTC_e8182/fast
+        make  -f CMakeFiles\\cmTC_e8182.dir\\build.make CMakeFiles/cmTC_e8182.dir/build
+        make[1]: Entering directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-srnyj0'
+        Building C object CMakeFiles/cmTC_e8182.dir/CheckIncludeFile.c.obj
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe    -o CMakeFiles\\cmTC_e8182.dir\\CheckIncludeFile.c.obj -c C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\zlib\\zlib-1.3.1\\build\\CMakeFiles\\CMakeScratch\\TryCompile-srnyj0\\CheckIncludeFile.c
+        Linking C executable cmTC_e8182.exe
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E cmake_link_script CMakeFiles\\cmTC_e8182.dir\\link.txt --verbose=1
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\cmake-3.29.0-windows-x86_64\\bin\\cmake.exe -E rm -f CMakeFiles\\cmTC_e8182.dir/objects.a
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\ar.exe qc CMakeFiles\\cmTC_e8182.dir/objects.a @CMakeFiles\\cmTC_e8182.dir\\objects1.rsp
+        C:\\Users\\msgok\\OneDrive\\Desktop\\Project\\hackathon\\intent-driven-atsc-slicing\\tools\\w64devkit\\w64devkit\\bin\\gcc.exe -Wl,--whole-archive CMakeFiles\\cmTC_e8182.dir/objects.a -Wl,--no-whole-archive -o cmTC_e8182.exe -Wl,--out-implib,libcmTC_e8182.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\\cmTC_e8182.dir\\linkLibs.rsp
+        make[1]: Leaving directory 'C:/Users/msgok/OneDrive/Desktop/Project/hackathon/intent-driven-atsc-slicing/tools/zlib/zlib-1.3.1/build/CMakeFiles/CMakeScratch/TryCompile-srnyj0'
+        
+      exitCode: 0
+...

@@ -1,0 +1,41 @@
+{
+    "expo": {
+        "name": "BLE Receiver",
+        "slug": "ble-receiver",
+        "version": "1.0.0",
+        "orientation": "portrait",
+        "icon": "./assets/icon.png",
+        "userInterfaceStyle": "dark",
+        "splash": {
+            "image": "./assets/splash.png",
+            "resizeMode": "contain",
+            "backgroundColor": "#0f172a"
+        },
+        "assetBundlePatterns": [
+            "**/*"
+        ],
+        "ios": {
+            "supportsTablet": true,
+            "bundleIdentifier": "com.broadcastai.blereceiver",
+            "infoPlist": {
+                "NSBluetoothAlwaysUsageDescription": "This app scans for BLE broadcasts from the AI tower",
+                "NSBluetoothPeripheralUsageDescription": "This app receives BLE signals for demo purposes"
+            }
+        },
+        "android": {
+            "minSdkVersion": 24,
+            "adaptiveIcon": {
+                "foregroundImage": "./assets/adaptive-icon.png",
+                "backgroundColor": "#0f172a"
+            },
+            "package": "com.broadcastai.blereceiver",
+            "permissions": [
+                "android.permission.BLUETOOTH",
+                "android.permission.BLUETOOTH_ADMIN",
+                "android.permission.BLUETOOTH_CONNECT",
+                "android.permission.BLUETOOTH_SCAN",
+                "android.permission.ACCESS_FINE_LOCATION"
+            ]
+        }
+    }
+}

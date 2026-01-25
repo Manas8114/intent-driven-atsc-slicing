@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Sun, Moon, Home, Activity, Zap, History, Database, Cpu, LayoutGrid, Radio, Signal } from 'lucide-react';
+import { Sun, Moon, Home, Activity, Zap, History, Database, Cpu, LayoutGrid, Radio, Signal, Bluetooth } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
 import { TopStatusBar } from './TopStatusBar';
@@ -28,6 +28,7 @@ const NAV_ITEMS: NavItem[] = [
     { id: 'training', label: 'Training Data', icon: Database, highlight: true, section: 'Competition' },
     { id: 'architecture', label: 'ITU Architecture', icon: LayoutGrid, highlight: true, section: 'Competition' },
     { id: 'benchmarks', label: 'AI vs Baseline', icon: Activity, highlight: true, section: 'Competition' },
+    { id: 'ble', label: 'BLE Mobile Demo', icon: Bluetooth, highlight: true, section: 'Competition' },
     // Core Operations
     { id: 'overview', label: 'System Overview', icon: Home },
     { id: 'approval', label: 'Deployment Approval', icon: Activity, highlight: true },

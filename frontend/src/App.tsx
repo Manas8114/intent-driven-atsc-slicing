@@ -23,6 +23,7 @@ import { BroadcastCoverage } from './pages/BroadcastCoverage';
 import { TrainingData } from './pages/TrainingData';
 import { Architecture } from './pages/Architecture';
 import { Benchmarks } from './pages/Benchmarks';
+import { BLEDemo } from './pages/BLEDemo';
 
 function App() {
   const [activePage, setActivePage] = useState('cognitive');
@@ -40,6 +41,7 @@ function App() {
       case 'training': return <TrainingData />;
       case 'architecture': return <Architecture />;
       case 'benchmarks': return <Benchmarks />;
+      case 'ble': return <BLEDemo />;
       // Core Operations  
       case 'overview': return <Overview />;
       case 'intent': return <IntentControl />;

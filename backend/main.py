@@ -15,6 +15,7 @@ from .ai_data_collector import router as knowledge_router
 from .demand_predictor import router as demand_router
 from .learning_loop import router as learning_router
 from .bootstrap_uncertainty import router as bootstrap_router
+from .ble_adapter import router as ble_router
 
 app = FastAPI(
     title="AI-Native Broadcast Intelligence Platform",
@@ -139,6 +140,9 @@ app.include_router(broadcast_router, prefix="/broadcast", tags=["Real Broadcast 
 
 from .experience_buffer import router as experience_router
 app.include_router(experience_router, prefix="/experiences", tags=["Training Experience Buffer"])
+
+# BLE Mobile Demo (Hackathon Demo Feature)
+app.include_router(ble_router, prefix="/ble", tags=["BLE Mobile Demo"])
 
 
 # ============================================================================
