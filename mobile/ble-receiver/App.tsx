@@ -15,6 +15,203 @@ import { StatusBar } from 'expo-status-bar';
 // Backend URL - change this to your server IP for direct polling mode
 const BACKEND_URL = 'http://192.168.1.40:8000';
 
+// ============================================================================
+// REAL PACKET DECODING (Matches backend ble_adapter.py)
+// ============================================================================
+
+// Decoding maps (reverse of backend encoding)
+const DELIVERY_MODE_REVERSE: Record<number, string> = { 0: 'unicast', 1: 'multicast', 2: 'broadcast' };
+const MODULATION_REVERSE: Record<number, string> = { 0: 'QPSK', 1: '16QAM', 2: '64QAM', 3: '256QAM' };
+const CODING_RATE_REVERSE: Record<number, string> = { 0: '5/15', 1: '7/15', 2: '9/15', 3: '11/15' };
+const HURDLE_REVERSE: Record<number, string | null> = {
+    0: null, 1: 'coverage_drop', 2: 'interference', 3: 'spectrum_reduction',
+    4: 'traffic_surge', 5: 'emergency_escalation', 6: 'cellular_congestion',
+    7: 'mobility_surge', 8: 'monsoon', 9: 'flash_crowd', 10: 'tower_failure'
+};
+const INTENT_REVERSE: Record<number, string> = {
+    0: 'maximize_coverage', 1: 'maximize_throughput', 2: 'minimize_latency',
+    3: 'emergency_response', 4: 'power_efficient', 5: 'rural_priority',
+    6: 'urban_dense', 7: 'balanced'
+};
+
+/**
+ * Calculate CRC16-CCITT (0xFFFF init, 0x1021 poly) - REAL implementation
+ */
+function calculateCRC16(bytes: number[]): number {
+    let crc = 0xFFFF;
+    for (const byte of bytes) {
+        crc ^= (byte << 8);
+        for (let i = 0; i < 8; i++) {
+            if (crc & 0x8000) {
+                crc = ((crc << 1) ^ 0x1021) & 0xFFFF;
+            } else {
+                crc = (crc << 1) & 0xFFFF;
+            }
+        }
+    }
+    return crc;
+}
+
+/**
+ * REAL packet decoder - parses the 20-byte hex string locally
+ * Matches the backend's ble_adapter.py encoding exactly
+ * 
+ * Packet Structure:
+ * [0]     Version (uint8)
+ * [1]     Delivery Mode (uint8): 0=unicast, 1=multicast, 2=broadcast
+ * [2]     Coverage % (uint8): 0-100
+ * [3]     SNR dB (int8): stored as uint8 with offset 128
+ * [4]     Modulation (uint8): 0=QPSK, 1=16QAM, 2=64QAM, 3=256QAM
+ * [5]     Power dBm (int8): stored as uint8 with offset 128
+ * [6]     Coding Rate (uint8): 0=5/15, 1=7/15, 2=9/15, 3=11/15
+ * [7]     Emergency Flag (uint8): 0=normal, 1=emergency
+ * [8-9]   Timestamp (uint16 big-endian)
+ * [10-11] Hurdle Code (uint16 big-endian)
+ * [12-17] Reserved (zeros)
+ * [18-19] CRC16 (uint16 big-endian)
+ */
+function decodeBLEPacket(hexString: string): { state: AIState; crcValid: boolean } | null {
+    if (hexString.length < 40) { // 20 bytes = 40 hex chars
+        console.log('Packet too short:', hexString.length);
+        return null;
+    }
+
+    // Convert hex to bytes
+    const bytes: number[] = [];
+    for (let i = 0; i < hexString.length; i += 2) {
+        bytes.push(parseInt(hexString.substr(i, 2), 16));
+    }
+
+    // Extract fields
+    const version = bytes[0];
+    const deliveryMode = DELIVERY_MODE_REVERSE[bytes[1]] || 'unknown';
+    const coverage = bytes[2];
+    const snr = bytes[3] - 128; // Remove offset
+    const modulation = MODULATION_REVERSE[bytes[4]] || 'unknown';
+    const power = bytes[5] - 128; // Remove offset
+    const codingRate = CODING_RATE_REVERSE[bytes[6]] || 'unknown';
+    const isEmergency = bytes[7] === 1;
+    const timestamp = (bytes[8] << 8) | bytes[9];
+    const hurdleCode = (bytes[10] << 8) | bytes[11];
+    const activeHurdle = HURDLE_REVERSE[hurdleCode] ?? null;
+
+    // Extract CRC from packet (last 2 bytes)
+    const receivedCRC = (bytes[18] << 8) | bytes[19];
+
+    // Calculate CRC of header (first 12 bytes)
+    const calculatedCRC = calculateCRC16(bytes.slice(0, 12));
+    const crcValid = receivedCRC === calculatedCRC;
+
+    return {
+        state: {
+            delivery_mode: deliveryMode,
+            coverage_percent: coverage,
+            snr_db: snr,
+            modulation: modulation,
+            power_dbm: power,
+            coding_rate: codingRate,
+            is_emergency: isEmergency,
+            active_hurdle: activeHurdle,
+        },
+        crcValid
+    };
+}
+
+/**
+ * Get intent from hurdle/emergency state (mirrors backend logic)
+ */
+function deriveIntent(state: AIState): OperatorIntent {
+    let intent = 'balanced';
+    if (state.is_emergency) intent = 'emergency_response';
+    else if (state.active_hurdle === 'flash_crowd' || state.active_hurdle === 'traffic_surge') intent = 'maximize_throughput';
+    else if (state.active_hurdle === 'coverage_drop' || state.active_hurdle === 'tower_failure') intent = 'maximize_coverage';
+    else if (state.active_hurdle === 'monsoon' || state.active_hurdle === 'interference') intent = 'rural_priority';
+    else if (state.active_hurdle === 'cellular_congestion') intent = 'urban_dense';
+
+    const adjustments: Record<string, { priority: string; power_mode: string; modulation: string; behavior: string }> = {
+        'emergency_response': { priority: 'EMERGENCY', power_mode: 'MAXIMUM', modulation: 'ROBUST (QPSK)', behavior: 'Override all - emergency broadcast' },
+        'maximize_coverage': { priority: 'COVERAGE', power_mode: 'MAXIMUM', modulation: 'ROBUST (QPSK)', behavior: 'Extend reach to all users' },
+        'maximize_throughput': { priority: 'SPEED', power_mode: 'ADAPTIVE', modulation: 'HIGH-ORDER (256QAM)', behavior: 'Prioritize data rate' },
+        'rural_priority': { priority: 'RURAL', power_mode: 'MAXIMUM', modulation: 'ROBUST (QPSK)', behavior: 'Focus on underserved areas' },
+        'urban_dense': { priority: 'URBAN', power_mode: 'ADAPTIVE', modulation: 'HIGH-ORDER (256QAM)', behavior: 'High-density optimization' },
+        'balanced': { priority: 'BALANCED', power_mode: 'STANDARD', modulation: 'BALANCED (64QAM)', behavior: 'Normal operation' },
+    };
+
+    const adj = adjustments[intent] || adjustments['balanced'];
+
+    return {
+        intent,
+        intent_code: Object.keys(INTENT_REVERSE).find(k => INTENT_REVERSE[parseInt(k)] === intent) ? parseInt(Object.keys(INTENT_REVERSE).find(k => INTENT_REVERSE[parseInt(k)] === intent)!) : 7,
+        display_name: intent.replace(/_/g, ' ').toUpperCase(),
+        description: adj.behavior,
+        auto_adjustments: adj,
+    };
+}
+
+// ============================================================================
+// ADVANCED PHYSICS SIMULATION
+// ============================================================================
+
+/**
+ * Calculate RSSI based on simulated distance (Log-distance path loss model)
+ * RSSI = TxPower - 10 * n * log10(distance) - randomFading
+ */
+function calculateRSSI(distance: number, txPower: number = 0): number {
+    const n = 2.5; // Path loss exponent (indoor = 2-3, outdoor = 3-4)
+    const d0 = 1; // Reference distance (meters)
+    const PL_d0 = 40; // Path loss at reference distance (dB)
+
+    if (distance < 0.1) distance = 0.1; // Minimum 10cm
+
+    const pathLoss = PL_d0 + 10 * n * Math.log10(distance / d0);
+    const fading = (Math.random() - 0.5) * 6; // Shadow fading ±3dB
+
+    return txPower - pathLoss + fading;
+}
+
+/**
+ * Calculate Bit Error Rate based on SNR (AWGN Channel Model for QPSK)
+ * BER ≈ 0.5 * erfc(sqrt(SNR_linear))
+ */
+function calculateBER(snrDb: number): number {
+    if (snrDb > 15) return 0; // Very good signal, no errors
+    if (snrDb < -5) return 0.5; // Complete noise
+
+    // Simplified BER model for QPSK
+    // Higher SNR = lower BER (exponential relationship)
+    const snrLinear = Math.pow(10, snrDb / 10);
+    const ber = 0.5 * Math.exp(-snrLinear / 2);
+
+    return Math.min(0.5, Math.max(0, ber));
+}
+
+/**
+ * Apply bit errors to packet based on BER
+ */
+function corruptPacket(hexString: string, ber: number): { corrupted: string; errorCount: number } {
+    if (ber <= 0) return { corrupted: hexString, errorCount: 0 };
+
+    const bytes: number[] = [];
+    for (let i = 0; i < hexString.length; i += 2) {
+        bytes.push(parseInt(hexString.substr(i, 2), 16));
+    }
+
+    let errorCount = 0;
+    const corruptedBytes = bytes.map(byte => {
+        let result = byte;
+        for (let bit = 0; bit < 8; bit++) {
+            if (Math.random() < ber) {
+                result ^= (1 << bit);
+                errorCount++;
+            }
+        }
+        return result;
+    });
+
+    const corrupted = corruptedBytes.map(b => b.toString(16).padStart(2, '0')).join('').toUpperCase();
+    return { corrupted, errorCount };
+}
+
 interface AIState {
     delivery_mode: string;
     coverage_percent: number;
@@ -57,6 +254,9 @@ export default function App() {
     const [lastUpdate, setLastUpdate] = useState<Date | null>(null);
     const [updateCount, setUpdateCount] = useState(0);
 
+    // NEW: Distance slider for realistic physics
+    const [distance, setDistance] = useState(5); // meters
+
     // Manual Overrides State
     const [showControls, setShowControls] = useState(false);
     const [overrides, setOverrides] = useState<ManualOverrides>({
@@ -84,95 +284,62 @@ export default function App() {
         ]).start();
     }, [pulseAnim]);
 
-    // Process Received Packet (Replaces Polling)
-    const processPacket = useCallback(async (packetHex: string) => {
+    // ========================================================================
+    // REAL PACKET PROCESSING (No more fetch('/ble/state') cheating!)
+    // ========================================================================
+    const processPacket = useCallback((packetHex: string) => {
         try {
-            // In a real app, we would decode the hex bits here locally.
-            // For demo, we verify the packet against the backend to get the decoded object
-            // This ensures our UI shows the correct decoded values
+            // 1. Calculate RSSI based on distance (REAL physics)
+            const rssi = calculateRSSI(distance);
+            setSignalStrength(rssi);
 
-            // 1. Get Decoded Data (Simulating local decoding)
-            const [stateRes, intentRes] = await Promise.all([
-                fetch(`${BACKEND_URL}/ble/state`),
-                fetch(`${BACKEND_URL}/ble/intent`),
-            ]);
+            // 2. Estimate SNR from RSSI (noise floor = -100 dBm)
+            const noiseFloor = -100;
+            const estimatedSnr = rssi - noiseFloor;
 
-            if (stateRes.ok && intentRes.ok) {
-                let stateData = await stateRes.json();
-                const intentData = await intentRes.json();
+            // 3. Calculate BER from SNR (REAL AWGN model)
+            const ber = calculateBER(estimatedSnr + overrides.snrOffset);
 
-                // APPLY MANUAL OVERRIDES (Packet Injection Simulation)
-                if (overrides.forceEmergency) {
-                    stateData.is_emergency = true;
-                    intentData.intent = 'emergency_response';
-                    intentData.display_name = 'EMERGENCY RESPONSE';
-                    intentData.description = 'Override all - emergency broadcast';
-                    intentData.auto_adjustments.priority = 'EMERGENCY';
-                    intentData.auto_adjustments.power_mode = 'MAXIMUM';
-                }
-                if (overrides.snrOffset !== 0) stateData.snr_db += overrides.snrOffset;
-                if (overrides.forceMode) stateData.delivery_mode = overrides.forceMode;
+            // 4. Apply bit errors to packet (REAL corruption)
+            const { corrupted, errorCount } = corruptPacket(packetHex, ber);
 
-                // --- REALISTIC PHYSICS SIMULATION ---
-                // 1. Bit Error Rate (BER) Simulation based on SNR
-                // If SNR is low (< 10dB), probability of bit flip increases
-                let simulatedPacket = packetHex;
-                let errorCount = 0;
-                let isCrcPass = true;
+            // 5. DECODE THE PACKET LOCALLY (THE KEY CHANGE!)
+            const decoded = decodeBLEPacket(corrupted);
 
-                // Calculate Effective SNR (Signal + Noise + Injection)
-                const effectiveSnr = stateData.snr_db;
-
-                if (effectiveSnr < 10) {
-                    // Low SNR -> High BER
-                    const berProbability = Math.max(0, (10 - effectiveSnr) / 50); // Scale: 0% at 10dB, 20% at 0dB
-
-                    // Convert hex to byte array for manipulation
-                    const bytes = [];
-                    for (let i = 0; i < packetHex.length; i += 2) {
-                        bytes.push(parseInt(packetHex.substr(i, 2), 16));
-                    }
-
-                    // Randomly flip bits
-                    const corruptedBytes = bytes.map(byte => {
-                        let warpedByte = byte;
-                        for (let bit = 0; bit < 8; bit++) {
-                            if (Math.random() < berProbability) {
-                                warpedByte ^= (1 << bit); // Flip bit
-                                errorCount++;
-                            }
-                        }
-                        return warpedByte;
-                    });
-
-                    // Reconstruct hex
-                    simulatedPacket = corruptedBytes.map(b => b.toString(16).padStart(2, '0')).join('');
-                }
-
-                // 2. CRC Verification Checks
-                // We check the LAST 2 BYTES against the CRC16 of the REST
-                // Note: Since we don't have the backend lib in JS, we simulate the verify:
-                // IF we injected errors -> CRC FAILS.
-                // IF SNR is good -> CRC PASSES.
-                if (errorCount > 0) {
-                    isCrcPass = false;
-                }
-
-                setState(stateData);
-                setIntent(intentData);
-                setRawPacket(simulatedPacket);
-                setCrcValid(isCrcPass);
-                setBitErrors(errorCount);
-
-                setLastUpdate(new Date());
-                setUpdateCount((prev: number) => prev + 1);
-                setSignalStrength(-50 + Math.random() * 20); // Simulated RSSI
-                triggerPulse();
+            if (!decoded) {
+                console.log('Failed to decode packet');
+                return;
             }
+
+            let decodedState = decoded.state;
+
+            // Apply manual overrides
+            if (overrides.forceEmergency) {
+                decodedState.is_emergency = true;
+            }
+            if (overrides.forceMode) {
+                decodedState.delivery_mode = overrides.forceMode;
+            }
+
+            // 6. Derive intent from state (REAL logic)
+            const derivedIntent = deriveIntent(decodedState);
+
+            // 7. Update UI
+            setState(decodedState);
+            setIntent(derivedIntent);
+            setRawPacket(corrupted);
+            setCrcValid(decoded.crcValid && errorCount === 0);
+            setBitErrors(errorCount);
+            setLastUpdate(new Date());
+            setUpdateCount(prev => prev + 1);
+            triggerPulse();
+
+            console.log(`Rx: Decoded packet | SNR: ${estimatedSnr.toFixed(1)}dB | BER: ${(ber * 100).toFixed(2)}% | Errors: ${errorCount} | CRC: ${decoded.crcValid ? 'OK' : 'FAIL'}`);
+
         } catch (e) {
-            // Packet drop
+            console.log('Packet processing error:', e);
         }
-    }, [triggerPulse, overrides]);
+    }, [triggerPulse, overrides, distance]);
 
     // WebSocket Connection & Real-Time Reception
     useEffect(() => {
@@ -386,8 +553,27 @@ export default function App() {
                                             </TouchableOpacity>
                                         </View>
 
+                                        {/* Distance Control - NEW! */}
+                                        <View style={styles.controlRow}>
+                                            <Text style={styles.controlLabel}>Distance: {distance}m</Text>
+                                            <View style={{ flexDirection: 'row', gap: 8 }}>
+                                                <TouchableOpacity
+                                                    style={[styles.miniBtn, styles.btnInactive]}
+                                                    onPress={() => setDistance(Math.max(1, distance - 5))}
+                                                >
+                                                    <Text style={styles.miniBtnText}>-5m</Text>
+                                                </TouchableOpacity>
+                                                <TouchableOpacity
+                                                    style={[styles.miniBtn, styles.btnInactive]}
+                                                    onPress={() => setDistance(Math.min(100, distance + 5))}
+                                                >
+                                                    <Text style={styles.miniBtnText}>+5m</Text>
+                                                </TouchableOpacity>
+                                            </View>
+                                        </View>
+
                                         <Text style={styles.controlHint}>
-                                            Adjustments above simulate modifying the packet bytes before processing
+                                            Distance affects RSSI (signal strength) → affects SNR → affects BER → affects packet corruption
                                         </Text>
                                     </View>
                                 )}
