@@ -44,7 +44,7 @@ if exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
 echo.
 
 :: Install Backend Dependencies
-echo [1/4] Installing Backend Dependencies...
+echo [1/6] Installing Backend Dependencies...
 "%VENV_PYTHON%" -m pip install -r "%PROJECT_DIR%backend\requirements.txt" --quiet 2>nul
 if %ERRORLEVEL% neq 0 (
     echo [WARN] Some backend dependencies may have failed. Continuing anyway...
@@ -53,7 +53,7 @@ echo [OK] Backend dependencies installed
 echo.
 
 :: Install Frontend Dependencies
-echo [2/4] Installing Frontend Dependencies...
+echo [2/6] Installing Frontend Dependencies...
 cd /d "%PROJECT_DIR%frontend"
 call npm install --silent 2>nul
 if %ERRORLEVEL% neq 0 (
@@ -63,8 +63,30 @@ cd /d "%PROJECT_DIR%"
 echo [OK] Frontend dependencies installed
 echo.
 
+:: Install Mobile App Dependencies (BLE Advertiser)
+echo [3/6] Installing BLE Advertiser Mobile App Dependencies...
+cd /d "%PROJECT_DIR%mobile\ble-advertiser"
+call npm install --silent 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [WARN] Some ble-advertiser dependencies may have failed. Continuing anyway...
+)
+cd /d "%PROJECT_DIR%"
+echo [OK] BLE Advertiser dependencies installed
+echo.
+
+:: Install Mobile App Dependencies (BLE Receiver)
+echo [4/6] Installing BLE Receiver Mobile App Dependencies...
+cd /d "%PROJECT_DIR%mobile\ble-receiver"
+call npm install --silent 2>nul
+if %ERRORLEVEL% neq 0 (
+    echo [WARN] Some ble-receiver dependencies may have failed. Continuing anyway...
+)
+cd /d "%PROJECT_DIR%"
+echo [OK] BLE Receiver dependencies installed
+echo.
+
 :: Start Backend Server (with venv if available)
-echo [3/4] Starting Backend Server...
+echo [5/6] Starting Backend Server...
 if exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
     start "ATSC Backend" cmd /k "cd /d "%PROJECT_DIR%" && call .venv\Scripts\activate && python -m uvicorn backend.main:app --reload --host 0.0.0.0 --port 8000"
 ) else (
@@ -73,8 +95,24 @@ if exist "%PROJECT_DIR%.venv\Scripts\activate.bat" (
 timeout /t 3 /nobreak >nul
 
 :: Start Frontend Dev Server
-echo [4/4] Starting Frontend Dev Server...
+echo [6/6] Starting Frontend Dev Server...
 start "ATSC Frontend" cmd /k "cd /d "%PROJECT_DIR%frontend" && npm run dev"
+
+echo.
+echo ===================================================
+echo   OPTIONAL: Start Mobile Apps (Expo)
+echo ===================================================
+echo.
+echo To start mobile apps, run these commands in separate terminals:
+echo.
+echo   BLE Advertiser:
+echo     cd mobile\ble-advertiser
+echo     npx expo start
+echo.
+echo   BLE Receiver:
+echo     cd mobile\ble-receiver
+echo     npx expo start
+echo.
 
 echo.
 echo ===================================================
@@ -91,6 +129,22 @@ echo   - Real-time Thinking Trace Visualization
 echo   - Terrain-Aware RF Propagation (SRTM Data)
 echo   - Chaos Director (Simulated Failure Scenarios)
 echo   - ITU FG-AINN Architecture Compliance
+echo.
+echo ===================================================
+echo   IMPORTANT: NETWORK CONFIGURATION CHECK
+echo ===================================================
+echo.
+echo [1] Your Local IP Addresses (IPv4):
+ipconfig | findstr /i "IPv4"
+echo.
+echo [2] Mobile Apps Configured Backend IP:
+findstr "BACKEND_URL" "%PROJECT_DIR%mobile\ble-advertiser\App.tsx"
+echo.
+echo [!] ACTION REQUIRED IF RUNNING ON MOBILE:
+echo     Ensure the IP address in [2] matches your WiFi IPv4 address in [1].
+echo     If they differ, edit these files:
+echo       - mobile\ble-advertiser\App.tsx
+echo       - mobile\ble-receiver\App.tsx
 echo.
 echo ===================================================
 echo   Press any key to open the frontend in browser...
