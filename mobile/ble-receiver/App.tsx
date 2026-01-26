@@ -257,6 +257,87 @@ export default function App() {
     // NEW: Distance slider for realistic physics
     const [distance, setDistance] = useState(5); // meters
 
+    // NEW: Constellation diagram points (I/Q coordinates)
+    const [constellationPoints, setConstellationPoints] = useState<{ x: number, y: number, isError: boolean }[]>([]);
+
+    /**
+     * Generate constellation points based on modulation scheme and SNR
+     * Real modulation schemes use specific I/Q patterns:
+     * - QPSK: 4 points at (±1, ±1)
+     * - 16QAM: 16 points in 4x4 grid
+     * - 64QAM: 64 points in 8x8 grid
+     * - 256QAM: 256 points in 16x16 grid
+     * 
+     * Noise causes points to scatter from ideal positions
+     */
+    const generateConstellationPoints = useCallback((modulation: string, snrDb: number, numSymbols: number = 32) => {
+        // Ideal constellation points for each modulation
+        const idealPoints: { x: number, y: number }[] = [];
+
+        switch (modulation) {
+            case 'QPSK':
+                // 4 points at corners
+                idealPoints.push({ x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 }, { x: 1, y: -1 });
+                break;
+            case '16QAM':
+                // 16 points in 4x4 grid
+                for (let i = -3; i <= 3; i += 2) {
+                    for (let q = -3; q <= 3; q += 2) {
+                        idealPoints.push({ x: i / 3, y: q / 3 });
+                    }
+                }
+                break;
+            case '64QAM':
+                // 64 points in 8x8 grid (simplified to show pattern)
+                for (let i = -7; i <= 7; i += 2) {
+                    for (let q = -7; q <= 7; q += 2) {
+                        idealPoints.push({ x: i / 7, y: q / 7 });
+                    }
+                }
+                break;
+            case '256QAM':
+                // 256 points in 16x16 grid (simplified)
+                for (let i = -15; i <= 15; i += 2) {
+                    for (let q = -15; q <= 15; q += 2) {
+                        idealPoints.push({ x: i / 15, y: q / 15 });
+                    }
+                }
+                break;
+            default:
+                // Default to QPSK
+                idealPoints.push({ x: 1, y: 1 }, { x: -1, y: 1 }, { x: -1, y: -1 }, { x: 1, y: -1 });
+        }
+
+        // Calculate noise standard deviation from SNR
+        // SNR = 10 * log10(signal_power / noise_power)
+        // For normalized signal power = 1: noise_std = 1 / sqrt(SNR_linear)
+        const snrLinear = Math.pow(10, snrDb / 10);
+        const noiseStd = 1 / Math.sqrt(snrLinear);
+
+        // Generate received symbols with AWGN noise
+        const points: { x: number, y: number, isError: boolean }[] = [];
+        for (let i = 0; i < numSymbols; i++) {
+            // Pick a random ideal point (simulating transmitted symbol)
+            const ideal = idealPoints[Math.floor(Math.random() * idealPoints.length)];
+
+            // Add Gaussian noise (Box-Muller transform)
+            const u1 = Math.random();
+            const u2 = Math.random();
+            const noiseI = noiseStd * Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            const noiseQ = noiseStd * Math.sqrt(-2 * Math.log(u1)) * Math.sin(2 * Math.PI * u2);
+
+            const receivedX = ideal.x + noiseI * 0.3; // Scale noise for visibility
+            const receivedY = ideal.y + noiseQ * 0.3;
+
+            // Check if point would be decoded incorrectly (crossed decision boundary)
+            const isError = Math.abs(noiseI) > 0.5 || Math.abs(noiseQ) > 0.5;
+
+            points.push({ x: receivedX, y: receivedY, isError });
+        }
+
+        return points;
+    }, []);
+
     // Manual Overrides State
     const [showControls, setShowControls] = useState(false);
     const [overrides, setOverrides] = useState<ManualOverrides>({
@@ -334,12 +415,16 @@ export default function App() {
             setUpdateCount(prev => prev + 1);
             triggerPulse();
 
+            // 8. Generate constellation diagram points (NEW!)
+            const points = generateConstellationPoints(decodedState.modulation, estimatedSnr + overrides.snrOffset);
+            setConstellationPoints(points);
+
             console.log(`Rx: Decoded packet | SNR: ${estimatedSnr.toFixed(1)}dB | BER: ${(ber * 100).toFixed(2)}% | Errors: ${errorCount} | CRC: ${decoded.crcValid ? 'OK' : 'FAIL'}`);
 
         } catch (e) {
             console.log('Packet processing error:', e);
         }
-    }, [triggerPulse, overrides, distance]);
+    }, [triggerPulse, overrides, distance, generateConstellationPoints]);
 
     // WebSocket Connection & Real-Time Reception
     useEffect(() => {
@@ -611,6 +696,46 @@ export default function App() {
                                 <Text style={styles.statValue}>{state.power_dbm.toFixed(1)}</Text>
                                 <Text style={styles.statLabel}>Power (dBm)</Text>
                             </View>
+                        </View>
+
+                        {/* CONSTELLATION DIAGRAM - NEW! */}
+                        <View style={styles.constellationSection}>
+                            <Text style={styles.sectionHeader}>📊 I/Q CONSTELLATION DIAGRAM</Text>
+                            <Text style={styles.constellationSubtitle}>
+                                {state.modulation} • {constellationPoints.filter(p => p.isError).length} symbol errors
+                            </Text>
+                            <View style={styles.constellationContainer}>
+                                {/* Grid lines */}
+                                <View style={styles.constellationGridH} />
+                                <View style={styles.constellationGridV} />
+
+                                {/* Axis labels */}
+                                <Text style={styles.constellationAxisI}>I</Text>
+                                <Text style={styles.constellationAxisQ}>Q</Text>
+
+                                {/* Constellation points */}
+                                {constellationPoints.map((point, idx) => {
+                                    // Convert -1..1 coordinates to 0..100%
+                                    const x = ((point.x + 1.2) / 2.4) * 100;
+                                    const y = ((1.2 - point.y) / 2.4) * 100; // Flip Y for screen coords
+                                    return (
+                                        <View
+                                            key={idx}
+                                            style={[
+                                                styles.constellationPoint,
+                                                point.isError ? styles.constellationPointError : styles.constellationPointOk,
+                                                {
+                                                    left: `${Math.max(0, Math.min(96, x))}%`,
+                                                    top: `${Math.max(0, Math.min(96, y))}%`,
+                                                }
+                                            ]}
+                                        />
+                                    );
+                                })}
+                            </View>
+                            <Text style={styles.constellationHint}>
+                                Tight clusters = strong signal • Scattered = noisy channel
+                            </Text>
                         </View>
 
                         {/* Emergency Banner */}
@@ -1051,5 +1176,90 @@ const styles = StyleSheet.create({
         color: '#475569',
         fontSize: 10,
         textAlign: 'center',
+    },
+    // Constellation Diagram Styles
+    constellationSection: {
+        marginTop: 16,
+        backgroundColor: '#0f172a',
+        borderRadius: 12,
+        padding: 12,
+        borderWidth: 1,
+        borderColor: '#1e3a5f',
+    },
+    constellationSubtitle: {
+        color: '#64748b',
+        fontSize: 11,
+        textAlign: 'center',
+        marginBottom: 8,
+    },
+    constellationContainer: {
+        width: '100%',
+        aspectRatio: 1,
+        backgroundColor: '#020617',
+        borderRadius: 8,
+        borderWidth: 1,
+        borderColor: '#334155',
+        position: 'relative',
+        overflow: 'hidden',
+    },
+    constellationGridH: {
+        position: 'absolute',
+        left: 0,
+        right: 0,
+        top: '50%',
+        height: 1,
+        backgroundColor: '#334155',
+    },
+    constellationGridV: {
+        position: 'absolute',
+        top: 0,
+        bottom: 0,
+        left: '50%',
+        width: 1,
+        backgroundColor: '#334155',
+    },
+    constellationAxisI: {
+        position: 'absolute',
+        right: 4,
+        top: '50%',
+        color: '#64748b',
+        fontSize: 10,
+        fontWeight: 'bold',
+    },
+    constellationAxisQ: {
+        position: 'absolute',
+        left: '50%',
+        top: 4,
+        color: '#64748b',
+        fontSize: 10,
+        fontWeight: 'bold',
+        marginLeft: 4,
+    },
+    constellationPoint: {
+        position: 'absolute',
+        width: 6,
+        height: 6,
+        borderRadius: 3,
+    },
+    constellationPointOk: {
+        backgroundColor: '#22d3d1',
+        shadowColor: '#22d3d1',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 3,
+    },
+    constellationPointError: {
+        backgroundColor: '#ef4444',
+        shadowColor: '#ef4444',
+        shadowOffset: { width: 0, height: 0 },
+        shadowOpacity: 0.8,
+        shadowRadius: 3,
+    },
+    constellationHint: {
+        color: '#475569',
+        fontSize: 10,
+        textAlign: 'center',
+        marginTop: 8,
+        fontStyle: 'italic',
     },
 });
