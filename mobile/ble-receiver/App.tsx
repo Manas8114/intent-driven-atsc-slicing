@@ -12,8 +12,8 @@ import {
 } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 
-// Backend URL - change this to your server IP for direct polling mode
-const BACKEND_URL = 'http://192.168.1.40:8000';
+// Backend URL - imported from shared config (auto-updated by ngrok script)
+import { BACKEND_URL } from '../config';
 
 // ============================================================================
 // REAL PACKET DECODING (Matches backend ble_adapter.py)
