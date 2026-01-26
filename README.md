@@ -5,6 +5,7 @@
 [![React](https://img.shields.io/badge/React-19-blue)](https://react.dev)
 [![Vite](https://img.shields.io/badge/Vite-5.0%2B-purple)](https://vitejs.dev)
 [![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-cyan)](https://tailwindcss.com)
+[![Expo](https://img.shields.io/badge/Expo-Go-black)](https://expo.dev)
 
 ## Overview
 
@@ -12,19 +13,84 @@ This project implements a production-grade research prototype for an **AI-native
 
 The system features a **closed-loop control system** where a Reinforcement Learning (PPO) agent optimizes spectrum allocation dynamically based on real-time simulated feedback from a spatial "Digital Twin" of the coverage area.
 
+> **🏆 ITU FG-AINN Hackathon Edition (Build-a-thon 4.0)**
+> This version includes special "Realism" and "Demo" features including a full mobile stack with RF physics simulation.
+
 ---
 
-## ⚠️ System Boundaries (IMPORTANT)
+## 🚀 Quick Start (Demo Mode)
+
+We have created a unified launcher for the entire stack (Backend + Frontend + Mobile Servers).
+
+### One-Click Launch
+
+Double-click `start_all.cmd` (Windows) or run:
+
+```cmd
+start_all.cmd
+```
+
+This will open **4 terminal windows** automatically:
+
+1. **Backend API** (<http://localhost:8000>)
+2. **Frontend Dashboard** (<http://localhost:5173>)
+3. **BLE Advertiser** (Expo Server)
+4. **BLE Receiver** (Expo Server)
+
+### Mobile App Setup
+
+1. Install **Expo Go** on two Android phones.
+2. Scan the **QR Code** in the "BLE Advertiser" terminal with Phone 1.
+3. Scan the **QR Code** in the "BLE Receiver" terminal with Phone 2.
+4. Ensure phones and laptop are on the **same WiFi network**.
+
+---
+
+## 📱 New Mobile Realism Features
+
+The BLE Receiver app has been upgraded to demonstrate professional RF engineering concepts:
+
+### 1. I/Q Constellation Diagram
+
+* Real-time visualization of signal quality in the I/Q plane.
+* **Tight Clusters:** Strong signal (High SNR).
+* **Scattered Points:** Noisy signal (Low SNR).
+* Supports QPSK, 16QAM, 64QAM, 256QAM modulations.
+
+### 2. Advanced Physics Simulation
+
+* **Real-World Math:** Uses Log-distance path loss model and AWGN channel model.
+* **Distance Control:** Use the **-5m / +5m** buttons to simulate walking distance.
+* **Chain Reaction:** Increasing Distance → Reduces RSSI → Reduces SNR → Increases BER → Causes CRC Failures.
+
+### 3. Real Binary Protocol
+
+* The system transmits **real 20-byte binary packets** encoded with Python's `struct` module.
+* The mobile app performs **local decoding** and **real CRC-16 verification** (no API cheating).
+
+---
+
+## ⚡ Quick Demo Mode
+
+For hackathon presentations, use the **"🚀 QUICK DEMO"** button in the Frontend sidebar:
+
+1. **Injects Knowledge:** Seeds the AI with 30 pre-learned experiences showing an improving reward curve.
+2. **Triggers Chaos:** Immediately activates a "Monsoon" weather scenario.
+3. **Shows Adaptation:** The AI instantly adapts modulation to maintain coverage, visible in the "Thinking Trace" and Constellation Diagram.
+
+---
+
+## System Boundaries (IMPORTANT)
 
 > **This system is a CONTROL AND OPTIMIZATION LAYER, not a transmission system.**
 
 ### What This System DOES ✅
 
-- Computes encoder-ready configurations using AI optimization
-- Simulates baseband behavior for pre-deployment validation
-- Acts as a control and optimization layer for broadcast operations
-- Requires human approval before any configuration deployment
-- Provides full audit trail for all decisions
+* Computes encoder-ready configurations using AI optimization
+* Simulates baseband behavior for pre-deployment validation
+* Acts as a control and optimization layer for broadcast operations
+* Requires human approval before any configuration deployment
+* Provides full audit trail for all decisions
 
 ### What This System Does NOT Do ❌
 
@@ -39,7 +105,17 @@ This transparency is intentional and increases credibility with real broadcast o
 
 ---
 
-## Broadcast Stack Position
+## Key Features
+
+* **Human Approval Workflow**: AI recommendations require engineer approval before deployment.
+* **Intent Translation**: Natural language-like intents are mapped to mathematical utility functions.
+* **AI Orchestration (RL)**: PPO agent dynamically adjusts slice weights.
+* **Digital Twin Simulation**: sophisticated `SpatialGrid` simulation models UHF propagation.
+* **Bootstrap Uncertainty Analysis**: Publication-quality statistical inference with BCa confidence intervals.
+
+---
+
+## Architecture
 
 ```
 ┌─────────────────────┐
@@ -47,7 +123,7 @@ This transparency is intentional and increases credibility with real broadcast o
 └─────────┬───────────┘
           ▼
 ┌─────────────────────┐
-│  AI Control Plane   │ ◄── THIS PROJECT
+│  AI Control Plane   │ ◄── Backend (FastAPI + AI Engine)
 │  (Recommendations)  │
 └─────────┬───────────┘
           ▼
@@ -67,18 +143,18 @@ This transparency is intentional and increases credibility with real broadcast o
 
 ## Key Features
 
-- **Human Approval Workflow**: AI recommendations require engineer approval before deployment. Emergency mode allows bypass with full logging.
-- **Intent Translation**: Natural language-like intents are mapped to mathematical utility functions and constraints.
-- **AI Orchestration (RL)**: A Proximal Policy Optimization (PPO) agent dynamically adjusts slice weights to balance competing objectives (e.g., Reliability vs. Throughput).
-- **Digital Twin Simulation**: A sophisticated `SpatialGrid` simulation models UHF propagation, interference, and decoding probability across a 10km x 10km rural grid.
-- **Bootstrap Uncertainty Analysis**: Publication-quality statistical inference with BCa confidence intervals, block bootstrap for time-series, and IEEE-formatted reporting.
-- **Real-World Data Integration**: Integrates **FCC Broadcast Station Data** (AM/FM/TV) and **OpenCellID** (5M+ towers) to model realistic interference scenarios.
-- **Broadcast-Grade Telemetry**: Comprehensive monitoring of transmission metrics, receiver statistics, and control plane performance with NOC-style dashboards.
-- **Hurdle Control**: Interactive controls to simulate adverse network conditions (Interference, Load Spikes, Spectrum Loss) to test the system's resilience.
-- **Explainability**: Transparent "Decision Logs" explain *why* the AI made specific configuration changes (e.g., "Shifted to QPSK due to low SNR").
-- **ATSC 3.0 Compliance**: Models legitimate A/322 Physical Layer Pipe (PLP) configurations and signaling.
-- **Baseband Abstraction**: Encoder-ready configuration export for future hardware integration.
-- **Real-Time Performance**: Measured sub-10ms decision cycles with instrumented latency tracking.
+* **Human Approval Workflow**: AI recommendations require engineer approval before deployment. Emergency mode allows bypass with full logging.
+* **Intent Translation**: Natural language-like intents are mapped to mathematical utility functions and constraints.
+* **AI Orchestration (RL)**: A Proximal Policy Optimization (PPO) agent dynamically adjusts slice weights to balance competing objectives (e.g., Reliability vs. Throughput).
+* **Digital Twin Simulation**: A sophisticated `SpatialGrid` simulation models UHF propagation, interference, and decoding probability across a 10km x 10km rural grid.
+* **Bootstrap Uncertainty Analysis**: Publication-quality statistical inference with BCa confidence intervals, block bootstrap for time-series, and IEEE-formatted reporting.
+* **Real-World Data Integration**: Integrates **FCC Broadcast Station Data** (AM/FM/TV) and **OpenCellID** (5M+ towers) to model realistic interference scenarios.
+* **Broadcast-Grade Telemetry**: Comprehensive monitoring of transmission metrics, receiver statistics, and control plane performance with NOC-style dashboards.
+* **Hurdle Control**: Interactive controls to simulate adverse network conditions (Interference, Load Spikes, Spectrum Loss) to test the system's resilience.
+* **Explainability**: Transparent "Decision Logs" explain *why* the AI made specific configuration changes (e.g., "Shifted to QPSK due to low SNR").
+* **ATSC 3.0 Compliance**: Models legitimate A/322 Physical Layer Pipe (PLP) configurations and signaling.
+* **Baseband Abstraction**: Encoder-ready configuration export for future hardware integration.
+* **Real-Time Performance**: Measured sub-10ms decision cycles with instrumented latency tracking.
 
 ---
 
@@ -100,9 +176,9 @@ This transparency is intentional and increases credibility with real broadcast o
 
 The PPO agent uses **offline training** with **online inference only**:
 
-- **Training**: 10,000+ timesteps on Digital Twin (done once, saved to disk)
-- **Runtime**: Single `model.predict()` call (~0.8ms on CPU)
-- **No gradient computation**, no backpropagation at demo time
+* **Training**: 10,000+ timesteps on Digital Twin (done once, saved to disk)
+* **Runtime**: Single `model.predict()` call (~0.8ms on CPU)
+* **No gradient computation**, no backpropagation at demo time
 
 This architecture enables cognitive decisions in **<10ms**, meeting real-time broadcast requirements.
 
@@ -116,15 +192,15 @@ For detailed methodology, see [docs/BENCHMARKS.md](docs/BENCHMARKS.md).
 
 ### Near-Term Extensions
 
-- **Model-Based RL (MPC + RL hybrid)**: Combine learned world models with policy optimization for faster adaptation
-- **Actor-Critic Methods (SAC)**: Soft Actor-Critic for continuous action control with entropy regularization
-- **Policy Distillation**: Compress large networks into ultra-fast inference models (<1ms)
+* **Model-Based RL (MPC + RL hybrid)**: Combine learned world models with policy optimization for faster adaptation
+* **Actor-Critic Methods (SAC)**: Soft Actor-Critic for continuous action control with entropy regularization
+* **Policy Distillation**: Compress large networks into ultra-fast inference models (<1ms)
 
 ### Longer-Term Research
 
-- **Multi-Agent RL (MARL)**: Decentralized optimization for multi-transmitter scenarios
-- **Approximate Dynamic Programming**: Learned value functions for faster decision making
-- **Drift-Plus-Penalty Methods**: Multi-objective optimization for competing KPIs (coverage vs. throughput)
+* **Multi-Agent RL (MARL)**: Decentralized optimization for multi-transmitter scenarios
+* **Approximate Dynamic Programming**: Learned value functions for faster decision making
+* **Drift-Plus-Penalty Methods**: Multi-objective optimization for competing KPIs (coverage vs. throughput)
 
 These extensions would further reduce latency and improve adaptation speed while maintaining the human-governed architecture.
 
@@ -136,36 +212,36 @@ The system consists of four integrated layers:
 
 ### 1. Backend (FastAPI + AI Engine)
 
-- **API Layer**: REST endpoints for intent submission and status monitoring.
-- **AI Engine**: Integrates the PPO Agent and Convex Optimizer.
-- **Optimizer**: Solves for optimal Power/Bandwidth allocation using water-filling algorithms.
-- **Approval Engine**: State machine ensuring human oversight (AI_RECOMMENDED → ENGINEER_APPROVED → DEPLOYED).
+* **API Layer**: REST endpoints for intent submission and status monitoring.
+* **AI Engine**: Integrates the PPO Agent and Convex Optimizer.
+* **Optimizer**: Solves for optimal Power/Bandwidth allocation using water-filling algorithms.
+* **Approval Engine**: State machine ensuring human oversight (AI_RECOMMENDED → ENGINEER_APPROVED → DEPLOYED).
 
 ### 2. Simulation Layer (Digital Twin)
 
 Pre-deployment validation through simulation:
 
-- `SpatialGrid`: Simulates signal propagation over a realistic 10km x 10km terrain grid.
-- `Environment`: Manages external variables like Noise Floor, Interference, and User Traffic.
-- `Interference Simulator`: Models co-channel and adjacent channel interference.
+* `SpatialGrid`: Simulates signal propagation over a realistic 10km x 10km terrain grid.
+* `Environment`: Manages external variables like Noise Floor, Interference, and User Traffic.
+* `Interference Simulator`: Models co-channel and adjacent channel interference.
 
 **These simulations reduce risk before real broadcast changes.**
 
 ### 3. Abstraction Layers (Architectural)
 
-- `baseband_interface.py`: Symbolic baseband frame generation, encoder-ready exports.
-- `iq_generator.py`: Simulated I/Q samples for visualization (NOT RF-accurate).
-- `rf_adapter.py`: RF front-end abstraction with SIMULATION mode only (SDR/Encoder modes stubbed).
-- `libatsc3_bridge.py`: Python bindings to libatsc3 C library for ATSC 3.0 protocol parsing and validation.
+* `baseband_interface.py`: Symbolic baseband frame generation, encoder-ready exports.
+* `iq_generator.py`: Simulated I/Q samples for visualization (NOT RF-accurate).
+* `rf_adapter.py`: RF front-end abstraction with SIMULATION mode only (SDR/Encoder modes stubbed).
+* `libatsc3_bridge.py`: Python bindings to libatsc3 C library for ATSC 3.0 protocol parsing and validation.
 
 ### 4. Frontend (React + Vite)
 
-- Real-time dashboard for operators.
-- **Decision Approval Panel**: Engineers approve/reject AI recommendations.
-- **Broadcast Readiness Checklist**: Explicit visibility of implementation status.
-- **Broadcast Telemetry Dashboard**: NOC-style monitoring of transmission, receiver, and control plane metrics.
-- Visualizations for Spectrum usage, Coverage Heatmaps, and KPI trends.
-- Control panel for Intents and Hurdle simulation.
+* Real-time dashboard for operators.
+* **Decision Approval Panel**: Engineers approve/reject AI recommendations.
+* **Broadcast Readiness Checklist**: Explicit visibility of implementation status.
+* **Broadcast Telemetry Dashboard**: NOC-style monitoring of transmission, receiver, and control plane metrics.
+* Visualizations for Spectrum usage, Coverage Heatmaps, and KPI trends.
+* Control panel for Intents and Hurdle simulation.
 
 ---
 
@@ -173,9 +249,9 @@ Pre-deployment validation through simulation:
 
 ### Prerequisites
 
-- **OS**: Windows (preferred for provided scripts), Linux, or macOS.
-- **Python**: Version 3.10 or higher.
-- **Node.js**: Version 18 or higher.
+* **OS**: Windows (preferred for provided scripts), Linux, or macOS.
+* **Python**: Version 3.10 or higher.
+* **Node.js**: Version 18 or higher.
 
 ### Quick Start (Windows)
 
@@ -190,11 +266,11 @@ The easiest way to run the full stack is using the provided startup script:
     ```
 
     This will:
-    - Install Python dependencies from `backend/requirements.txt`.
-    - Install Node.js dependencies for the frontend.
-    - Start the Backend server on `http://localhost:8000`.
-    - Start the Frontend client on `http://localhost:5173`.
-    - Open separate command windows for backend and frontend processes.
+    * Install Python dependencies from `backend/requirements.txt`.
+    * Install Node.js dependencies for the frontend.
+    * Start the Backend server on `http://localhost:8000`.
+    * Start the Frontend client on `http://localhost:5173`.
+    * Open separate command windows for backend and frontend processes.
 
 ### Quick Start (Linux/macOS)
 
@@ -256,64 +332,64 @@ npm run dev
 
 ## Folder Structure
 
-- `backend/`: FastAPI app, AI models (`rl_agent.py`), approval engine, and optimization logic.
-  - `ai_engine.py`: AI decision engine with human approval integration
-  - `approval_engine.py`: Human approval workflow state machine
-  - `baseband_interface.py`: Encoder-ready configuration abstraction
-  - `broadcast_telemetry.py`: Broadcast-grade telemetry and monitoring
-  - `environment_router.py`: Environment control and hurdle simulation
-  - `intent_service.py`: Intent translation service
-  - `iq_generator.py`: Simulated I/Q for visualization
-  - `kpi_engine.py`: KPI tracking and metrics
-  - `libatsc3_bridge.py`: Bridge to libatsc3 library
-  - `main.py`: FastAPI application entry point
-  - `optimizer.py`: Spectrum optimization algorithms
-  - `rf_adapter.py`: RF front-end abstraction (simulation only)
-  - `rl_agent.py`: Reinforcement learning agent
-  - `simulation_state.py`: Simulation state management
-  - `simulator.py`: Main simulation orchestrator
-  - `visualization_router.py`: Visualization data endpoints
-  - `requirements.txt`: Python dependencies
-  - `__pycache__/`: Python bytecode cache
-- `frontend/`: React application code (`src/pages`, `src/components`).
-  - `src/pages/`: Main application pages
-    - `ApprovalPanel.tsx`: Decision approval UI
-    - `BroadcastReadiness.tsx`: Implementation checklist
-    - `BroadcastTelemetry.tsx`: Telemetry dashboard
-    - `CapabilitiesLimits.tsx`: System capabilities and limits
-    - `EmergencyMode.tsx`: Emergency control interface
-    - `Explainability.tsx`: AI decision explanations
-    - `IntentControl.tsx`: Intent submission interface
-    - `KPIDashboard.tsx`: KPI monitoring dashboard
-    - `Overview.tsx`: Main dashboard overview
-    - `PLPVisualization.tsx`: PLP spectrum visualization
-  - `src/components/`: Reusable UI components
-  - `src/context/`: React context providers
-  - `src/lib/`: Utility libraries
-  - `package.json`: Node.js dependencies
-- `sim/`: Physics simulation (`spatial_model.py`) and validation scripts.
-  - `spatial_model.py`: Digital twin spatial coverage simulation
-  - `channel_model.py`: RF propagation modeling
-  - `interference_simulator.py`: Interference simulation
-  - `real_interference_simulator.py`: Real-world interaction modeling
-  - `emergency_scenarios.py`: Emergency scenario testing
-  - `validation.py`: Simulation validation utilities
-  - `__pycache__/`: Python bytecode cache
-- `data/`: Data ingestion and processing
-  - `fcc_data_parser.py`: Parser for FCC broadcast station databases
-  - `osm_data_fetcher.py`: Fetcher for OpenStreetMap terrain capabilities
-  - `pdf_extractor.py`: Utility for extracting query results from regulatory PDFs
-  - `broadcast_data_loader.py`: Universal loader for processed CSV datasets
-- `libatsc3/`: ATSC 3.0 reference library (C/C++).
-  - `src/`: Source code for ATSC 3.0 parsing and processing
-  - `CMakeLists.txt`: Build configuration
-  - `README.md`: Library documentation
-- `docs/`: Additional documentation.
-  - `explainability.md`: AI decision explainability details
-  - `frontend_design.md`: Frontend design principles
-  - `frontend_realtime_spec.md`: Real-time frontend specifications
-- `tests/`: Test suites and validation scripts.
-- `start_project.cmd`: Windows startup script for full stack
+* `backend/`: FastAPI app, AI models (`rl_agent.py`), approval engine, and optimization logic.
+  * `ai_engine.py`: AI decision engine with human approval integration
+  * `approval_engine.py`: Human approval workflow state machine
+  * `baseband_interface.py`: Encoder-ready configuration abstraction
+  * `broadcast_telemetry.py`: Broadcast-grade telemetry and monitoring
+  * `environment_router.py`: Environment control and hurdle simulation
+  * `intent_service.py`: Intent translation service
+  * `iq_generator.py`: Simulated I/Q for visualization
+  * `kpi_engine.py`: KPI tracking and metrics
+  * `libatsc3_bridge.py`: Bridge to libatsc3 library
+  * `main.py`: FastAPI application entry point
+  * `optimizer.py`: Spectrum optimization algorithms
+  * `rf_adapter.py`: RF front-end abstraction (simulation only)
+  * `rl_agent.py`: Reinforcement learning agent
+  * `simulation_state.py`: Simulation state management
+  * `simulator.py`: Main simulation orchestrator
+  * `visualization_router.py`: Visualization data endpoints
+  * `requirements.txt`: Python dependencies
+  * `__pycache__/`: Python bytecode cache
+* `frontend/`: React application code (`src/pages`, `src/components`).
+  * `src/pages/`: Main application pages
+    * `ApprovalPanel.tsx`: Decision approval UI
+    * `BroadcastReadiness.tsx`: Implementation checklist
+    * `BroadcastTelemetry.tsx`: Telemetry dashboard
+    * `CapabilitiesLimits.tsx`: System capabilities and limits
+    * `EmergencyMode.tsx`: Emergency control interface
+    * `Explainability.tsx`: AI decision explanations
+    * `IntentControl.tsx`: Intent submission interface
+    * `KPIDashboard.tsx`: KPI monitoring dashboard
+    * `Overview.tsx`: Main dashboard overview
+    * `PLPVisualization.tsx`: PLP spectrum visualization
+  * `src/components/`: Reusable UI components
+  * `src/context/`: React context providers
+  * `src/lib/`: Utility libraries
+  * `package.json`: Node.js dependencies
+* `sim/`: Physics simulation (`spatial_model.py`) and validation scripts.
+  * `spatial_model.py`: Digital twin spatial coverage simulation
+  * `channel_model.py`: RF propagation modeling
+  * `interference_simulator.py`: Interference simulation
+  * `real_interference_simulator.py`: Real-world interaction modeling
+  * `emergency_scenarios.py`: Emergency scenario testing
+  * `validation.py`: Simulation validation utilities
+  * `__pycache__/`: Python bytecode cache
+* `data/`: Data ingestion and processing
+  * `fcc_data_parser.py`: Parser for FCC broadcast station databases
+  * `osm_data_fetcher.py`: Fetcher for OpenStreetMap terrain capabilities
+  * `pdf_extractor.py`: Utility for extracting query results from regulatory PDFs
+  * `broadcast_data_loader.py`: Universal loader for processed CSV datasets
+* `libatsc3/`: ATSC 3.0 reference library (C/C++).
+  * `src/`: Source code for ATSC 3.0 parsing and processing
+  * `CMakeLists.txt`: Build configuration
+  * `README.md`: Library documentation
+* `docs/`: Additional documentation.
+  * `explainability.md`: AI decision explainability details
+  * `frontend_design.md`: Frontend design principles
+  * `frontend_realtime_spec.md`: Real-time frontend specifications
+* `tests/`: Test suites and validation scripts.
+* `start_project.cmd`: Windows startup script for full stack
 
 ---
 
@@ -416,3 +492,9 @@ SEO and standards compliance - Meets WCAG accessibility guidelines
 
 The "Honest" Constructive Critique
 If you take this beyond the hackathon, the biggest hurdle will be Simulation vs. Reality. Currently, the AI is learning in a perfect digital environment. In a real RF environment, multi-path interference and hardware latency are "noisy" in ways simulations rarely capture. To make this production-ready, your next big push would be "Sim-to-Real" transfer learning—training on hardware data.
+
+---
+
+## License
+
+MIT License - Open for Research and Education.
