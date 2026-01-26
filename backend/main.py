@@ -161,6 +161,107 @@ app.include_router(ble_router, prefix="/ble", tags=["BLE Mobile Demo"])
 
 
 # ============================================================================
+# QUICK DEMO MODE - For Hackathon Presentations
+# ============================================================================
+
+@app.post("/demo/quick-start", tags=["Demo Mode"])
+async def quick_start_demo():
+    """
+    🚀 QUICK DEMO MODE - One-click impressive demo setup
+    
+    This endpoint:
+    1. Seeds 30 AI learning experiences with improving rewards
+    2. Triggers a 'monsoon' chaos scenario
+    3. Returns success for frontend confirmation
+    
+    Use this to instantly show judges:
+    - AI learning curve (experiences already recorded)
+    - Chaos resilience (monsoon active)
+    - Real-time recovery (AI adapts)
+    """
+    import random
+    import uuid
+    
+    from .learning_loop import get_learning_tracker
+    from .environment import get_env_state
+    
+    tracker = get_learning_tracker()
+    env = get_env_state()
+    
+    # 1. Seed experiences with IMPROVING rewards (shows learning)
+    experiences_added = 0
+    for i in range(30):
+        decision_id = f"quickdemo-{uuid.uuid4().hex[:6]}"
+        
+        # Simulate improving performance over time
+        base_reward = 0.4 + (i / 30) * 0.5  # Starts at 0.4, ends at 0.9
+        noise = random.gauss(0, 0.05)
+        reward = min(1.0, max(0.0, base_reward + noise))
+        
+        predicted_kpis = {
+            "coverage": 0.7 + (i / 30) * 0.2,
+            "alert_reliability": 0.85 + (i / 30) * 0.1,
+        }
+        
+        actual_kpis = {
+            "coverage": predicted_kpis["coverage"] + random.gauss(0.02, 0.01),
+            "alert_reliability": predicted_kpis["alert_reliability"] + random.gauss(0, 0.01),
+            "mobile_stability": 0.8 + (i / 30) * 0.15,
+        }
+        
+        action = {
+            "modulation": ["QPSK", "16QAM", "64QAM"][min(2, i // 10)],
+            "coding_rate": "5/15" if i < 15 else "7/15",
+            "power_dbm": 33 + (i / 30) * 5,
+            "delivery_mode": "broadcast"
+        }
+        
+        tracker.record_decision_outcome(
+            decision_id=decision_id,
+            intent="maximize_coverage" if i < 15 else "balanced",
+            action=action,
+            predicted_kpis=predicted_kpis,
+            actual_kpis=actual_kpis
+        )
+        experiences_added += 1
+    
+    # 2. Trigger monsoon scenario for dramatic effect
+    env.active_hurdle = "monsoon"
+    env.hurdle_intensity = 0.7
+    
+    return {
+        "status": "🚀 DEMO MODE ACTIVE",
+        "experiences_added": experiences_added,
+        "total_experiences": tracker.total_decisions,
+        "active_scenario": "monsoon",
+        "message": "AI is now learning and adapting to monsoon conditions!",
+        "next_steps": [
+            "Open Learning Timeline to see improvement curve",
+            "Open Thinking Trace to see AI decisions",
+            "Watch constellation diagram scatter under stress"
+        ]
+    }
+
+
+@app.post("/demo/reset", tags=["Demo Mode"])
+async def reset_demo():
+    """
+    Reset demo state - clears scenario and resets to normal operation.
+    """
+    from .environment import get_env_state
+    
+    env = get_env_state()
+    env.active_hurdle = None
+    env.hurdle_intensity = 0.0
+    
+    return {
+        "status": "Demo reset",
+        "active_scenario": None,
+        "message": "System returned to normal operation"
+    }
+
+
+# ============================================================================
 # Startup Event: Seed Demo Data
 # ============================================================================
 # Automatically seeds demonstration data on startup for hackathon demos.

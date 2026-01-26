@@ -114,7 +114,7 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                         </div>
 
                         {/* Dark mode toggle */}
-                        <div className="flex items-center justify-end mt-2">
+                        <div className="flex items-center justify-between mt-2">
                             <button
                                 onClick={() => setDarkMode(!darkMode)}
                                 className={cn(
@@ -132,6 +132,43 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                                 )}
                             </button>
                         </div>
+
+                        {/* Quick Demo Mode Button */}
+                        <button
+                            onClick={async () => {
+                                try {
+                                    const btn = document.getElementById('quick-demo-btn');
+                                    if (btn) btn.textContent = '⏳ Loading...';
+
+                                    const res = await fetch('http://localhost:8000/demo/quick-start', {
+                                        method: 'POST'
+                                    });
+                                    const data = await res.json();
+
+                                    if (btn) btn.textContent = '✅ Demo Ready!';
+                                    setTimeout(() => {
+                                        if (btn) btn.textContent = '🚀 QUICK DEMO';
+                                    }, 2000);
+
+                                    console.log('Quick Demo:', data);
+                                } catch (e) {
+                                    console.error('Demo start failed:', e);
+                                    const btn = document.getElementById('quick-demo-btn');
+                                    if (btn) btn.textContent = '❌ Failed';
+                                }
+                            }}
+                            id="quick-demo-btn"
+                            className={cn(
+                                "w-full mt-3 py-2 px-3 rounded-lg font-bold text-sm",
+                                "bg-gradient-to-r from-emerald-500 to-cyan-500",
+                                "text-white shadow-lg shadow-emerald-500/30",
+                                "hover:from-emerald-400 hover:to-cyan-400",
+                                "transition-all duration-200 cursor-pointer",
+                                "animate-pulse hover:animate-none"
+                            )}
+                        >
+                            🚀 QUICK DEMO
+                        </button>
                     </div>
 
                     {/* Navigation - Grouped by Section */}
