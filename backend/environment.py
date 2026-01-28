@@ -45,6 +45,7 @@ class EnvironmentState(BaseModel):
     # Active Hurdle Name (for UI/Logging)
     active_hurdle: Optional[str] = None
     active_scenario_label: Optional[str] = None
+    hurdle_intensity: float = 0.0
 
 
 # Global Singleton
