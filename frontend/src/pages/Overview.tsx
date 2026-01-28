@@ -1,9 +1,37 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Activity, Radio, Cpu, Server, Signal, User, ShieldCheck, Tv, BarChart3 } from 'lucide-react';
 import { IntentLogTerminal } from '../components/IntentLogTerminal';
+import { DriftMonitor } from '../components/DriftMonitor';
 
 export function Overview() {
+    const [stats, setStats] = useState({
+        coverage: 0,
+        alert_reliability: 0,
+        latency_ms: 0,
+        spectral_efficiency: 0,
+        throughput_mbps: 0
+    });
+
+    useEffect(() => {
+        const fetchStats = async () => {
+            try {
+                const res = await fetch('http://localhost:8000/kpi/live');
+                const data = await res.json();
+                setStats(data);
+            } catch (e) {
+                console.error("Failed to fetch live stats", e);
+            }
+        };
+        fetchStats();
+        const interval = setInterval(fetchStats, 1000);
+        return () => clearInterval(interval);
+    }, []);
+
+    const injectDrift = async () => {
+        await fetch('http://localhost:8000/drift/inject?offset=1.0', { method: 'POST' });
+        alert("Drift Injected! Watch the monitor.");
+    };
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
             <div>
@@ -16,18 +44,29 @@ export function Overview() {
             </div>
 
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                {/* Drift Monitor takes full width on mobile, 1 col on large screens, positioned first for visibility */}
+                <div className="col-span-1 md:col-span-2 lg:col-span-1">
+                    <DriftMonitor />
+                    <button
+                        onClick={injectDrift}
+                        className="mt-2 text-xs text-red-300 hover:text-red-500 w-full text-right opacity-50 hover:opacity-100 transition-opacity"
+                        title="Inject Artificial Drift (Demo Only)"
+                    >
+                        [Inject Drift]
+                    </button>
+                </div>
                 {[
-                    { title: 'System Status', value: 'Online', sub: 'All controllers active', icon: Activity, color: 'text-emerald-500' },
-                    { title: 'Active PLPs', value: '3', sub: 'Dynamic Slicing', icon: Radio, color: 'text-blue-500' },
-                    { title: 'AI Confidence', value: '98.5%', sub: 'Last Decision', icon: Cpu, color: 'text-purple-500' },
-                    { title: 'Spectrum Usage', value: '5.8 MHz', sub: 'of 6.0 MHz', icon: Signal, color: 'text-orange-500' },
+                    { title: 'Coverage', value: `${stats.coverage.toFixed(1)}% `, sub: 'Service Area', icon: Signal, color: 'text-emerald-500' },
+                    { title: 'Reliability', value: `${(stats.alert_reliability * 100).toFixed(1)}% `, sub: 'Alert Delivery', icon: ShieldCheck, color: 'text-blue-500' },
+                    { title: 'Latency', value: `${stats.latency_ms.toFixed(0)} ms`, sub: 'End-to-End', icon: Activity, color: 'text-purple-500' },
+                    { title: 'Throughput', value: `${stats.throughput_mbps.toFixed(2)} Mbps`, sub: 'Broadcast Capacity', icon: BarChart3, color: 'text-orange-500' },
                 ].map((stat, i) => (
                     <Card key={i} className="hover:shadow-md transition-shadow">
                         <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
                             <CardTitle className="text-sm font-medium text-slate-600">
                                 {stat.title}
                             </CardTitle>
-                            <stat.icon className={`h-4 w-4 ${stat.color}`} />
+                            <stat.icon className={`h - 4 w - 4 ${stat.color} `} />
                         </CardHeader>
                         <CardContent>
                             <div className="text-2xl font-bold text-slate-900">{stat.value}</div>
@@ -58,7 +97,7 @@ export function Overview() {
                         ].map((step, i, arr) => (
                             <React.Fragment key={i}>
                                 <div className="relative z-10 flex flex-col items-center gap-3 min-w-[80px]">
-                                    <div className={`h-14 w-14 rounded-2xl ${step.color} flex items-center justify-center shadow-sm border border-white/50 transition-transform hover:scale-105`}>
+                                    <div className={`h - 14 w - 14 rounded - 2xl ${step.color} flex items - center justify - center shadow - sm border border - white / 50 transition - transform hover: scale - 105`}>
                                         <step.icon className="h-7 w-7" />
                                     </div>
                                     <span className="font-semibold text-xs text-slate-700 text-center">{step.label}</span>
@@ -107,11 +146,11 @@ export function Overview() {
             </Card>
 
             <style>{`
-        @keyframes shimmer {
-          0% { transform: translateX(-100%); }
-          100% { transform: translateX(200%); }
-        }
-      `}</style>
+@keyframes shimmer {
+    0 % { transform: translateX(-100 %); }
+    100 % { transform: translateX(200 %); }
+}
+`}</style>
         </div>
     );
 }

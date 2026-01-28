@@ -271,6 +271,13 @@ def calculate_receiver_metrics(
                 source=MetricSource.SIMULATION
             ),
             description="Time from transmission start to first alert byte received"
+        ),
+        Metric(
+            name="receiver_avg_snr_db",
+            value=float(snr_db),
+            unit="dB",
+            labels=labels,
+            description="Average Signal-to-Noise Ratio measured at receiver"
         )
     ]
     

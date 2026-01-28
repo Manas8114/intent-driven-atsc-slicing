@@ -146,11 +146,11 @@ class LearningLoopTracker:
         action: Dict[str, Any],
         predicted_kpis: Dict[str, float],
         actual_kpis: Dict[str, float]
-    ) -> float:
+    ) -> tuple[float, str]:
         """
         Record the outcome of an AI decision and compute learning signal.
         
-        Returns the reward signal (learning feedback).
+        Returns (reward_signal, learning_contribution).
         """
         now = datetime.now()
         
@@ -242,7 +242,7 @@ class LearningLoopTracker:
         except Exception as e:
             print(f"Failed to broadcast decision: {e}")
 
-        return reward
+        return reward, learning_contribution
     
     def _compute_reward(
         self, 
@@ -631,12 +631,12 @@ def record_and_learn(
     action: Dict,
     predicted_kpis: Dict,
     actual_kpis: Dict
-) -> float:
+) -> tuple[float, str]:
     """
     Helper function to record a decision outcome and get learning signal.
     
     Called by the AI engine after each decision/simulation cycle.
-    Returns the reward signal for potential RL agent training.
+    Returns (reward_signal, learning_contribution).
     """
     tracker = get_learning_tracker()
     

@@ -67,28 +67,7 @@ export function HurdlePanel() {
     const isBusy = phase !== 'idle' && phase !== 'broadcasting' && phase !== 'emergency';
 
     // Auto-Play Logic
-    useEffect(() => {
-        if (isAutoPlay) {
-            let index = 0;
-            // Immediate trigger
-            handleScenarioTrigger(COGNITIVE_SCENARIOS[0]);
 
-            const interval = setInterval(() => {
-                index = (index + 1) % COGNITIVE_SCENARIOS.length;
-                handleScenarioTrigger(COGNITIVE_SCENARIOS[index]);
-            }, 8000); // Cycle every 8 seconds
-
-            autoPlayRef.current = interval;
-        } else {
-            if (autoPlayRef.current) {
-                clearInterval(autoPlayRef.current);
-                autoPlayRef.current = null;
-            }
-        }
-        return () => {
-            if (autoPlayRef.current) clearInterval(autoPlayRef.current);
-        };
-    }, [isAutoPlay]);
 
     const handleScenarioTrigger = async (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
         // Only one hurdle at a time
@@ -139,6 +118,30 @@ export function HurdlePanel() {
         triggerHurdle(scenario.id);
     };
 
+    // Auto-Play Logic
+    useEffect(() => {
+        if (isAutoPlay) {
+            let index = 0;
+            // Immediate trigger
+            handleScenarioTrigger(COGNITIVE_SCENARIOS[0]);
+
+            const interval = setInterval(() => {
+                index = (index + 1) % COGNITIVE_SCENARIOS.length;
+                handleScenarioTrigger(COGNITIVE_SCENARIOS[index]);
+            }, 8000); // Cycle every 8 seconds
+
+            autoPlayRef.current = interval;
+        } else {
+            if (autoPlayRef.current) {
+                clearInterval(autoPlayRef.current);
+                autoPlayRef.current = null;
+            }
+        }
+        return () => {
+            if (autoPlayRef.current) clearInterval(autoPlayRef.current);
+        };
+    }, [isAutoPlay]);
+
     const handleEmergencyEscalation = () => {
         const event: CognitiveEvent = {
             timestamp: new Date(),
@@ -158,8 +161,8 @@ export function HurdlePanel() {
 
     return (
         <div className={cn(
-            "fixed right-0 top-20 bottom-8 z-40 bg-white border-l border-slate-200 shadow-xl transition-all duration-300 flex flex-col scale-90 origin-top-right", // Added scale-90 to fit more content
-            isOpen ? "w-[450px]" : "w-12" // Widened to 450px to fit charts
+            "fixed right-0 top-20 bottom-8 z-40 bg-white border-l border-slate-200 shadow-xl transition-all duration-300 flex flex-col origin-top-right",
+            isOpen ? "w-[450px]" : "w-12"
         )}>
             {/* Toggle Handle */}
             <button
@@ -249,9 +252,7 @@ export function HurdlePanel() {
 
                 {/* Thinking Trace - Flex Grow Area */}
                 <div className="flex-1 min-h-0 bg-slate-900 overflow-hidden relative border-t border-slate-300">
-                    {/* Dark/Light mode considerations handled inside ThinkingTrace or passing className */}
-                    {/* Forcing dark mode context for the trace as designed */}
-                    <div className="absolute inset-0 p-4 overflow-y-auto scrollbar-hide">
+                    <div className="absolute inset-0 p-4 flex flex-col overflow-y-auto scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
                         <ThinkingTrace />
                     </div>
                 </div>

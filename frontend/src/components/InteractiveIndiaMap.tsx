@@ -90,9 +90,10 @@ export function InteractiveIndiaMap({
             const decision = lastMessage.data as any;
 
             // Sync with AI's reported focus
-            if (decision.focus_region) {
+            // Sync with AI's reported focus
+            if (decision.focus_region && decision.focus_region !== aiFocusRegion) {
                 setAiFocusRegion(decision.focus_region);
-            } else {
+            } else if (!decision.focus_region && aiFocusRegion !== null) {
                 setAiFocusRegion(null);
             }
 

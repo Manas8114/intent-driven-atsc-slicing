@@ -519,7 +519,7 @@ const RadioTypeBar = ({ type, count, total }: { type: string; count: number; tot
             <div className="flex-1 h-6 bg-slate-100 rounded-full overflow-hidden">
                 <div
                     className={`h-full ${colors[type] || 'bg-slate-400'} transition-all duration-500`}
-                    style={{ width: `${percentage}%` }} // eslint-disable-line react-dom/no-unsafe-inline-styles
+                    style={{ width: `${percentage}%` }}
                 />
             </div>
             <span className="w-20 text-right text-sm text-slate-600">

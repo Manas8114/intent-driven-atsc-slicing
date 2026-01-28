@@ -141,9 +141,10 @@ export function CognitiveBrain() {
 
     // Handle WebSocket state updates
     useEffect(() => {
-        if (lastMessage?.type === 'state_update' && lastMessage.data) {
-            const data = lastMessage.data as Record<string, unknown>;
+        if (!lastMessage || !lastMessage.data) return;
 
+        if (lastMessage.type === 'state_update') {
+            const data = lastMessage.data as Record<string, unknown>;
             setCognitiveState(prev => {
                 // Only update if we have a valid previous state (don't overwrite loading state)
                 if (!prev) return prev;
@@ -157,8 +158,45 @@ export function CognitiveBrain() {
                     }
                 };
             });
-
             setLastWsUpdate(new Date());
+        } else if (lastMessage.type === 'ai_decision') {
+            const data = lastMessage.data as Record<string, unknown>;
+
+            // If metrics are present in the decision broadcast, update them immediately
+            if (data.metrics) {
+                const metrics = data.metrics as CognitiveState['latency_metrics'];
+                setCognitiveState(prev => {
+                    if (!prev) return prev;
+
+                    // Create updated latency metrics
+                    const newLatencyMetrics = {
+                        ...prev.latency_metrics!, // Assume existing structure
+                        ...metrics,
+                        // Ensure policy_type is preserved if not in update
+                        policy_type: metrics?.policy_type || prev.latency_metrics?.policy_type || 'pre_computed'
+                    };
+
+                    // Also update the Decision Pipeline stages derived from latency
+                    const newDecisionStages = prev.decision_stages ? {
+                        ...prev.decision_stages,
+                        quick_decision: {
+                            ...prev.decision_stages.quick_decision,
+                            latency_ms: metrics?.ppo_inference_ms || prev.decision_stages.quick_decision.latency_ms
+                        },
+                        refined_decision: {
+                            ...prev.decision_stages.refined_decision,
+                            latency_ms: metrics?.digital_twin_validation_ms || prev.decision_stages.refined_decision.latency_ms
+                        }
+                    } : prev.decision_stages;
+
+                    return {
+                        ...prev,
+                        latency_metrics: newLatencyMetrics,
+                        decision_stages: newDecisionStages
+                    };
+                });
+                setLastWsUpdate(new Date());
+            }
         }
     }, [lastMessage]);
 

@@ -65,8 +65,16 @@ class AutonomousMonitor:
                 # 3. Determine 'Monitoring' Policy
                 # If emergency/surge is active, the policy should reflect that expectation
                 policy_type = "maximize_coverage" # Default
+                
+                # Check for active hurdles (Context-Aware Intent)
                 if env.is_emergency_active:
                     policy_type = "ensure_emergency_reliability"
+                elif env.active_hurdle == "monsoon":
+                    policy_type = "mitigate_monsoon"
+                elif env.active_hurdle == "tower_failure":
+                    policy_type = "recover_coverage_hole"
+                elif env.active_hurdle == "flash_crowd":
+                    policy_type = "minimize_congestion"
                 elif env.traffic_load_level > 1.5:
                     policy_type = "minimize_latency" # Prioritize capacity/latency during surges
                 

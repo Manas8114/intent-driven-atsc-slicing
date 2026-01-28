@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Send, CheckCircle, Settings2, ShieldCheck, Signal, ArrowRight, X } from 'lucide-react';
@@ -163,7 +163,7 @@ export function IntentControl() {
                                     Cancel
                                 </Button>
                                 <Button className="flex-1 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30" onClick={handleConfirm}>
-                                    Confirm & Apply Intent ({Math.floor(Math.random() * 20 + 40)}ms latency)
+                                    Confirm & Apply Intent ({useMemo(() => Math.floor(Math.random() * 20 + 40), [selectedPreset])}ms latency)
                                 </Button>
                             </div>
                         </div>

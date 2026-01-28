@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { Zap, Radio, Clock, MapPin, TrendingUp, AlertTriangle, Wifi, Activity } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 
@@ -47,6 +47,7 @@ export function RealtimeIntentPanel({
     const [intents, setIntents] = useState<RealtimeIntent[]>(externalIntents || []);
     const [patternChanges, setPatternChanges] = useState<PatternChange[]>(externalPatternChanges || []);
     const [isSimulating, setIsSimulating] = useState(!externalIntents);
+    const [now, setNow] = useState(Date.now()); // Stable time for render references
 
     // REAL-TIME: Connect to WebSocket for live AI decisions
     const { lastMessage, isConnected } = useWebSocket();
@@ -66,6 +67,12 @@ export function RealtimeIntentPanel({
 
     const modulations = ['QPSK', '16QAM', '64QAM', '256QAM'];
 
+    // Stable time tick for "time ago" updates
+    useEffect(() => {
+        const interval = setInterval(() => setNow(Date.now()), 5000); // Update every 5s
+        return () => clearInterval(interval);
+    }, []);
+
     // Handle real WebSocket AI decisions
     useEffect(() => {
         if (lastMessage?.type === 'ai_decision') {
@@ -79,8 +86,8 @@ export function RealtimeIntentPanel({
             const cityIdx = Math.floor(Math.random() * cities.length);
             const city = cities[cityIdx];
 
-            const intentType = decision.intent?.includes('coverage') ? 'coverage' :
-                decision.intent?.includes('latency') ? 'latency' :
+            const intentType = (decision.intent?.includes('coverage') || decision.intent?.includes('monsoon') || decision.intent?.includes('hole')) ? 'coverage' :
+                (decision.intent?.includes('latency') || decision.intent?.includes('congestion')) ? 'latency' :
                     decision.intent?.includes('emergency') ? 'emergency' : 'balanced';
 
             const newIntent: RealtimeIntent = {
@@ -204,11 +211,19 @@ export function RealtimeIntentPanel({
 
     const getStatusBadge = (status: string) => {
         switch (status) {
-            case 'incoming': return { color: '#F59E0B', text: 'INCOMING' };
-            case 'processing': return { color: '#3B82F6', text: 'PROCESSING' };
-            case 'applied': return { color: '#10B981', text: 'APPLIED' };
-            default: return { color: '#6B7280', text: 'UNKNOWN' };
+            case 'incoming': return { bg: 'bg-amber-500/20', text: 'text-amber-500', label: 'INCOMING' };
+            case 'processing': return { bg: 'bg-blue-500/20', text: 'text-blue-500', label: 'PROCESSING' };
+            case 'applied': return { bg: 'bg-emerald-500/20', text: 'text-emerald-500', label: 'APPLIED' };
+            default: return { bg: 'bg-slate-500/20', text: 'text-slate-500', label: 'UNKNOWN' };
         }
+    };
+
+    // Pre-defined styles to avoid inline styles
+    const typeStyles: Record<string, { bg: string; text: string; icon: string }> = {
+        coverage: { bg: 'bg-blue-500/20', text: 'text-blue-500', icon: 'text-blue-500' },
+        latency: { bg: 'bg-purple-500/20', text: 'text-purple-500', icon: 'text-purple-500' },
+        emergency: { bg: 'bg-red-500/20', text: 'text-red-500', icon: 'text-red-500' },
+        balanced: { bg: 'bg-emerald-500/20', text: 'text-emerald-500', icon: 'text-emerald-500' }
     };
 
     const formatTime = (timestamp: number) => {
@@ -221,7 +236,7 @@ export function RealtimeIntentPanel({
     };
 
     const formatTimeAgo = (timestamp: number) => {
-        const seconds = Math.floor((Date.now() - timestamp) / 1000);
+        const seconds = Math.floor((now - timestamp) / 1000);
         if (seconds < 60) return `${seconds}s ago`;
         const minutes = Math.floor(seconds / 60);
         if (minutes < 60) return `${minutes}m ago`;
@@ -263,6 +278,8 @@ export function RealtimeIntentPanel({
                         const Icon = getIntentIcon(intent.type);
                         const statusBadge = getStatusBadge(intent.status);
 
+                        const styles = typeStyles[intent.type] || { bg: 'bg-slate-500/20', text: 'text-slate-500', icon: 'text-slate-500' };
+
                         return (
                             <div
                                 key={intent.id}
@@ -282,18 +299,15 @@ export function RealtimeIntentPanel({
                                 <div className="flex items-start justify-between mb-2">
                                     <div className="flex items-center gap-2">
                                         <div
-                                            className="p-1.5 rounded-lg"
-                                            style={{ backgroundColor: `${getIntentColor(intent.type)}20` }}
+                                            className={`p-1.5 rounded-lg ${styles.bg}`}
                                         >
                                             <Icon
-                                                className="w-4 h-4"
-                                                style={{ color: getIntentColor(intent.type) }}
+                                                className={`w-4 h-4 ${styles.icon}`}
                                             />
                                         </div>
                                         <div>
                                             <span
-                                                className="font-medium text-sm uppercase"
-                                                style={{ color: getIntentColor(intent.type) }}
+                                                className={`font-medium text-sm uppercase ${styles.text}`}
                                             >
                                                 {intent.type}
                                             </span>
@@ -304,13 +318,9 @@ export function RealtimeIntentPanel({
                                         </div>
                                     </div>
                                     <span
-                                        className="text-[10px] px-1.5 py-0.5 rounded font-medium"
-                                        style={{
-                                            backgroundColor: `${statusBadge.color}20`,
-                                            color: statusBadge.color
-                                        }}
+                                        className={`text-[10px] px-1.5 py-0.5 rounded font-medium ${statusBadge.bg} ${statusBadge.text}`}
                                     >
-                                        {statusBadge.text}
+                                        {statusBadge.label}
                                     </span>
                                 </div>
 

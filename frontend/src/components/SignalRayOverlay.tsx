@@ -16,7 +16,6 @@ export const SignalRayOverlay: React.FC<SignalRayProps> = ({
     containerHeight,
 }) => {
     const [quality, setQuality] = useState<'good' | 'fair' | 'poor'>('fair');
-    const [snr, setSnr] = useState(15);
     const canvasRef = useRef<HTMLCanvasElement>(null);
 
     // Fetch current signal quality
@@ -27,9 +26,9 @@ export const SignalRayOverlay: React.FC<SignalRayProps> = ({
                 const data = await res.json();
                 if (data.physics_log) {
                     setQuality(data.physics_log.quality || 'fair');
-                    setSnr(data.physics_log.outputs?.snr_db || 15);
+                    setQuality(data.physics_log.quality || 'fair');
                 }
-            } catch (err) {
+            } catch {
                 // Silent fail
             }
         };
@@ -47,91 +46,82 @@ export const SignalRayOverlay: React.FC<SignalRayProps> = ({
         const ctx = canvas.getContext('2d');
         if (!ctx) return;
 
-        // Clear canvas
-        ctx.clearRect(0, 0, containerWidth, containerHeight);
+        let animationId: number;
 
-        // Get color based on quality
-        const getColor = () => {
-            switch (quality) {
-                case 'good': return { r: 34, g: 197, b: 94, a: 0.6 };  // green-500
-                case 'fair': return { r: 234, g: 179, b: 8, a: 0.5 };   // yellow-500
-                case 'poor': return { r: 239, g: 68, b: 68, a: 0.7 };   // red-500
-                default: return { r: 156, g: 163, b: 175, a: 0.4 };     // gray-400
-            }
-        };
+        const render = () => {
+            // Clear canvas
+            ctx.clearRect(0, 0, containerWidth, containerHeight);
 
-        const color = getColor();
+            // Get color based on quality
+            const getColor = () => {
+                switch (quality) {
+                    case 'good': return { r: 34, g: 197, b: 94, a: 0.6 };  // green-500
+                    case 'fair': return { r: 234, g: 179, b: 8, a: 0.5 };   // yellow-500
+                    case 'poor': return { r: 239, g: 68, b: 68, a: 0.7 };   // red-500
+                    default: return { r: 156, g: 163, b: 175, a: 0.4 };     // gray-400
+                }
+            };
 
-        // Draw rays from tower to each device
-        devicePositions.forEach((device, index) => {
-            const startX = towerPosition.x;
-            const startY = towerPosition.y;
-            const endX = device.x;
-            const endY = device.y;
+            const color = getColor();
 
-            // Create gradient along the ray
-            const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
-            gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`);
-            gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.1)`);
+            // Draw rays from tower to each device
+            devicePositions.forEach((device, index) => {
+                const startX = towerPosition.x;
+                const startY = towerPosition.y;
+                const endX = device.x;
+                const endY = device.y;
 
-            // Draw the ray
+                // Create gradient along the ray
+                const gradient = ctx.createLinearGradient(startX, startY, endX, endY);
+                gradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, ${color.a})`);
+                gradient.addColorStop(1, `rgba(${color.r}, ${color.g}, ${color.b}, 0.1)`);
+
+                // Draw the ray
+                ctx.beginPath();
+                ctx.moveTo(startX, startY);
+                ctx.lineTo(endX, endY);
+                ctx.strokeStyle = gradient;
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 5]);
+                ctx.stroke();
+
+                // Draw animated pulse along the ray (simulation of data flow)
+                const pulsePosition = (Date.now() / 1000 + index * 0.5) % 1;
+                const pulseX = startX + (endX - startX) * pulsePosition;
+                const pulseY = startY + (endY - startY) * pulsePosition;
+
+                ctx.beginPath();
+                ctx.arc(pulseX, pulseY, 4, 0, Math.PI * 2);
+                ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`;
+                ctx.fill();
+
+                // Draw glow effect
+                ctx.beginPath();
+                ctx.arc(pulseX, pulseY, 8, 0, Math.PI * 2);
+                const glowGradient = ctx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, 8);
+                glowGradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`);
+                glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+                ctx.fillStyle = glowGradient;
+                ctx.fill();
+            });
+
+            // Draw tower indicator
             ctx.beginPath();
-            ctx.moveTo(startX, startY);
-            ctx.lineTo(endX, endY);
-            ctx.strokeStyle = gradient;
+            ctx.arc(towerPosition.x, towerPosition.y, 12, 0, Math.PI * 2);
+            ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`;
+            ctx.fill();
+            ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`;
             ctx.lineWidth = 2;
-            ctx.setLineDash([5, 5]);
+            ctx.setLineDash([]);
             ctx.stroke();
 
-            // Draw animated pulse along the ray (simulation of data flow)
-            const pulsePosition = (Date.now() / 1000 + index * 0.5) % 1;
-            const pulseX = startX + (endX - startX) * pulsePosition;
-            const pulseY = startY + (endY - startY) * pulsePosition;
+            animationId = requestAnimationFrame(render);
+        };
 
-            ctx.beginPath();
-            ctx.arc(pulseX, pulseY, 4, 0, Math.PI * 2);
-            ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.9)`;
-            ctx.fill();
-
-            // Draw glow effect
-            ctx.beginPath();
-            ctx.arc(pulseX, pulseY, 8, 0, Math.PI * 2);
-            const glowGradient = ctx.createRadialGradient(pulseX, pulseY, 0, pulseX, pulseY, 8);
-            glowGradient.addColorStop(0, `rgba(${color.r}, ${color.g}, ${color.b}, 0.5)`);
-            glowGradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
-            ctx.fillStyle = glowGradient;
-            ctx.fill();
-        });
-
-        // Draw tower indicator
-        ctx.beginPath();
-        ctx.arc(towerPosition.x, towerPosition.y, 12, 0, Math.PI * 2);
-        ctx.fillStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.3)`;
-        ctx.fill();
-        ctx.strokeStyle = `rgba(${color.r}, ${color.g}, ${color.b}, 0.8)`;
-        ctx.lineWidth = 2;
-        ctx.setLineDash([]);
-        ctx.stroke();
-
-        // Animate
-        const animationId = requestAnimationFrame(() => {
-            // Trigger re-render for animation
-        });
+        render();
 
         return () => cancelAnimationFrame(animationId);
-    }, [quality, snr, towerPosition, devicePositions, containerWidth, containerHeight]);
-
-    // Force animation refresh
-    useEffect(() => {
-        const interval = setInterval(() => {
-            const canvas = canvasRef.current;
-            if (canvas) {
-                canvas.dispatchEvent(new Event('refresh'));
-            }
-        }, 50);
-
-        return () => clearInterval(interval);
-    }, []);
+    }, [quality, towerPosition, devicePositions, containerWidth, containerHeight]);
 
     return (
         <canvas

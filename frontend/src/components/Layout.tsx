@@ -49,7 +49,7 @@ interface LayoutProps {
 }
 
 export function Layout({ children, activePage, onNavigate }: LayoutProps) {
-    const { logs, adaptationExplanation } = useSystem();
+    const { logs, adaptationExplanation, dismissExplanation } = useSystem();
     const [darkMode, setDarkMode] = useState(() => {
         if (typeof window !== 'undefined') {
             const saved = localStorage.getItem('darkMode');
@@ -291,7 +291,7 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                     {/* Adaptation Explanation Toast */}
                     {adaptationExplanation && (
                         <div className="absolute inset-x-0 bottom-20 flex justify-center z-[60] px-4 pointer-events-none">
-                            <div className="glass-card-dark text-white p-6 rounded-xl shadow-2xl max-w-2xl w-full animate-fade-in pointer-events-auto">
+                            <div className="glass-card-dark relative text-white p-6 rounded-xl shadow-2xl max-w-2xl w-full animate-fade-in pointer-events-auto">
                                 <div className="flex items-start gap-4">
                                     <div className="bg-cyan-500/20 p-2 rounded-lg">
                                         <Activity className="h-6 w-6 text-cyan-400 animate-pulse" />
@@ -313,6 +313,13 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                                         </div>
                                     </div>
                                 </div>
+                                <button
+                                    onClick={dismissExplanation}
+                                    className="absolute top-2 right-2 p-1.5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 rounded-full transition-colors"
+                                    title="Dismiss"
+                                >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M18 6 6 18" /><path d="m6 6 12 12" /></svg>
+                                </button>
                             </div>
                         </div>
                     )}

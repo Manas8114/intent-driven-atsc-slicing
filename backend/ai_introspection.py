@@ -205,7 +205,7 @@ async def get_thinking_trace(limit: int = 10):
             },
             "reward_breakdown": decision.get("reward_components", {}),
             "action_taken": decision.get("action_taken", {}),
-            "human_readable": decision.get("learning_contribution", "")
+            "learning_contribution": decision.get("learning_contribution", "")
         }
         trace_entries.append(entry)
     

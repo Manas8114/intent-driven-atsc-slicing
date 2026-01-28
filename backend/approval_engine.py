@@ -25,6 +25,11 @@ from dataclasses import dataclass, field
 import threading
 import uuid
 
+try:
+    from .broadcast_telemetry import control_plane_metrics
+except ImportError:
+    control_plane_metrics = None
+
 
 router = APIRouter()
 
@@ -114,6 +119,89 @@ class ApprovalEngine:
         self._audit_log: List[Dict[str, Any]] = []
         self._last_deployed_config: Optional[Dict[str, Any]] = None
         self._initialized = True
+        
+        # Seed with some demo history if empty (for UI demonstration)
+        self._seed_demo_history()
+        
+    def _seed_demo_history(self):
+        """Seed the engine with some fake history for the dashboard."""
+        import random
+        from datetime import timedelta
+        
+        # Scenarios suitable for history
+        scenarios = [
+            ("mitigate_monsoon", "QPSK", "Detected signal degradation (Rain Fade)", True),
+            ("minimize_congestion", "16QAM", "Traffic surge detected (Load: 1.5x)", True),
+            ("optimize_spectrum", "64QAM", "Conditions nominal", True),
+            ("recover_coverage_hole", "QPSK", "Coverage hole detected in Sector 3", False) # Rejected
+        ]
+        
+        base_time = datetime.now(timezone.utc) - timedelta(hours=1)
+        
+        for i, (intent, mod, summary, approved) in enumerate(scenarios):
+            record_id = f"demo-{i+100}"
+            created_at = base_time + timedelta(minutes=i*15)
+            
+            # Fake config
+            config = {
+                "modulation": mod,
+                "coding_rate": "5/15",
+                "power_dbm": 35,
+                "bandwidth_mhz": 6.0
+            }
+            
+            record = ApprovalRecord(
+                id=record_id,
+                created_at=created_at,
+                recommended_config=config,
+                risk_assessment={"level": "low", "score": 0.1},
+                expected_impact={"coverage": 95.0},
+                comparison_with_previous={},
+                human_readable_summary=summary
+            )
+            
+            # Trace transitions
+            record.transitions.append(StateTransition(
+                from_state=ApprovalState.AI_RECOMMENDED,
+                to_state=ApprovalState.AWAITING_HUMAN_APPROVAL,
+                timestamp=created_at,
+                actor="AI",
+                reason="AI recommendation"
+            ))
+            
+            if approved:
+                approved_at = created_at + timedelta(seconds=random.randint(30, 120))
+                record.state = ApprovalState.DEPLOYED
+                record.approved_by = "Jane Doe (Chief Engineer)"
+                record.transitions.append(StateTransition(
+                    from_state=ApprovalState.AWAITING_HUMAN_APPROVAL,
+                    to_state=ApprovalState.ENGINEER_APPROVED,
+                    timestamp=approved_at,
+                    actor="ENGINEER:Jane Doe",
+                    reason="Approved"
+                ))
+            else:
+                rejected_at = created_at + timedelta(seconds=random.randint(30, 120))
+                record.state = ApprovalState.REJECTED
+                record.engineer_comment = "Too conservative for current weather"
+                record.transitions.append(StateTransition(
+                    from_state=ApprovalState.AWAITING_HUMAN_APPROVAL,
+                    to_state=ApprovalState.REJECTED,
+                    timestamp=rejected_at,
+                    actor="ENGINEER:Jane Doe",
+                    reason=record.engineer_comment
+                ))
+                
+            with self._records_lock:
+                self._records[record_id] = record
+                
+            # Log to audit (silently)
+            self._audit_log.append({
+                "timestamp": created_at.isoformat(),
+                "event": "DEMO_SEED",
+                "record_id": record_id,
+                "details": {"note": "Automated demo seed"}
+            })
     
     def submit_recommendation(
         self,
@@ -205,6 +293,10 @@ class ApprovalEngine:
                 if removable:
                     del self._records[removable[0][0]]
         
+        if is_emergency and control_plane_metrics:
+            control_plane_metrics.record_emergency_override()
+            control_plane_metrics.record_recommendation(accepted=True)
+
         self._log_audit_event("RECOMMENDATION_SUBMITTED", record_id, {
             "is_emergency": is_emergency,
             "state": record.state.value
@@ -270,6 +362,9 @@ class ApprovalEngine:
             record.transitions.append(deploy_transition)
             record.state = ApprovalState.DEPLOYED
             self._last_deployed_config = record.recommended_config
+
+            if control_plane_metrics:
+                control_plane_metrics.record_recommendation(accepted=True)
         
         self._log_audit_event("APPROVED", record_id, {
             "engineer": engineer_name,
@@ -318,6 +413,9 @@ class ApprovalEngine:
             record.transitions.append(reject_transition)
             record.state = ApprovalState.REJECTED
             record.engineer_comment = reason
+
+            if control_plane_metrics:
+                control_plane_metrics.record_recommendation(accepted=False)
         
         self._log_audit_event("REJECTED", record_id, {
             "engineer": engineer_name,

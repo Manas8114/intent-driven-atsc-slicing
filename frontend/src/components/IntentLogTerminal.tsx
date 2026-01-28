@@ -39,6 +39,8 @@ export const IntentLogTerminal: React.FC = () => {
     const terminalRef = useRef<HTMLDivElement>(null);
     const [lastPhysics, setLastPhysics] = useState<PhysicsLog | null>(null);
 
+    const lastPhysicsRef = useRef<PhysicsLog | null>(null);
+
     // Fetch physics telemetry
     useEffect(() => {
         if (!isLive) return;
@@ -50,9 +52,11 @@ export const IntentLogTerminal: React.FC = () => {
 
                 if (data.physics_log && data.physics_log.timestamp) {
                     const physics = data.physics_log as PhysicsLog;
+                    const prev = lastPhysicsRef.current;
 
                     // Only add if timestamp changed
-                    if (!lastPhysics || physics.timestamp !== lastPhysics.timestamp) {
+                    if (!prev || physics.timestamp !== prev.timestamp) {
+                        lastPhysicsRef.current = physics;
                         setLastPhysics(physics);
 
                         const newLog: LogEntry = {
@@ -63,8 +67,8 @@ export const IntentLogTerminal: React.FC = () => {
                             quality: physics.quality,
                         };
 
-                        setLogs(prev => {
-                            const updated = [...prev, newLog];
+                        setLogs(prevLogs => {
+                            const updated = [...prevLogs, newLog];
 
                             // Check for System Events (Surges/Hazards)
                             if (physics.hurdle && physics.hurdle !== 'reset' && physics.scenario) {
@@ -83,14 +87,14 @@ export const IntentLogTerminal: React.FC = () => {
                         });
                     }
                 }
-            } catch (err) {
+            } catch {
                 // Silently fail - backend might be restarting
             }
         };
 
         const interval = setInterval(fetchPhysics, 1000);
         return () => clearInterval(interval);
-    }, [isLive, lastPhysics]);
+    }, [isLive]);
 
     // Auto-scroll to bottom
     useEffect(() => {

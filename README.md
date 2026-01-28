@@ -493,6 +493,8 @@ SEO and standards compliance - Meets WCAG accessibility guidelines
 The "Honest" Constructive Critique
 If you take this beyond the hackathon, the biggest hurdle will be Simulation vs. Reality. Currently, the AI is learning in a perfect digital environment. In a real RF environment, multi-path interference and hardware latency are "noisy" in ways simulations rarely capture. To make this production-ready, your next big push would be "Sim-to-Real" transfer learning—training on hardware data.
 
+> **See [docs/LIMITATIONS.md](docs/LIMITATIONS.md) for a detailed analysis of the Sim-to-Real gap, Drift Detection logic, and Safety Constraints implemented to address these challenges.**
+
 ---
 
 ## License

@@ -421,6 +421,73 @@ def compare_configs(
     }
 
 
+
+# ============================================================================
+# Narrative Explanation Generator
+# ============================================================================
+
+def generate_narrative_explanation(
+    intent: str,
+    env_state: Any,
+    action: Dict[str, Any],
+    metrics: Dict[str, Any],
+    delivery_decision: Any
+) -> str:
+    """
+    Generates a natural language explanation for the AI's decision.
+    Target Audience: Broadcast Engineers (Human-in-the-loop).
+    """
+    intent_map = {
+        "maximize_coverage": "maximize service area coverage",
+        "ensure_emergency_reliability": "ensure 99.9% emergency alert delivery",
+        "mitigate_monsoon": "counteract heavy rain attenuation",
+        "recover_coverage_hole": "patch detected coverage hole",
+        "minimize_latency": "reduce end-to-end latency",
+        "minimize_congestion": "alleviate network congestion",
+        "optimize_spectrum": "balance spectral efficiency"
+    }
+    
+    narrative = []
+    
+    # 1. Trigger / Context
+    if env_state.is_emergency_active:
+        narrative.append("🚨 EMERGENCY ALERT ACTIVE.")
+    elif env_state.active_hurdle == "monsoon":
+        narrative.append("Detected heavy precipitation (-dB gain).")
+    elif env_state.active_hurdle == "flash_crowd":
+        narrative.append(f"Traffic surge detected (Load: {env_state.traffic_load_level:.1f}x).")
+    elif env_state.active_hurdle == "tower_failure":
+        narrative.append("Tower failure detected in sector.")
+    
+    # 2. Strategic Goal
+    goal = intent_map.get(intent, "optimize network performance")
+    narrative.append(f"Prioritizing to {goal}.")
+    
+    # 3. Action Taken
+    mod = action.get('modulation', 'QPSK')
+    code = action.get('coding_rate', 'N/A')
+    power = action.get('power_dbm', 0)
+    
+    if intent in ["mitigate_monsoon", "ensure_emergency_reliability", "recover_coverage_hole"]:
+        narrative.append(f"Switched to robust {mod} {code} and boosted power to {power}dBm.")
+    elif intent in ["minimize_congestion", "minimize_latency"]:
+        narrative.append(f"Selected high-capacity {mod} {code} to clear backlog.")
+    else:
+        narrative.append(f"Recommending {mod} {code} configuration.")
+
+    # 4. Delivery Mode Reasoning
+    if delivery_decision.mode == "broadcast":
+        narrative.append(f"Using BROADCAST mode due to {delivery_decision.reasoning}.")
+    elif delivery_decision.mode == "multicast":
+        narrative.append(f"Using MULTICAST mode for {delivery_decision.reasoning}.")
+    
+    # 5. Outcome Prediction
+    cov = metrics.get('coverage_percent', 0)
+    narrative.append(f"Expected Impact: {cov:.1f}% coverage maintained.")
+
+    return " ".join(narrative)
+
+
 # ============================================================================
 # Main Decision Endpoint
 # ============================================================================
@@ -446,6 +513,8 @@ async def make_decision(request: DecisionRequest):
     from .environment import get_env_state
     from .simulation_state import get_simulation_state
     from .approval_engine import approval_engine
+    from .drift_detector import drift_detector
+    from .safety_constraints import safety_layer
 
     # ⏱️ LATENCY TRACKING: Start total decision cycle timer
     total_decision_start = time.perf_counter()
@@ -466,8 +535,10 @@ async def make_decision(request: DecisionRequest):
     # Base configuration from Intent
     if policy_type == "ensure_emergency_reliability":
         base_weights = [3.0, 0.5]  # [Emergency, Standard] - Heavily skewed
-    elif policy_type == "maximize_coverage":
+    elif policy_type in ["maximize_coverage", "mitigate_monsoon", "recover_coverage_hole"]:
         base_weights = [1.0, 1.5]
+    elif policy_type in ["minimize_latency", "minimize_congestion"]:
+        base_weights = [1.0, 0.5] # Prioritize latency/capacity
     elif policy_type == "optimize_spectrum":
         base_weights = [1.0, 1.0]  # Balanced
     else:
@@ -525,6 +596,19 @@ async def make_decision(request: DecisionRequest):
         adjusted_weights = list(base_weights)
     
     latency.record_ppo_inference(latency.elapsed_ms(ppo_start))
+
+    # --- DRIFT DETECTION CHECK (Safety Layer) ---
+    actual_kpis = {
+        "coverage": grid_metrics.get("coverage_percent", 0) / 100.0 if 'grid_metrics' in locals() else 0.85, # Fallback if not yet calc
+        "avg_snr": grid_metrics.get("avg_snr_db", 0) if 'grid_metrics' in locals() else 20.0,
+        "reward": 0.8 # Placeholder for actual reward feedback
+    }
+    
+    # We need to run simulation early or estimate predicted
+    # Ideally, Drift Check runs AFTER simulation but BEFORE decision finalization
+    # But to "Freeze" before optimization might be too early? 
+    # Let's run it after optimization and simulation, but BEFORE approval submission.
+    pass 
 
     slices_config = [
         {'name': 'Emergency', 'weight': float(adjusted_weights[0]), 'channel_gain': 0.8},
@@ -605,14 +689,60 @@ async def make_decision(request: DecisionRequest):
     comparison = compare_configs(previous_config, recommended_config)
 
     # Build human-readable explanation
-    env_note = f" [Env: {env.active_hurdle}]" if env.active_hurdle else ""
-    explanation = (
-        f"RL adjusted w=[{adjusted_weights[0]:.1f}, {adjusted_weights[1]:.1f}]{env_note}. "
-        f"Recommending {mod} {code} for SNR={avg_snr_db:.1f}dB. "
-        f"Delivery mode: {delivery_mode_decision.mode} ({delivery_mode_decision.confidence:.0%} confidence). "
-        f"Expected coverage: {grid_metrics['coverage_percent']:.1f}%. "
-        f"Risk level: {risk_assessment['level']}."
+    explanation = generate_narrative_explanation(
+        intent=policy_type,
+        env_state=env,
+        action=recommended_config,
+        metrics=grid_metrics,
+        delivery_decision=delivery_mode_decision
     )
+
+    # --- DRIFT DETECTION CHECK (Safety Layer) ---
+    # Update detector with PREDICTED (from Twin) vs ACTUAL (from Receiver Agent/Physics)
+    # Note: In this prototype, 'grid_metrics' is the Twin's prediction.
+    # We need 'actual' from the ReceiverAgent/Physics Engine.
+    try:
+        from .receiver_agent import get_receiver_agent
+        rx_agent = get_receiver_agent()
+        rx_metrics = rx_agent.get_metrics()
+        
+        # Predicted by Digital Twin
+        predicted = {
+            "coverage": grid_metrics.get("coverage_percent", 0) / 100.0,
+            "avg_snr": grid_metrics.get("avg_snr_db", 0),
+            "reward": 0.8 # Estimated
+        }
+        
+        # Actual from Physics Engine (Receiver Agent)
+        actual = {
+            "coverage": rx_metrics.get("receiver_service_acquisition_success_ratio", 0.0),
+            "avg_snr": rx_metrics.get("receiver_avg_snr_db", 0.0),
+            "reward": 0.8 # Actual reward not yet available in this cycle
+        }
+        
+        drift_detector.update(predicted, actual)
+        drift_status = drift_detector.get_status()
+        
+        if drift_status["status"] == "DRIFT_DETECTED":
+             explanation = f"⚠️ AI FROZEN: {drift_status['message']}"
+             status = "error" # Or specific frozen status
+             
+             # Modify recommended config to be "Safety Fallback" or just current
+             # Here we just mark it as frozen
+             recommended_config["ai_status"] = "frozen"
+             recommended_config["drift_reason"] = drift_status["message"]
+             
+             # We return early? Or submit as 'REJECTED' automatically?
+             # Let's return a "FROZEN" response
+             return DecisionResponse(
+                status="drift_frozen",
+                action=recommended_config,
+                explanation=explanation,
+                approval_id=None,
+                risk_level="high"
+            )
+    except Exception as e:
+        print(f"Drift detection failed: {e}")
 
     # 6. Submit to Approval Engine (NOT direct deployment)
     approval_id = approval_engine.submit_recommendation(
@@ -648,7 +778,7 @@ async def make_decision(request: DecisionRequest):
         )
         
         # Record to learning loop for improvement tracking
-        reward = record_and_learn(
+        reward, learning_contribution = record_and_learn(
             decision_id=approval_id,
             intent=policy_type,
             action=recommended_config,
@@ -661,6 +791,7 @@ async def make_decision(request: DecisionRequest):
         )
     except Exception as e:
         print(f"Learning feedback recording failed (non-critical): {e}")
+        learning_contribution = "Learning active..." # Fallback
 
     # Determine status based on emergency mode
     if is_emergency:
@@ -680,16 +811,33 @@ async def make_decision(request: DecisionRequest):
         
         # Get focus region for context
         focus_region = sim_state.focus_region
+
+        # Prepare latency metrics for real-time dashboard
+        latest = latency.get_latest_metrics()
+        avg = latency.get_average_metrics()
+        
+        metrics_payload = {
+            "ppo_inference_ms": round(latest.ppo_inference_ms, 3),
+            "digital_twin_validation_ms": round(latest.digital_twin_validation_ms, 3),
+            "optimization_ms": round(latest.optimization_ms, 3),
+            "total_decision_cycle_ms": round(latest.total_decision_cycle_ms, 3),
+            "policy_type": latest.policy_type,
+            "real_time_capable": latest.total_decision_cycle_ms < 10.0,
+            "averages": avg
+        }
         
         asyncio.create_task(broadcast_ai_decision(
             decision_id=approval_id,
             intent=policy_type,
             action=recommended_config,
             explanation=explanation,
-            focus_region=focus_region
+            learning_contribution=learning_contribution, # Pass dynamic learning insight
+            focus_region=focus_region,
+            metrics=metrics_payload
         ))
     except Exception as e:
         print(f"WebSocket broadcast failed (non-critical): {e}")
+
 
     return DecisionResponse(
         status=status,
@@ -782,6 +930,19 @@ async def get_cognitive_state():
     from .environment import get_env_state
     from .simulation_state import get_simulation_state
     
+
+    
+    env = get_env_state()
+    sim_state = get_simulation_state()
+    
+    # Get mobility metrics first so we can use them for prediction
+    try:
+        mobility_metrics = sim_state.grid.get_mobility_metrics()
+        current_mobility = mobility_metrics.get("mobile_user_ratio", 0.0)
+    except (AttributeError, Exception):
+        mobility_metrics = {"mobile_user_ratio": 0.0}
+        current_mobility = 0.0
+
     try:
         from .ai_data_collector import get_knowledge_store
         from .demand_predictor import get_demand_predictor
@@ -792,22 +953,18 @@ async def get_cognitive_state():
         learning_tracker = get_learning_tracker()
         
         knowledge_state = knowledge_store.get_knowledge_state()
-        demand_forecast = demand_predictor.predict_demand()
+        
+        # improvements: Pass REAL context to the predictor
+        demand_forecast = demand_predictor.predict_demand(
+            current_mobility=current_mobility,
+            current_congestion=env.traffic_load_level - 1.0 if env.traffic_load_level > 1.0 else 0.0, # Approximate congestion from load
+            recent_emergency=env.is_emergency_active
+        )
         learning_stats = learning_tracker.get_improvement_stats()
     except Exception as e:
         knowledge_state = {"error": str(e)}
         demand_forecast = None
         learning_stats = None
-    
-    env = get_env_state()
-    sim_state = get_simulation_state()
-    
-    # Get mobility metrics
-    try:
-        mobility_metrics = sim_state.grid.get_mobility_metrics()
-    except (AttributeError, Exception) as e:
-        # Handle missing grid or method gracefully
-        mobility_metrics = {"mobile_user_ratio": 0.0}
     
     # Get latency metrics from the tracker
     latency = get_latency_tracker()

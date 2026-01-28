@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
+import type { AIDecision } from '../types';
 
 export type SystemPhase = 'idle' | 'parsing' | 'optimizing' | 'safety_check' | 'reconfiguring' | 'broadcasting' | 'emergency';
 
@@ -10,7 +11,8 @@ export interface SystemState {
     lastDecisionTime: number | null;
     safetyLock: boolean;
     receiversReached: number;
-    kpiHistory: any[];
+    kpiHistory: unknown[];
+    thoughtLog: AIDecision[]; // Added for persistence
 }
 
 interface SystemContextType extends SystemState {
@@ -19,7 +21,9 @@ interface SystemContextType extends SystemState {
     triggerEmergency: () => Promise<void>;
     cancelEmergency: () => void;
     addLog: (msg: string) => void;
+    dismissExplanation: () => void;
     logs: string[];
+    addThought: (thought: AIDecision) => void;
 }
 
 const SystemContext = createContext<SystemContextType | undefined>(undefined);
@@ -34,7 +38,16 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     const [safetyLock, setSafetyLock] = useState(false);
     const [receiversReached, setReceiversReached] = useState(12000);
     const [logs, setLogs] = useState<string[]>([]);
-    const [kpiHistory, setKpiHistory] = useState<any[]>([]);
+    const [kpiHistory, setKpiHistory] = useState<unknown[]>([]);
+    const [thoughtLog, setThoughtLog] = useState<AIDecision[]>([]);
+
+    const addThought = useCallback((thought: AIDecision) => {
+        setThoughtLog(prev => {
+            // Avoid duplicates
+            if (prev.some(t => t.decision_id === thought.decision_id)) return prev;
+            return [thought, ...prev].slice(0, 50);
+        });
+    }, []);
 
     const addLog = useCallback((msg: string) => {
         const timestamp = new Date().toLocaleTimeString();
@@ -115,7 +128,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
             // Extract Explanation
             // We parse the generated explanation or construct one from the returned action
             // For the demo specific wording requested:
-            let specificExpl = {
+            const specificExpl = {
                 changed: data?.environment_change || "Environment changed.",
                 action: decision.explanation, // The AI engine returns a summary
                 safe: "Reliability maintained > 99%."
@@ -133,8 +146,8 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
             setLastDecisionTime(Date.now());
             addLog("System Stabilized under stress.");
 
-            // Auto-clear explanation
-            setTimeout(() => setAdaptationExplanation(null), 12000);
+            // Auto-clear explanation REMOVED - User wants it permanent
+            // setTimeout(() => setAdaptationExplanation(null), 12000);
 
         } catch (e) {
             console.error(e);
@@ -197,6 +210,10 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
         }, 1500);
     };
 
+    const dismissExplanation = useCallback(() => {
+        setAdaptationExplanation(null);
+    }, []);
+
     return (
         <SystemContext.Provider value={{
             phase,
@@ -212,7 +229,10 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
             triggerEmergency,
             cancelEmergency,
             addLog,
-            logs
+            logs,
+            dismissExplanation,
+            thoughtLog,
+            addThought
         }}>
             {children}
         </SystemContext.Provider>

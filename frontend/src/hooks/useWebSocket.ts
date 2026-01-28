@@ -35,6 +35,8 @@ export function useWebSocket(): UseWebSocketReturn {
     const reconnectAttemptsRef = useRef(0);
     const reconnectTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+    const connectRef = useRef<() => void>(() => { });
+
     const connect = useCallback(() => {
         // Clean up existing connection
         if (wsRef.current) {
@@ -84,7 +86,7 @@ export function useWebSocket(): UseWebSocketReturn {
                     console.log(`Reconnecting... (attempt ${reconnectAttemptsRef.current}/${MAX_RECONNECT_ATTEMPTS})`);
 
                     reconnectTimeoutRef.current = setTimeout(() => {
-                        connect();
+                        connectRef.current();
                     }, RECONNECT_DELAY);
                 } else if (reconnectAttemptsRef.current >= MAX_RECONNECT_ATTEMPTS) {
                     setConnectionError('Max reconnection attempts reached');
@@ -95,6 +97,11 @@ export function useWebSocket(): UseWebSocketReturn {
             setConnectionError('Failed to connect');
         }
     }, []);
+
+    // Update the ref whenever connect changes
+    useEffect(() => {
+        connectRef.current = connect;
+    }, [connect]);
 
     const reconnect = useCallback(() => {
         reconnectAttemptsRef.current = 0;
@@ -132,7 +139,11 @@ export function useWebSocketSubscription<T = unknown>(
 ) {
     const { lastMessage, isConnected } = useWebSocket();
     const callbackRef = useRef(onMessage);
-    callbackRef.current = onMessage;
+
+    // Update ref in effect, not render
+    useEffect(() => {
+        callbackRef.current = onMessage;
+    }, [onMessage]);
 
     useEffect(() => {
         if (lastMessage && lastMessage.type === messageType) {

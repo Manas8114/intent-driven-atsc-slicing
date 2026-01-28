@@ -4,40 +4,7 @@ import { useWebSocket } from '../hooks/useWebSocket';
 import { Brain, Cpu, Zap, Target, Signal, AlertTriangle, TrendingUp, Gauge, Activity } from 'lucide-react';
 import { cn } from '../lib/utils';
 
-interface RewardComponents {
-    coverage: number;
-    accuracy: number;
-    reliability: number;
-    congestion: number;
-    stability: number;
-}
-
-interface PPOInternals {
-    value_estimate: number;
-    confidence_pct: number;
-    action_log_prob: number;
-    action_mean?: number[];
-    action_std?: number[];
-}
-
-interface Interpretation {
-    value_insight: string;
-    confidence_insight: string;
-    action_insight: string;
-    advantage_insight: string;
-    source: string;
-}
-
-interface AIDecision {
-    decision_id: string;
-    timestamp: string;
-    intent: string;
-    action_taken: any;
-    reward_signal: number;
-    reward_components?: RewardComponents;
-    learning_contribution: string;
-    ppo_internals?: PPOInternals;
-}
+import type { AIDecision, PPOInternals, Interpretation } from '../types';
 
 interface IntrospectionData {
     current_introspection: PPOInternals;
@@ -46,31 +13,32 @@ interface IntrospectionData {
     data_source: string;
 }
 
+import { useSystem } from '../context/SystemContext'; // Added import
+
 export function ThinkingTrace() {
     const { lastMessage } = useWebSocket();
-    const [thoughtLog, setThoughtLog] = useState<AIDecision[]>([]);
+    const { thoughtLog, addThought } = useSystem(); // Use persistent state
+
+    // const [thoughtLog, setThoughtLog] = useState<AIDecision[]>([]); // Removed local state
     const [introspection, setIntrospection] = useState<IntrospectionData | null>(null);
     const [isRealData, setIsRealData] = useState(false);
     const scrollRef = useRef<HTMLDivElement>(null);
 
-    // Fetch real PPO internals from the new endpoint
+    // Fetch real PPO internals (Less frequent polling for stability)
     useEffect(() => {
         const fetchIntrospection = async () => {
+            // Only fetch if we need PPO internals, trace comes via WebSocket mostly
             try {
                 const res = await fetch('http://localhost:8000/ai/thinking-trace');
                 if (res.ok) {
                     const data = await res.json();
+                    // debounce/smooth update
                     setIntrospection(data);
                     setIsRealData(data.data_source === 'REAL_PPO_INTERNALS');
 
-                    // Merge trace entries if available
+                    // Only fill initial history if empty
                     if (data.trace_entries && data.trace_entries.length > 0) {
-                        setThoughtLog(prev => {
-                            const newEntries = data.trace_entries.filter(
-                                (e: AIDecision) => !prev.some(p => p.decision_id === e.decision_id)
-                            );
-                            return [...newEntries, ...prev].slice(0, 50);
-                        });
+                        data.trace_entries.forEach((e: AIDecision) => addThought(e));
                     }
                 }
             } catch (err) {
@@ -79,20 +47,17 @@ export function ThinkingTrace() {
         };
 
         fetchIntrospection();
-        const interval = setInterval(fetchIntrospection, 3000); // Poll every 3s
+        const interval = setInterval(fetchIntrospection, 5000); // Slower poll to reduce jitter
         return () => clearInterval(interval);
-    }, []);
+    }, [addThought]);
 
     // Process incoming WebSocket messages
     useEffect(() => {
         if (lastMessage?.type === 'ai_decision') {
             const decision = lastMessage.data as unknown as AIDecision;
-            setThoughtLog(prev => {
-                const filtered = prev.filter(d => d.decision_id !== decision.decision_id);
-                return [decision, ...filtered].slice(0, 50);
-            });
+            addThought(decision);
         }
-    }, [lastMessage]);
+    }, [lastMessage, addThought]);
 
     // Auto-scroll to top
     useEffect(() => {
@@ -102,11 +67,15 @@ export function ThinkingTrace() {
     }, [thoughtLog]);
 
     const latestThought = thoughtLog[0];
+    // Find the latest decision that actually has metrics to prevent flickering "0.00" or missing graphs
+    // when intermediate status updates arrive.
+    const validDecision = thoughtLog.find(d => d.reward_components) || latestThought;
+
     const ppo = introspection?.current_introspection;
     const interpretation = introspection?.interpretation;
 
     return (
-        <div className="flex flex-col gap-4 h-full">
+        <div className="flex flex-col gap-4 h-full w-full min-h-[500px]">
             {/* Real PPO Internals Section */}
             <Card className="border-l-4 border-l-purple-500 bg-slate-900/50 backdrop-blur">
                 <CardHeader className="pb-2">
@@ -183,103 +152,111 @@ export function ThinkingTrace() {
                 </CardContent>
             </Card>
 
-            {/* Latest Thought / Reward Breakdown */}
-            <Card className="border-l-4 border-l-blue-500 bg-slate-900/50 backdrop-blur">
-                <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-300">
-                        <Brain className="w-4 h-4" />
-                        AI Reasoning Engine
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    {latestThought ? (
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-start">
-                                <div>
-                                    <p className="text-xs text-slate-400">Current Focus</p>
-                                    <p className="font-mono text-sm font-bold text-white uppercase">{latestThought.intent.replace('_', ' ')}</p>
+            {/* Decisions Container - Explicit Height for scrolling context */}
+            <div className="flex flex-col gap-4">
+                {/* Latest Thought (Fixed Height) */}
+                <Card className="border-l-4 border-l-blue-500 bg-slate-900/50 backdrop-blur shrink-0">
+                    <CardHeader className="pb-2">
+                        <CardTitle className="text-sm font-medium flex items-center gap-2 text-blue-300">
+                            <Brain className="w-4 h-4" />
+                            AI Reasoning Engine
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {validDecision ? (
+                            <div className="space-y-4">
+                                <div className="flex justify-between items-start">
+                                    <div>
+                                        <p className="text-xs text-slate-400">Current Focus</p>
+                                        <p className="font-mono text-sm font-bold text-white uppercase">{validDecision.intent.replace('_', ' ')}</p>
+                                    </div>
+                                    <div className="text-right">
+                                        <p className="text-xs text-slate-400">Total Reward</p>
+                                        <p className={cn(
+                                            "font-mono text-lg font-bold",
+                                            (validDecision.reward_signal || 0) > 0 ? "text-green-400" : "text-red-400"
+                                        )}>
+                                            {(validDecision.reward_signal || 0) > 0 ? '+' : ''}{(validDecision.reward_signal || 0).toFixed(2)}
+                                        </p>
+                                    </div>
                                 </div>
-                                <div className="text-right">
-                                    <p className="text-xs text-slate-400">Total Reward</p>
-                                    <p className={cn(
-                                        "font-mono text-lg font-bold",
-                                        (latestThought.reward_signal || 0) > 0 ? "text-green-400" : "text-red-400"
-                                    )}>
-                                        {(latestThought.reward_signal || 0) > 0 ? '+' : ''}{(latestThought.reward_signal || 0).toFixed(2)}
+
+                                {/* Reward Composition Chart */}
+                                {validDecision.reward_components && (
+                                    <div className="space-y-2">
+                                        <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Reward Components</p>
+                                        <div className="space-y-1">
+                                            <RewardBar label="Coverage" value={validDecision.reward_components?.coverage || 0} max={2} color="bg-emerald-500" icon={<Signal className="w-3 h-3" />} />
+                                            <RewardBar label="Reliability" value={validDecision.reward_components?.reliability || 0} max={1.5} color="bg-blue-500" icon={<AlertTriangle className="w-3 h-3" />} />
+                                            <RewardBar label="Accuracy" value={validDecision.reward_components?.accuracy || 0} max={1} color="bg-purple-500" icon={<Target className="w-3 h-3" />} />
+                                            <RewardBar label="Congestion" value={validDecision.reward_components?.congestion || 0} max={1} color="bg-orange-500" icon={<Zap className="w-3 h-3" />} />
+                                        </div>
+                                    </div>
+                                )}
+
+                                <div className="mt-3 p-2 bg-slate-900 rounded border border-slate-700">
+                                    <p className="text-xs font-mono text-cyan-300">
+                                        {'>'} {validDecision.learning_contribution}
                                     </p>
                                 </div>
                             </div>
-
-                            {/* Reward Composition Chart */}
-                            {latestThought.reward_components && (
-                                <div className="space-y-2">
-                                    <p className="text-xs text-slate-500 font-semibold uppercase tracking-wider">Reward Components</p>
-                                    <div className="space-y-1">
-                                        <RewardBar label="Coverage" value={latestThought.reward_components?.coverage || 0} max={2} color="bg-emerald-500" icon={<Signal className="w-3 h-3" />} />
-                                        <RewardBar label="Reliability" value={latestThought.reward_components?.reliability || 0} max={1.5} color="bg-blue-500" icon={<AlertTriangle className="w-3 h-3" />} />
-                                        <RewardBar label="Accuracy" value={latestThought.reward_components?.accuracy || 0} max={1} color="bg-purple-500" icon={<Target className="w-3 h-3" />} />
-                                        <RewardBar label="Congestion" value={latestThought.reward_components?.congestion || 0} max={1} color="bg-orange-500" icon={<Zap className="w-3 h-3" />} />
-                                    </div>
-                                </div>
-                            )}
-
-                            <div className="mt-3 p-2 bg-slate-900 rounded border border-slate-700">
-                                <p className="text-xs font-mono text-cyan-300">
-                                    {'>'} {latestThought.learning_contribution}
-                                </p>
-                            </div>
-                        </div>
-                    ) : (
-                        <div className="text-center py-8 text-slate-500">
-                            <Cpu className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
-                            <p className="text-sm">Waiting for AI decision...</p>
-                        </div>
-                    )}
-                </CardContent>
-            </Card>
-
-            <Card className="flex-1 min-h-0 bg-slate-900/30 flex flex-col">
-                <CardHeader className="py-3 border-b border-white/10">
-                    <CardTitle className="text-xs font-medium uppercase text-slate-500">Decision Trace</CardTitle>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
-                    <div className="divide-y divide-white/5">
-                        {thoughtLog.map((log, index) => {
-                            let timeStr = "--:--:--";
-                            try {
-                                if (log.timestamp) {
-                                    const d = new Date(log.timestamp);
-                                    if (!isNaN(d.getTime())) {
-                                        timeStr = d.toLocaleTimeString();
-                                    }
-                                }
-                            } catch (e) { /* ignore date error */ }
-
-                            return (
-                                <div key={log.decision_id || `trace-${index}`} className="p-3 hover:bg-white/5 transition-colors">
-                                    <div className="flex justify-between items-start mb-1">
-                                        <span className="text-xs font-mono text-slate-500">{timeStr}</span>
-                                        <span className={cn(
-                                            "text-xs font-bold px-1.5 py-0.5 rounded",
-                                            (log.reward_signal || 0) >= 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
-                                        )}>
-                                            {(log.reward_signal || 0).toFixed(2)}
-                                        </span>
-                                    </div>
-                                    <p className="text-sm text-slate-300 mb-1">{log.intent || "Unknown Intent"}</p>
-                                    <p className="text-xs text-slate-500 line-clamp-2">{log.learning_contribution}</p>
-                                </div>
-                            )
-                        })}
-                        {thoughtLog.length === 0 && (
-                            <div className="p-4 text-center text-xs text-slate-600">
-                                No history available
+                        ) : (
+                            <div className="text-center py-8 text-slate-500">
+                                <Cpu className="w-8 h-8 mx-auto mb-2 opacity-50 animate-pulse" />
+                                <p className="text-sm">Waiting for AI decision...</p>
                             </div>
                         )}
-                    </div>
-                </CardContent>
-            </Card>
-        </div>
+                    </CardContent>
+                </Card>
+
+                {/* Scrolled History List (Fixed Window) */}
+                < Card className="h-[500px] bg-slate-900/30 flex flex-col border-slate-800 shrink-0" >
+                    <CardHeader className="py-3 border-b border-white/5 bg-white/5">
+                        <CardTitle className="text-xs font-medium uppercase text-slate-400 flex items-center justify-between">
+                            <span>Decision Trace</span>
+                            <span className="text-[10px] bg-slate-800 px-2 py-0.5 rounded text-slate-500">{thoughtLog.length} events</span>
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent className="flex-1 overflow-y-auto p-0 scrollbar-thin scrollbar-thumb-slate-700 scrollbar-track-transparent">
+                        <div className="divide-y divide-white/5">
+                            {thoughtLog.map((log, index) => {
+                                let timeStr = "--:--:--";
+                                try {
+                                    if (log.timestamp) {
+                                        const d = new Date(log.timestamp);
+                                        if (!isNaN(d.getTime())) {
+                                            timeStr = d.toLocaleTimeString();
+                                        }
+                                    }
+                                } catch (e) { /* ignore date error */ }
+
+                                return (
+                                    <div key={log.decision_id || `trace-${index}`} className="p-3 hover:bg-white/5 transition-colors group">
+                                        <div className="flex justify-between items-start mb-1">
+                                            <span className="text-xs font-mono text-slate-500 group-hover:text-slate-300 transition-colors">{timeStr}</span>
+                                            <span className={cn(
+                                                "text-xs font-bold px-1.5 py-0.5 rounded",
+                                                (log.reward_signal || 0) >= 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"
+                                            )}>
+                                                {(log.reward_signal || 0).toFixed(2)}
+                                            </span>
+                                        </div>
+                                        <p className="text-sm text-slate-300 mb-1 font-medium">{log.intent || "Unknown Intent"}</p>
+                                        <p className="text-xs text-slate-500 line-clamp-2 group-hover:text-slate-400 transition-colors">{log.learning_contribution || "Processing decision rationale..."}</p>
+                                    </div>
+                                )
+                            })}
+                            {thoughtLog.length === 0 && (
+                                <div className="p-8 text-center text-xs text-slate-600 flex flex-col items-center gap-2">
+                                    <Activity className="w-5 h-5 opacity-20" />
+                                    No history available
+                                </div>
+                            )}
+                        </div>
+                    </CardContent>
+                </Card >
+            </div >
+        </div >
     );
 }
 

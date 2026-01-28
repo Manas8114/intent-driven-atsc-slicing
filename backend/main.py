@@ -164,6 +164,35 @@ app.include_router(ble_router, prefix="/ble", tags=["BLE Mobile Demo"])
 # AI Introspection (Real PPO Internals for Thinking Trace)
 app.include_router(introspection_router, prefix="/ai", tags=["AI Introspection"])
 
+# ============================================================================
+# Drift Detection & Safety (Sim-to-Real Protection)
+# ============================================================================
+from .drift_detector import drift_detector
+
+@app.get("/drift/status", tags=["Drift Detection"])
+async def get_drift_status():
+    """
+    Get current sim-to-real drift status.
+    Returns Nominal or Drift Detected (with freeze status).
+    """
+    return drift_detector.get_status()
+
+@app.post("/drift/inject", tags=["Drift Detection"])
+async def inject_drift(offset: float = 1.0):
+    """
+    FOR DEMO ONLY: Artificially inject drift to demonstrate safety freeze.
+    Offset > 0 biases the receiver measurements away from prediction.
+    """
+    drift_detector.inject_drift(offset)
+    return {"status": "Drift injected", "offset": offset, "message": "Artificial drift active - Check Drift Monitor"}
+
+@app.post("/drift/reset", tags=["Drift Detection"])
+async def reset_drift():
+    """Reset drift detector state."""
+    drift_detector.reset()
+    return {"status": "Drift detector reset"}
+
+
 
 
 # ============================================================================
@@ -234,6 +263,26 @@ async def quick_start_demo():
     # 2. Trigger monsoon scenario for dramatic effect
     env.active_hurdle = "monsoon"
     env.hurdle_intensity = 0.7
+    
+    # 3. Seed Control Plane Metrics for visual dashboard
+    from .broadcast_telemetry import control_plane_metrics
+    # Reset first
+    control_plane_metrics._initialize()
+    
+    # Simulate past 24h of operations
+    # 200 recommendations, 98% acceptance
+    for _ in range(196):
+        control_plane_metrics.record_recommendation(accepted=True)
+    for _ in range(4):
+        control_plane_metrics.record_recommendation(accepted=False)
+        
+    # Simulate safety interventions
+    for _ in range(12):
+        control_plane_metrics.record_safety_override()
+        
+    # Simulate emergency overrides
+    for _ in range(3):
+        control_plane_metrics.record_emergency_override()
     
     return {
         "status": "🚀 DEMO MODE ACTIVE",
