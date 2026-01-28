@@ -255,6 +255,80 @@ class RLController:
         # If 4-dim observation (old format), extend it
         action = self.suggest_action(obs)
         return action[:2]  # Return only weight adjustments
+    
+    def predict_with_breakdown(self, current_observation):
+        """
+        🧠 REAL AI INTROSPECTION 🧠
+        
+        Returns the action along with the PPO policy's internal state:
+        - Value Estimate: The critic's estimate of state value V(s)
+        - Action Log-Probability: Confidence measure (higher = more certain)
+        - Action Mean/Std: The Gaussian policy's parameters
+        
+        This makes the "Thinking Trace" REAL - showing actual AI computation,
+        not post-hoc text generation.
+        
+        Args:
+            current_observation: 7-dim array
+            
+        Returns:
+            dict with action, value_estimate, log_prob, action_mean, action_std
+        """
+        import torch
+        
+        obs = np.array(current_observation, dtype=np.float32)
+        if len(obs) < 7:
+            obs = np.pad(obs, (0, 7 - len(obs)), mode='constant')
+        
+        # Ensure model is loaded
+        if not os.path.exists(self.model_path + ".zip") and self.model is None:
+            self.train(timesteps=500)
+            
+        if self.model is None:
+            if RLController._model_cache is not None:
+                self.model = RLController._model_cache
+            else:
+                self.model = PPO.load(self.model_path, device='cpu')
+                RLController._model_cache = self.model
+        
+        # Get action (deterministic)
+        action, _ = self.model.predict(obs, deterministic=True)
+        
+        # Extract PPO internals using the policy network directly
+        obs_tensor = torch.from_numpy(obs).unsqueeze(0).float()
+        
+        with torch.no_grad():
+            # Get value estimate from critic
+            value = self.model.policy.predict_values(obs_tensor)
+            value_estimate = float(value.cpu().numpy()[0])
+            
+            # Get action distribution from actor
+            distribution = self.model.policy.get_distribution(obs_tensor)
+            
+            # Get mean and std of the Gaussian policy
+            action_mean = distribution.distribution.mean.cpu().numpy()[0]
+            action_std = distribution.distribution.stddev.cpu().numpy()[0]
+            
+            # Get log probability of the chosen action
+            action_tensor = torch.from_numpy(action).unsqueeze(0).float()
+            log_prob = distribution.log_prob(action_tensor)
+            action_log_prob = float(log_prob.sum().cpu().numpy())
+        
+        # Calculate confidence from log probability (higher = more confident)
+        # Map log_prob to 0-100% scale (approximate)
+        confidence_pct = min(100.0, max(0.0, 50.0 + action_log_prob * 10.0))
+        
+        return {
+            "action": action.tolist(),
+            "value_estimate": round(value_estimate, 4),
+            "action_log_prob": round(action_log_prob, 4),
+            "confidence_pct": round(confidence_pct, 1),
+            "action_mean": [round(x, 4) for x in action_mean.tolist()],
+            "action_std": [round(x, 4) for x in action_std.tolist()],
+            "observation_used": obs.tolist(),
+            "introspection_type": "REAL_PPO_INTERNALS"
+        }
+
 
 
 # Global accessor for Singleton instance

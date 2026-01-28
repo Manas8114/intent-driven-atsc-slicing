@@ -17,6 +17,8 @@ from .demand_predictor import router as demand_router
 from .learning_loop import router as learning_router
 from .bootstrap_uncertainty import router as bootstrap_router
 from .ble_adapter import router as ble_router
+from .ai_introspection import router as introspection_router
+
 
 app = FastAPI(
     title="AI-Native Broadcast Intelligence Platform",
@@ -158,6 +160,10 @@ app.include_router(experience_router, prefix="/experiences", tags=["Training Exp
 
 # BLE Mobile Demo (Hackathon Demo Feature)
 app.include_router(ble_router, prefix="/ble", tags=["BLE Mobile Demo"])
+
+# AI Introspection (Real PPO Internals for Thinking Trace)
+app.include_router(introspection_router, prefix="/ai", tags=["AI Introspection"])
+
 
 
 # ============================================================================

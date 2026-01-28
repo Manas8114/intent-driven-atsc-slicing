@@ -12,7 +12,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 
 // Backend URL - imported from shared config (auto-updated by ngrok script)
-import { BACKEND_URL } from '../config';
+import { BACKEND_URL } from './config';
 
 interface AIState {
     delivery_mode: string;
