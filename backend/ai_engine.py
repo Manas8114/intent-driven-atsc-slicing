@@ -477,6 +477,16 @@ async def make_decision(request: DecisionRequest):
     if env.traffic_load_level > 1.5 and policy_type != "ensure_emergency_reliability":
         base_weights[1] *= 1.5
 
+    # Pre-fetch simulation state for observation
+    sim_state = get_simulation_state()
+    try:
+        current_mobility = sim_state.grid.get_mobility_metrics()
+        current_mobile_ratio = current_mobility.get("mobile_user_ratio", 0.0)
+        current_velocity = current_mobility.get("average_velocity_kmh", 0.0)
+    except Exception:
+        current_mobile_ratio = 0.0
+        current_velocity = 0.0
+
     # 2. RL Agent Adjustment (The "AI" Brain)
     # ⏱️ LATENCY TRACKING: PPO Inference
     latency = get_latency_tracker()
@@ -491,7 +501,16 @@ async def make_decision(request: DecisionRequest):
         if est_snr < 10:
             est_coverage = 60.0
         
-        obs = np.array([est_coverage, est_snr, base_weights[0], base_weights[1]], dtype=np.float32)
+        # FULL 7-DIM OBS: [Cov, SNR, W_emg, W_cov, Congestion, MobileRatio, Velocity]
+        obs = np.array([
+            est_coverage, 
+            est_snr, 
+            base_weights[0], 
+            base_weights[1],
+            env.traffic_load_level / 2.0,     # Normalize Congestion
+            current_mobile_ratio,             # Mobile User Ratio
+            current_velocity / 100.0          # Normalize Velocity (approx)
+        ], dtype=np.float32)
         
         # Run blocking inference in threadpool
         weight_delta = await run_in_threadpool(rl.suggest_weights, obs)
