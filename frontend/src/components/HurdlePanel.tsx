@@ -36,6 +36,15 @@ const COGNITIVE_SCENARIOS = [
         impact: 'AI re-routes coverage from adjacent towers',
         color: 'text-red-600 bg-red-50 hover:bg-red-100 border-red-200',
         aiAction: 'The AI reconfigures adjacent towers to cover the dead zone'
+    },
+    {
+        id: 'mobility_surge',
+        label: '🚄 High Mobility',
+        icon: Radio,
+        desc: '60% users moving at 75km/h',
+        impact: 'AI switches to robust modulation for Doppler shift',
+        color: 'text-indigo-600 bg-indigo-50 hover:bg-indigo-100 border-indigo-200',
+        aiAction: 'The AI increases coding robustness to handle Doppler shift'
     }
 ];
 
