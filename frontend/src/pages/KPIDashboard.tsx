@@ -1,9 +1,20 @@
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState, useMemo, useCallback } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { RefreshCw, ShieldCheck, Zap, Radio, Activity, TrendingUp, TrendingDown, Clock } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 import { cn } from '../lib/utils';
+import type { LucideIcon } from 'lucide-react';
+
+interface KPIDataPoint {
+    timestamp: number;
+    coverage: number;
+    reliability: number;
+    spectral_efficiency: number;
+    latency: number;
+    throughput: number;
+    [key: string]: number;
+}
 
 // --- Sub-components ---
 
@@ -45,7 +56,7 @@ const Gauge = ({ value, label, colorClass = "cyan", unit = "%" }: { value: numbe
     );
 };
 
-const StatCard = ({ title, value, unit, trend, icon: Icon, color }: { title: string; value: string | number; unit: string; trend: number; icon: any; color: string }) => (
+const StatCard = ({ title, value, unit, trend, icon: Icon, color }: { title: string; value: string | number; unit: string; trend: number; icon: LucideIcon; color: string }) => (
     <Card className="glass-card-dark border-slate-800/50 overflow-hidden group">
         <div className={cn("absolute top-0 left-0 w-1 h-full", color)} />
         <CardContent className="p-6">
@@ -75,7 +86,7 @@ const StatCard = ({ title, value, unit, trend, icon: Icon, color }: { title: str
 // --- Main Component ---
 
 export function KPIDashboard() {
-    const [data, setData] = useState<any[]>([]);
+    const [data, setData] = useState<KPIDataPoint[]>([]);
     const [loading, setLoading] = useState(false);
     const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
 
@@ -91,7 +102,7 @@ export function KPIDashboard() {
         }));
     };
 
-    const fetchData = async () => {
+    const fetchData = useCallback(async () => {
         setLoading(true);
         try {
             const res = await fetch('http://localhost:8000/kpi/?limit=30');
@@ -105,19 +116,19 @@ export function KPIDashboard() {
             } else {
                 setData(generateMockData());
             }
-        } catch (e) {
+        } catch {
             setData(generateMockData());
         } finally {
             setLoading(false);
             setLastUpdated(new Date());
         }
-    };
+    }, []);
 
     useEffect(() => {
         fetchData();
         const interval = setInterval(fetchData, 4000);
         return () => clearInterval(interval);
-    }, []);
+    }, [fetchData]);
 
     const latest = useMemo(() => data[data.length - 1] || {}, [data]);
     const previous = useMemo(() => data[data.length - 2] || {}, [data]);

@@ -39,7 +39,7 @@ export const DeviceMetricPopup: React.FC<DeviceMetricPopupProps> = ({
                         service_acquisition: data.physics_log.outputs?.service_acquisition || 0,
                     });
                 }
-            } catch (err) {
+            } catch {
                 console.error('Failed to fetch physics data');
             } finally {
                 setLoading(false);
@@ -124,7 +124,7 @@ export const DeviceMetricPopup: React.FC<DeviceMetricPopupProps> = ({
                             <div className="w-16 h-1.5 bg-gray-700 rounded-full overflow-hidden">
                                 <div
                                     className={`h-full transition-all duration-300 ${physics.service_acquisition > 90 ? 'bg-green-500' :
-                                            physics.service_acquisition > 60 ? 'bg-yellow-500' : 'bg-red-500'
+                                        physics.service_acquisition > 60 ? 'bg-yellow-500' : 'bg-red-500'
                                         }`}
                                     style={{ width: `${physics.service_acquisition}%` }}
                                 />

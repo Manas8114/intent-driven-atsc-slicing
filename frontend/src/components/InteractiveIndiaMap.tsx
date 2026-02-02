@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
-import { Activity, SignalHigh } from 'lucide-react';
+import { Activity } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { DeviceMetricPopup } from './DeviceMetricPopup';
 
@@ -87,7 +87,7 @@ export function InteractiveIndiaMap({
     // Process WebSocket for visual flair & Digital Twin Sync
     useEffect(() => {
         if (lastMessage?.type === 'ai_decision') {
-            const decision = lastMessage.data as any;
+            const decision = lastMessage.data as { intent?: string; focus_region?: string; action?: { modulation?: string; power_dbm?: number } };
 
             // Sync with AI's reported focus
             // Sync with AI's reported focus
@@ -113,7 +113,7 @@ export function InteractiveIndiaMap({
             };
             setLiveIntents(prev => [newIntent, ...prev].slice(0, 5));
         }
-    }, [lastMessage]);
+    }, [lastMessage, aiFocusRegion]);
 
     const handleCityClick = useCallback(async (city: City) => {
         if (onCitySelect) onCitySelect(city);

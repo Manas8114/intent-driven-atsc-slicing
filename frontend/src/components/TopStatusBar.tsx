@@ -1,4 +1,4 @@
-import { ShieldCheck, Clock, CheckCircle, Zap, Cpu, Shield, Radio, Tablet, Loader2, Brain } from 'lucide-react';
+import { ShieldCheck, CheckCircle, Zap, Cpu, Shield, Radio, Tablet, Loader2, Brain } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
 

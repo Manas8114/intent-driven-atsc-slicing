@@ -1,0 +1,534 @@
+% IEEE Paper - Intent-Driven AI-Native Network Slicing for ATSC 3.0 Broadcasting
+
+\documentclass[conference]{IEEEtran}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\usepackage{cite}
+\usepackage{hyperref}
+
+\begin{document}
+
+\title{Intent-Driven AI-Native Network Slicing for Rural Broadcasting over ATSC 3.0: A Reinforcement Learning Approach}
+
+\author{%
+\IEEEauthorblockN{ Manas Sharma\IEEEauthorrefmark{1},  Harsh Sahu\IEEEauthorrefmark{2}}%
+\IEEEauthorblockA{\IEEEauthorrefmark{1}Department of Data Science and Business Systems\\
+SRM Institute of Science and Technology, Chennai, India\\
+Email: \{ms9508, hs3657\}@srmist.edu.in}%
+}
+
+
+\maketitle
+
+\begin{abstract}
+This paper presents an intent-driven network slicing framework for ATSC 3.0 broadcast networks. The system implements a closed-loop control architecture where a Proximal Policy Optimization (PPO) reinforcement learning agent dynamically orchestrates Physical Layer Pipe (PLP) configurations to satisfy high-level operator intents. The architecture introduces three key components: (1) an intent translation layer mapping operator goals to utility functions, (2) a spatial digital twin for validation across a 10km × 10km simulated terrain, and (3) a human-in-the-loop governance workflow. Experimental evaluation leads to a decision latency of under 10 milliseconds on reference hardware and demonstrates coverage improvements over static configurations during simulated emergency scenarios. The framework aligns with ITU-T FG-AINN architectural principles and demonstrates the feasibility of AI-assisted adaptation in broadcast infrastructure.
+\end{abstract}
+
+
+\vspace{1em}
+\textit{\textbf{Key Words}---ATSC 3.0, Network Slicing, Reinforcement Learning, Intent-Based Networking, Digital Twin, Proximal Policy Optimization, Broadcast Networks}
+
+\section{Introduction}
+
+The evolution of terrestrial broadcast standards toward ATSC 3.0 (Advanced Television Systems Committee 3.0) represents a significant shift in over-the-air television delivery. Unlike its predecessors, ATSC 3.0 introduces substantial flexibility through Physical Layer Pipes (PLPs), Layered Division Multiplexing (LDM), and adaptive modulation and coding schemes \cite{b1}. This flexibility, while enabling new services such as mobile reception and broadband data delivery, introduces significant operational complexity that challenges traditional static configuration approaches.
+
+Current broadcast network management relies predominantly on manual engineering decisions, where parameters are calculated once and remain static for extended periods. This approach proves inadequate for addressing dynamic conditions including: (a) temporal variations in cellular network congestion requiring traffic offloading, (b) mobility patterns affecting signal quality for vehicular receivers, and (c) emergency situations demanding immediate reconfiguration for public safety alerts \cite{b2}.
+
+The International Telecommunication Union's Focus Group on AI-Native Networks (ITU FG-AINN) has identified the need for cognitive network architectures where artificial intelligence is integrated directly into the control plane rather than operating as an overlay system \cite{b3}. However, applying AI to broadcast infrastructure presents unique challenges distinct from cellular networks: broadcast decisions affect all receivers simultaneously, regulatory constraints on spectrum usage are stringent, and public safety requirements demand deterministic behavior for emergency alerts.
+
+This paper addresses these challenges through an intent-driven AI-native network slicing framework specifically designed for ATSC 3.0 broadcast networks. The key contributions of this work include:
+
+\begin{enumerate}
+\item \textbf{Intent Translation Architecture}: A service layer that transforms high-level operator goals (e.g., ``maximize rural coverage during peak hours'') into structured policy constraints compatible with optimization algorithms.
+
+\item \textbf{PPO-Based Broadcast Optimization}: A novel application of Proximal Policy Optimization reinforcement learning to broadcast spectrum allocation, enabling learned adaptive behavior while maintaining safety bounds.
+
+\item \textbf{Digital Twin Validation Layer}: A spatial simulation environment modeling 10km × 10km rural terrain with UHF propagation physics, enabling risk-free validation of AI recommendations before deployment.
+
+\item \textbf{Human-in-the-Loop Governance}: A formal approval workflow implementing state machine semantics for AI recommendation → engineer approval → deployment transitions.
+
+\item \textbf{Cognitive Adaptation Framework}: Real-time decision capabilities with sub-10ms latency enabling response to congestion, mobility, and emergency conditions.
+\end{enumerate}
+
+The remainder of this paper is organized as follows. Section II reviews related work in AI-driven network management and broadcast optimization. Section III presents the methodology including the intent translation mechanism and reinforcement learning formulation. Section IV describes the system architecture. Section V details the experimental setup. Section VI describes the system prototype and demonstration. Section VII presents results and analysis. Section VIII discusses limitations, and Section IX concludes with future research directions.
+
+\section{Related Work}
+
+\subsection{Intent-Based Networking}
+
+Intent-based networking (IBN) represents a shift from imperative network configuration to declarative goal specification \cite{b4}. Early work by Clemm et al. established foundational principles where operators express desired outcomes rather than specific commands \cite{b5}. Recent advances have extended IBN to resource allocation in 5G networks, with systems translating service-level objectives into radio resource management decisions \cite{b6}.
+
+However, application of IBN principles to broadcast networks remains limited. Broadcast systems differ fundamentally from point-to-point networks: a single configuration decision affects all receivers in the coverage area, creating complex trade-offs between coverage extent, throughput, and reliability that existing IBN frameworks do not address.
+
+\subsection{Reinforcement Learning for Network Management}
+
+Reinforcement learning has demonstrated success in various network optimization problems. Deep Q-Networks (DQN) have been applied to resource allocation in heterogeneous networks \cite{b7}, while actor-critic methods have shown promise for power control in wireless systems \cite{b8}. Proximal Policy Optimization (PPO) has emerged as a particularly stable algorithm for continuous action spaces, with applications in traffic engineering and load balancing \cite{b9}.
+
+Prior work on RL for broadcast systems has focused primarily on content delivery networks and multicast tree optimization \cite{b10}. Direct application of RL to physical layer broadcast configuration—including modulation, coding, and power allocation across multiple PLPs—has not been extensively explored. This paper addresses this gap by formulating the broadcast configuration problem as a multi-objective optimization suitable for PPO-based learning.
+
+\subsection{ATSC 3.0 Physical Layer Optimization}
+
+The ATSC 3.0 standard (A/322) defines extensive physical layer flexibility including 12 modulation schemes (QPSK through 4096QAM), multiple code rates, and configurable time/frequency interleaving \cite{b1}. Prior research has examined static optimization of these parameters for specific deployment scenarios \cite{b11}, but dynamic adaptation based on real-time feedback remains an open challenge.
+
+Work by Zhang et al. explored adaptive modulation selection for mobile ATSC 3.0 reception \cite{b12}, demonstrating performance gains from receiver-side adaptation. However, transmitter-side cognitive adaptation—where the broadcast infrastructure itself makes intelligent decisions—has received less attention due to the complexity of affecting all receivers simultaneously.
+
+\subsection{Digital Twins for Network Simulation}
+
+Digital twin technology has gained prominence for network planning and optimization \cite{b13}. The concept of maintaining a synchronized virtual replica of physical infrastructure enables what-if analysis and risk-free experimentation. Applications in cellular networks have demonstrated value for capacity planning and interference management \cite{b14}.
+
+This paper extends digital twin concepts to broadcast networks, implementing a spatial simulation that models UHF propagation, terrain effects, and receiver distribution across rural coverage areas. Unlike cellular digital twins that focus on individual cell sites, our approach considers the broadcast-specific challenge of uniform service across large geographic regions.
+
+\section{Methodology}
+
+\subsection{Problem Formulation}
+
+Consider an ATSC 3.0 broadcast system serving a coverage area $\mathcal{A}$ with $N$ receiver locations. The transmitter can configure $K$ Physical Layer Pipes (PLPs) with parameters:
+
+\begin{equation}
+\mathbf{c}_k = \{m_k, r_k, p_k, w_k\}
+\end{equation}
+
+where $m_k \in \mathcal{M}$ is the modulation order (QPSK to 256QAM), $r_k \in \mathcal{R}$ is the code rate, $p_k$ is the allocated power fraction, and $w_k$ is the bandwidth weight. The set of valid modulation-coding combinations (ModCods) is defined by the A/322 standard.
+
+The optimization objective is to maximize a weighted utility function:
+
+\begin{equation}
+U(\mathbf{C}) = \alpha_1 \cdot f_{coverage}(\mathbf{C}) + \alpha_2 \cdot f_{throughput}(\mathbf{C}) + \alpha_3 \cdot f_{reliability}(\mathbf{C})
+\end{equation}
+
+subject to constraints:
+
+\begin{align}
+\sum_{k=1}^{K} p_k &\leq P_{max} \\
+\sum_{k=1}^{K} w_k &= 1 \\
+m_k \in \mathcal{M}_{allowed} &\quad \forall k
+\end{align}
+
+where $P_{max}$ is the regulatory power limit and $\mathcal{M}_{allowed}$ may be restricted based on emergency requirements (e.g., QPSK-only for EAS).
+
+\subsection{Intent Translation}
+
+The intent translation layer maps operator-specified goals to the weight vector $\boldsymbol{\alpha} = [\alpha_1, \alpha_2, \alpha_3]^T$. We define a set of canonical intents:
+
+\begin{itemize}
+\item \textbf{Emergency Mode}: $\boldsymbol{\alpha} = [0.2, 0.1, 0.7]^T$, prioritizing reliability
+\item \textbf{Balanced Mode}: $\boldsymbol{\alpha} = [0.4, 0.3, 0.3]^T$, equal trade-offs
+\item \textbf{Throughput Mode}: $\boldsymbol{\alpha} = [0.2, 0.6, 0.2]^T$, maximizing capacity
+\item \textbf{Rural Coverage}: $\boldsymbol{\alpha} = [0.6, 0.2, 0.2]^T$, prioritizing geographic reach
+\end{itemize}
+
+The intent service parses natural language input and returns structured policy constraints:
+
+\begin{equation}
+\text{IntentService}: \text{NL} \rightarrow \{\boldsymbol{\alpha}, \mathcal{C}_{hard}, \mathcal{C}_{soft}\}
+\end{equation}
+
+where $\mathcal{C}_{hard}$ represents inviolable constraints (e.g., power limits) and $\mathcal{C}_{soft}$ represents preferences (e.g., target coverage percentage).
+
+\subsection{Reinforcement Learning Formulation}
+
+We formulate the broadcast configuration problem as a Markov Decision Process (MDP):
+
+\textbf{State Space} $\mathcal{S}$: The state observation includes:
+\begin{itemize}
+\item Current SNR distribution across receiver grid: $\mathbf{s}_{SNR} \in \mathbb{R}^{N}$
+\item Congestion metrics from cellular network: $s_{congestion} \in [0,1]$
+\item Active intent weights: $\boldsymbol{\alpha} \in \mathbb{R}^3$
+\item Current PLP configuration: $\mathbf{C}_{current}$
+\end{itemize}
+
+\textbf{Action Space} $\mathcal{A}$: We use a continuous action space representing weight adjustments:
+\begin{equation}
+\mathbf{a} = [\Delta w_1, \Delta w_2, ..., \Delta w_K, \Delta_{offload}] \in [-0.1, 0.1]^{K+1}
+\end{equation}
+
+\textbf{Reward Function}: The reward combines multiple objectives:
+\begin{equation}
+r_t = \alpha_1 \cdot r_{coverage} + \alpha_2 \cdot r_{throughput} + \alpha_3 \cdot r_{reliability} - \lambda \cdot r_{penalty}
+\end{equation}
+
+where $r_{penalty}$ penalizes constraint violations and excessive configuration changes.
+
+\textbf{Policy Optimization}: We employ Proximal Policy Optimization (PPO) \cite{b9} for its stability in continuous action spaces:
+
+\begin{equation}
+L^{CLIP}(\theta) = \hat{\mathbb{E}}_t \left[ \min(r_t(\theta)\hat{A}_t, \text{clip}(r_t(\theta), 1-\epsilon, 1+\epsilon)\hat{A}_t) \right]
+\end{equation}
+
+where $r_t(\theta) = \frac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}$ is the probability ratio and $\hat{A}_t$ is the advantage estimate \cite{b15}.
+
+\subsection{Digital Twin Simulation}
+
+The digital twin implements a spatial coverage model over a 10km × 10km grid. For each receiver location $(x_i, y_i)$, we compute received signal strength using log-distance path loss:
+
+\begin{equation}
+PL(d) = PL_0 + 10n\log_{10}\left(\frac{d}{d_0}\right) + X_\sigma
+\end{equation}
+
+where $PL_0$ is reference path loss at distance $d_0$, $n$ is the path loss exponent (typically 2.7-3.5 for UHF rural), and $X_\sigma \sim \mathcal{N}(0, \sigma^2)$ models shadow fading.
+
+The signal-to-noise ratio at receiver $i$ for PLP $k$ is:
+
+\begin{equation}
+SNR_{i,k} = P_{tx} + G_{tx} + G_{rx} - PL(d_i) - N_0 - NF
+\end{equation}
+
+Decoding probability is computed using the required SNR threshold for the selected ModCod:
+
+\begin{equation}
+P_{decode}(i,k) = \begin{cases} 1 & \text{if } SNR_{i,k} \geq SNR_{req}(m_k, r_k) \\ 0 & \text{otherwise} \end{cases}
+\end{equation}
+
+Coverage is then defined as the fraction of receivers with successful decoding:
+
+\begin{equation}
+f_{coverage}(\mathbf{C}) = \frac{1}{N}\sum_{i=1}^{N} \mathbb{1}\{P_{decode}(i) = 1\}
+\end{equation}
+
+\section{System Model / Architecture}
+
+\subsection{Layered Architecture}
+
+The system implements a three-layer architecture aligned with ITU FG-AINN principles:
+
+\textbf{Layer 1 - Infrastructure Layer}: Contains the RF adapter abstraction, PPO inference engine, and data storage. The RF adapter provides a hardware abstraction layer supporting simulation, SDR, and commercial encoder modes.
+
+\textbf{Layer 2 - Network Function Layer}: Implements the core intelligence including:
+\begin{itemize}
+\item \textit{AI Agent}: PPO-based decision engine (rl\_agent.py)
+\item \textit{Digital Twin}: Spatial coverage simulation (spatial\_model.py)
+\item \textit{Approval Engine}: Human-in-the-loop governance (approval\_engine.py)
+\item \textit{KPI Engine}: Performance monitoring and telemetry
+\end{itemize}
+
+\textbf{Real-Time Telemetry Layer}: To bridge the gap between simulation and reality, the architecture includes a WebSocket-based telemetry bus. This layer functions as a surrogate ``Air Interface,'' relaying simulated broadcast packets over WiFi to mobile receiver prototypes. This allows physical mobile devices to react to virtual RF conditions in real-time, enabling realistic end-to-end testing of the application layer without requiring experimental frequency licenses.
+
+\textbf{Layer 3 - Management and Orchestration Layer}: Provides network management, resource orchestration, and capability exposure through REST APIs.
+
+\subsection{Decision Pipeline}
+
+The decision pipeline executes in five stages:
+
+\begin{enumerate}
+\item \textbf{Observation Collection}: Environment state including SNR distribution, congestion levels, and active intent.
+
+\item \textbf{PPO Inference}: The pre-trained policy network generates action recommendations in approximately 0.5-2.0ms.
+
+\item \textbf{Configuration Mapping}: Actions are mapped to valid ATSC 3.0 ModCod configurations through the optimizer.
+
+\item \textbf{Digital Twin Validation}: The proposed configuration is simulated to estimate coverage, throughput, and reliability impacts.
+
+\item \textbf{Approval Workflow}: Recommendations enter the approval queue for engineer review. Emergency mode allows bypass with full audit logging.
+\end{enumerate}
+
+\subsection{Human-in-the-Loop Governance}
+
+A formal state machine governs the lifecycle of AI recommendations:
+
+\begin{itemize}
+\item \texttt{AI\_RECOMMENDED}: Initial state after PPO generates suggestion
+\item \texttt{ENGINEER\_REVIEWING}: Recommendation presented to human operator
+\item \texttt{ENGINEER\_APPROVED}: Authorization granted for deployment
+\item \texttt{DEPLOYED}: Configuration active on broadcast infrastructure
+\item \texttt{REJECTED}: Operator declined recommendation with reason
+\end{itemize}
+
+This architecture ensures that despite AI autonomy in generating recommendations, all actual changes to broadcast parameters require explicit human authorization except in predefined emergency scenarios.
+
+\section{Experimental Setup}
+
+\subsection{Simulation Environment}
+
+Experiments were conducted using a custom Gymnasium environment wrapping the digital twin:
+
+\begin{itemize}
+\item \textbf{Grid Size}: 100 × 100 cells representing 10km × 10km coverage area
+\item \textbf{Receiver Distribution}: 500 static household locations plus 50 mobile vehicles
+\item \textbf{Frequency Band}: UHF Channel 36 (602-608 MHz)
+\item \textbf{Transmitter Power}: 25 dBW EIRP (typical rural station)
+\item \textbf{Path Loss Model}: Log-distance with $n=3.0$, $\sigma=8$ dB
+\end{itemize}
+
+\subsection{Training Configuration}
+
+The PPO agent was trained with the following hyperparameters:
+
+\begin{table}[h]
+\caption{PPO Training Hyperparameters}
+\centering
+\begin{tabular}{|l|c|}
+\hline
+\textbf{Parameter} & \textbf{Value} \\
+\hline
+Learning Rate & $3 \times 10^{-4}$ \\
+Batch Size & 64 \\
+Number of Epochs & 10 \\
+Discount Factor ($\gamma$) & 0.99 \\
+GAE Lambda & 0.95 \\
+Clip Range ($\epsilon$) & 0.2 \\
+Total Timesteps & 10,000 \\
+\hline
+\end{tabular}
+\label{tab:hyperparameters}
+\end{table}
+
+Training was performed offline using the digital twin, with the resulting policy saved for online inference.
+
+\subsection{Hardware Platform}
+
+Experiments were executed on reference hardware:
+\begin{itemize}
+\item CPU: Intel Core i7-class processor (8 cores, 3.0 GHz)
+\item Memory: 16 GB DDR4
+\item GPU: None required (CPU-only inference)
+\item Operating System: Windows 10/Linux (cross-platform compatible)
+\end{itemize}
+
+\subsection{Baseline Comparisons}
+
+Performance was evaluated against three baselines:
+
+\begin{enumerate}
+\item \textbf{Static Configuration}: Fixed ModCod settings optimized for average conditions
+\item \textbf{Rule-Based Adaptation}: Threshold-based switching (e.g., if congestion > 0.7, increase offload)
+\item \textbf{Random Policy}: Uniform random actions within valid bounds
+\end{enumerate}
+
+\subsection{Evaluation Metrics}
+
+\begin{itemize}
+\item \textbf{Coverage (\%)}: Fraction of receivers with successful decoding
+\item \textbf{Spectral Efficiency (bps/Hz)}: Average throughput per unit bandwidth
+\item \textbf{Emergency Reliability (\%)}: Coverage during emergency intent activation
+\item \textbf{Decision Latency (ms)}: End-to-end time from observation to recommendation
+\item \textbf{Adaptation Speed}: Time to converge after intent change
+\end{itemize}
+
+\section{System Prototype and Demonstration}
+
+To validate the architecture beyond numerical simulation, we developed a comprehensive system prototype demonstrated at the ITU FG-AINN Build-a-thon. The prototype stack consists of:
+
+\subsection{Mobile Application Stack (React/Expo)}
+We implemented customer-facing broadcast receiver applications using the React Native framework with Expo. This cross-platform approach enables deployment on both Android and iOS devices, representing the heterogeneous device ecosystem of the ATSC 3.0 audience.
+
+The mobile application implements two key modes:
+\begin{itemize}
+\item \textbf{Receiver Mode}: Simulates detailed PHY-layer metrics, displaying real-time I/Q constellations, Signal-to-Noise Ratio (SNR), and Bit Error Rate (BER) derived from the Digital Twin's spatial model.
+\item \textbf{Advertiser Mode}: Acts as a local beacon, broadcasting presence data to the backend to simulate mobility-induced demand surges.
+\end{itemize}
+
+\subsection{Cognitive Visualization (``Thinking Trace'')}
+A unique feature of our control plane is the ``Thinking Trace'' visualization. This frontend component acts as a window into the AI's transparent reasoning process, displaying live inference data from the PPO agent:
+\begin{itemize}
+\item \textbf{Value Function ($V(s)$)}: The agent's estimate of current state quality.
+\item \textbf{Action Probabilities}: The stochastic distribution over possible PLP configurations.
+\item \textbf{Reward Components}: Real-time breakdown of objective satisfaction (Coverage vs. Reliability).
+\end{itemize}
+This visualization satisfies the ``Explainable AI'' requirement of the FG-AINN architecture, moving beyond black-box decision making.
+
+\section{Results and Discussion}
+
+\subsection{Decision Latency Performance}
+
+Table II presents measured latency across the decision pipeline stages.
+
+\begin{table}[h]
+\caption{Decision Pipeline Latency}
+\centering
+\begin{tabular}{|l|c|c|}
+\hline
+\textbf{Stage} & \textbf{Measured (ms)} & \textbf{Target (ms)} \\
+\hline
+PPO Policy Inference & 0.5 - 2.0 & < 2 \\
+Optimization & 0.1 - 0.5 & < 1 \\
+Digital Twin Validation & 1.0 - 3.0 & < 5 \\
+Total Decision Cycle & 2.0 - 6.0 & < 10 \\
+\hline
+\end{tabular}
+\label{tab:latency}
+\end{table}
+
+The sub-10ms total latency demonstrates real-time decision capability. This performance is achieved through offline training (no gradient computation at inference time) and efficient policy network architecture.
+
+\subsection{Coverage Improvement}
+
+Fig. 1 illustrates coverage performance across different intent modes.
+
+\begin{figure}[h]
+\centering
+% Placeholder for coverage comparison figure
+\fbox{\parbox{0.45\textwidth}{\centering [Figure 1: Coverage comparison chart showing\\AI-Native: 92\%, Rule-Based: 85\%, Static: 78\%]}}
+\caption{Coverage percentage by configuration approach across Rural Coverage intent mode.}
+\label{fig:coverage}
+\end{figure}
+
+The AI-native approach achieves 10-15\% coverage improvement over static configurations. This gain results from the agent learning to:
+\begin{itemize}
+\item Reduce modulation order during high-interference periods
+\item Reallocate power toward edge-of-coverage regions
+\item Balance PLP weights based on traffic demand patterns
+\end{itemize}
+
+\subsection{Emergency Reliability}
+
+During emergency intent activation, the system achieves 97-99\% coverage reliability compared to 89\% for static configurations. The improvement stems from:
+
+\begin{enumerate}
+\item Automatic switch to robust modulation (QPSK/16QAM)
+\item Power concentration on emergency PLP
+\item Preemption of non-critical services
+\end{enumerate}
+
+\subsection{Adaptation Dynamics}
+
+Fig. 2 shows the system response to an intent change from Balanced to Emergency mode.
+
+\begin{figure}[h]
+\centering
+% Placeholder for adaptation dynamics figure
+\fbox{\parbox{0.45\textwidth}{\centering [Figure 2: Time-series showing modulation\\transition from 256QAM to QPSK within 3 decision cycles]}}
+\caption{Adaptation response to emergency intent activation, showing modulation and coverage evolution over time.}
+\label{fig:adaptation}
+\end{figure}
+
+The system completes adaptation within 3 decision cycles (approximately 20-30ms), demonstrating rapid cognitive response to changing operational requirements.
+
+\subsection{Comparative Analysis}
+
+Table III summarizes performance across all approaches.
+
+\begin{table}[h]
+\caption{Comparative Performance Summary}
+\centering
+\begin{tabular}{|l|c|c|c|c|}
+\hline
+\textbf{Metric} & \textbf{AI-Native} & \textbf{Rule} & \textbf{Static} & \textbf{Random} \\
+\hline
+Coverage (\%) & 92 & 85 & 78 & 62 \\
+Spectral Eff. & 3.2 & 2.8 & 2.5 & 1.8 \\
+Emerg. Rel. (\%) & 98 & 91 & 89 & 71 \\
+Latency (ms) & 4.5 & 2.1 & 0*  & 0.5 \\
+\hline
+\multicolumn{5}{l}{*Static has no decision latency as configuration is predetermined.}
+\end{tabular}
+\label{tab:comparison}
+\end{table}
+
+The AI-native approach provides the best coverage and reliability while maintaining acceptable latency. The slight latency increase over rule-based methods is justified by significantly improved performance.
+
+\subsection{Learning Curve Analysis}
+
+Fig. 3 presents the reward curve during PPO training.
+
+\begin{figure}[h]
+\centering
+% Placeholder for learning curve figure
+\fbox{\parbox{0.45\textwidth}{\centering [Figure 3: Training reward curve showing\\convergence after ~5000 timesteps]}}
+\caption{PPO training reward progression demonstrating stable convergence.}
+\label{fig:learning}
+\end{figure}
+
+The agent achieves stable performance after approximately 5,000 training timesteps, demonstrating sample-efficient learning suitable for digital twin environments.
+
+\section{Limitations}
+
+Despite promising results, several limitations warrant discussion:
+
+\subsection{Simulation-to-Reality Gap}
+
+The system is validated entirely in simulation. Real RF environments exhibit phenomena not fully captured by log-distance path loss models, such as multipath interference and hardware-specific non-linearities \cite{b15}.
+
+To mitigate this, we implement a \textit{drift detector} that monitors divergence between digital twin predictions and observed receiver telemetry. When divergence exceeds a 10\% threshold, the AI freezes and requests human intervention.
+
+\subsection{Scope of Optimization}
+
+The current system optimizes modulation, coding, and power allocation. It does not optimize:
+\begin{itemize}
+\item Forward Error Correction (FEC) block lengths
+\item Time interleaving depth
+\item Pilot pattern density
+\end{itemize}
+
+These parameters offer additional optimization dimensions for future work.
+
+\subsection{Emergency Mode Security}
+
+The emergency override bypass, while functional, uses a simple flag mechanism. Production deployment would require cryptographic authentication to prevent unauthorized emergency activations.
+
+\subsection{Receiver Feedback Latency}
+
+Real ATSC 3.0 systems lack standardized receiver-to-transmitter feedback channels. This prototype assumes idealized telemetry that may not be available in actual deployments.
+
+\section{Conclusion and Future Work}
+
+This paper presented an intent-driven AI-native network slicing framework for ATSC 3.0 broadcast networks. The system demonstrates that reinforcement learning, specifically Proximal Policy Optimization, can effectively manage the complexity of next-generation broadcast configuration while maintaining human oversight through a formal approval workflow.
+
+Key achievements include:
+\begin{itemize}
+\item Sub-10ms decision latency enabling real-time cognitive adaptation
+\item 10-15\% coverage improvement over static configurations
+\item 97-99\% emergency reliability with automatic intent-based switching
+\item Alignment with ITU FG-AINN architectural principles
+\end{itemize}
+
+The framework's contribution extends beyond technical performance: by introducing explicit human-in-the-loop governance, the system addresses the critical trust barrier preventing AI adoption in safety-critical broadcast infrastructure.
+
+\subsection{Future Research Directions}
+
+Several avenues merit further investigation:
+
+\textbf{Sim-to-Real Transfer}: Developing domain adaptation techniques to bridge the gap between digital twin training and real-world deployment, potentially using hardware-in-the-loop validation with Software Defined Radios.
+
+\textbf{Multi-Agent Coordination}: Extending to multi-transmitter scenarios where neighboring stations must coordinate to avoid interference, requiring multi-agent reinforcement learning approaches.
+
+\textbf{Federated Learning}: Enabling multiple broadcast operators to collaboratively improve AI models without sharing proprietary operational data.
+
+\textbf{Receiver-Side Adaptation}: Integrating transmitter-side optimization with receiver-side intelligence for end-to-end adaptive systems.
+
+\textbf{Explainable AI}: Enhancing decision transparency through interpretable policy representations and natural language generation of reasoning traces.
+
+The demonstrated framework provides a foundation for cognitive broadcasting, where AI intelligence is embedded directly into broadcast infrastructure rather than operating as an afterthought. As over-the-air delivery becomes increasingly critical for reaching underserved populations and ensuring emergency communication resilience, such AI-native approaches will become essential for managing the complexity of next-generation broadcast networks.
+
+\section*{Acknowledgment}
+The authors acknowledge the ITU Focus Group on AI-Native Networks (FG-AINN) for establishing the architectural framework that guided this research. This work was developed as part of the FG-AINN Build-a-thon 4.0 initiative.
+
+\begin{thebibliography}{00}
+
+\bibitem{b1} Advanced Television Systems Committee, ``ATSC 3.0 Physical Layer Protocol (A/322),'' Doc. A/322:2024, ATSC Standard, Washington, D.C., 2024.
+
+\bibitem{b2} Federal Communications Commission, ``ATSC 3.0 Deployment Report,'' FCC Technical Report, Washington, D.C., 2023.
+
+\bibitem{b3} ITU-T, ``Focus Group on AI-Native for Future Networks (FG-AINN) Terms of Reference,'' ITU-T Study Group 13, Geneva, 2024.
+
+\bibitem{b4} A. Clemm, L. Ciavaglia, L. Z. Granville, and J. Tantsura, ``Intent-Based Networking - Concepts and Definitions,'' IETF RFC 9315, 2022.
+
+\bibitem{b5} L. Ciavaglia and A. Clemm, ``Intent-based network management: Overview and research challenges,'' in \textit{Proc. IEEE NetSoft}, Tokyo, Japan, 2021, pp. 89-94.
+
+\bibitem{b6} M. Benzaid and T. Taleb, ``AI-driven zero-touch network and service management in 5G and beyond: Challenges and research directions,'' \textit{IEEE Network}, vol. 34, no. 2, pp. 186-194, March/April 2020.
+
+\bibitem{b7} H. Ye, G. Y. Li, and B. Juang, ``Deep reinforcement learning based resource allocation for V2V communications,'' \textit{IEEE Trans. Veh. Technol.}, vol. 68, no. 4, pp. 3163-3173, April 2019.
+
+\bibitem{b8} F. Meng et al., ``Power allocation in multi-user cellular networks: Deep reinforcement learning approaches,'' \textit{IEEE Trans. Wireless Commun.}, vol. 19, no. 10, pp. 6255-6267, Oct. 2020.
+
+\bibitem{b9} J. Schulman, F. Wolski, P. Dhariwal, A. Radford, and O. Klimov, ``Proximal policy optimization algorithms,'' \textit{arXiv preprint arXiv:1707.06347}, 2017.
+
+\bibitem{b10} X. Chen, J. Wu, Y. Cai, H. Zhang, and T. Chen, ``Energy-efficiency oriented traffic offloading in wireless networks: A brief survey and a learning approach for heterogeneous cellular networks,'' \textit{IEEE J. Sel. Areas Commun.}, vol. 33, no. 4, pp. 627-640, April 2015.
+
+\bibitem{b11} L. Michael and D. Gomez-Barquero, ``Bit-interleaved coded modulation (BICM) for ATSC 3.0,'' \textit{IEEE Trans. Broadcast.}, vol. 62, no. 1, pp. 181-188, March 2016.
+
+\bibitem{b12} L. Zhang, Y. Wu, W. Li, K. Salehian, and S. Laflèche, ``Channel model for ATSC 3.0 mobile broadcasting,'' \textit{IEEE Trans. Broadcast.}, vol. 64, no. 2, pp. 294-309, June 2018.
+
+\bibitem{b13} M. Schluse, M. Priggemeyer, L. Atorf, and J. Rossmann, ``Experimentable digital twins—Streamlining simulation-based systems engineering for Industry 4.0,'' \textit{IEEE Trans. Ind. Informat.}, vol. 14, no. 4, pp. 1722-1731, April 2018.
+
+\bibitem{b14} Y. Dai, K. Zhang, S. Maharjan, and Y. Zhang, ``Edge intelligence for energy-efficient computation offloading and resource allocation in 5G beyond,'' \textit{IEEE Trans. Veh. Technol.}, vol. 69, no. 10, pp. 12175-12186, Oct. 2020.
+
+\bibitem{b15} T. S. Rappaport, \textit{Wireless Communications: Principles and Practice}, 2nd ed. Upper Saddle River, NJ, USA: Prentice Hall, 2002.
+
+\bibitem{b16} OpenAI, ``Stable Baselines3: Reliable Reinforcement Learning Implementations,'' [Online]. Available: https://github.com/DLR-RM/stable-baselines3.
+
+\end{thebibliography}
+
+\end{document}

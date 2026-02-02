@@ -1,8 +1,8 @@
-import { useState, useEffect, type CSSProperties } from 'react';
+import { useState, type CSSProperties } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import {
     Gauge, TrendingUp, Clock, Zap, Signal,
-    CheckCircle, XCircle, RefreshCw, BarChart3
+    CheckCircle, XCircle, BarChart3
 } from 'lucide-react';
 
 import './Benchmarks.css';
@@ -107,7 +107,6 @@ function ComparisonBar({
 }
 
 export function Benchmarks() {
-    const [loading, setLoading] = useState(false);
     const [results] = useState<BenchmarkResult[]>([
         { metric: 'Coverage', baseline: 78, aiSystem: 94, improvement: 20.5, unit: '%' },
         { metric: 'Emergency Reliability', baseline: 85, aiSystem: 99.2, improvement: 16.7, unit: '%' },

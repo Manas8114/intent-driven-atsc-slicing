@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Brain, Cpu, Zap, Target, Signal, AlertTriangle, TrendingUp, Gauge, Activity } from 'lucide-react';
@@ -22,7 +22,6 @@ export function ThinkingTrace() {
     // const [thoughtLog, setThoughtLog] = useState<AIDecision[]>([]); // Removed local state
     const [introspection, setIntrospection] = useState<IntrospectionData | null>(null);
     const [isRealData, setIsRealData] = useState(false);
-    const scrollRef = useRef<HTMLDivElement>(null);
 
     // Fetch real PPO internals (Less frequent polling for stability)
     useEffect(() => {
@@ -58,13 +57,6 @@ export function ThinkingTrace() {
             addThought(decision);
         }
     }, [lastMessage, addThought]);
-
-    // Auto-scroll to top
-    useEffect(() => {
-        if (scrollRef.current) {
-            scrollRef.current.scrollTop = 0;
-        }
-    }, [thoughtLog]);
 
     const latestThought = thoughtLog[0];
     // Find the latest decision that actually has metrics to prevent flickering "0.00" or missing graphs

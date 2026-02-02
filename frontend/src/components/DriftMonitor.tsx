@@ -1,7 +1,7 @@
 
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
-import { AlertTriangle, Activity, CheckCircle, Lock } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Lock } from 'lucide-react';
 
 interface DriftMetrics {
     coverage_error: number;

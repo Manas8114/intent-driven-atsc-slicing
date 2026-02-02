@@ -134,10 +134,9 @@ export function CognitiveBrain() {
     const [cognitiveState, setCognitiveState] = useState<CognitiveState | null>(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
-    const [lastWsUpdate, setLastWsUpdate] = useState<Date | null>(null);
 
     // REAL-TIME: WebSocket connection for instant updates
-    const { lastMessage, isConnected } = useWebSocket();
+    const { lastMessage } = useWebSocket();
 
     // Handle WebSocket state updates
     useEffect(() => {
@@ -158,7 +157,6 @@ export function CognitiveBrain() {
                     }
                 };
             });
-            setLastWsUpdate(new Date());
         } else if (lastMessage.type === 'ai_decision') {
             const data = lastMessage.data as Record<string, unknown>;
 
@@ -195,7 +193,6 @@ export function CognitiveBrain() {
                         decision_stages: newDecisionStages
                     };
                 });
-                setLastWsUpdate(new Date());
             }
         }
     }, [lastMessage]);

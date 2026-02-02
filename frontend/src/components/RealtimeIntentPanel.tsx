@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Zap, Radio, Clock, MapPin, TrendingUp, AlertTriangle, Wifi, Activity } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 
@@ -47,10 +47,10 @@ export function RealtimeIntentPanel({
     const [intents, setIntents] = useState<RealtimeIntent[]>(externalIntents || []);
     const [patternChanges, setPatternChanges] = useState<PatternChange[]>(externalPatternChanges || []);
     const [isSimulating, setIsSimulating] = useState(!externalIntents);
-    const [now, setNow] = useState(Date.now()); // Stable time for render references
+    const [now, setNow] = useState(() => Date.now()); // Stable time for render references
 
     // REAL-TIME: Connect to WebSocket for live AI decisions
-    const { lastMessage, isConnected } = useWebSocket();
+    const { lastMessage } = useWebSocket();
 
     // Cities for simulation and display
     const cities = [
@@ -117,7 +117,8 @@ export function RealtimeIntentPanel({
                 setPatternChanges(prev => [change, ...prev].slice(0, 10));
             }
         }
-    }, [lastMessage]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [lastMessage, cities]);
 
     // Simulate realtime intent stream (fallback when not connected)
     useEffect(() => {
@@ -173,7 +174,8 @@ export function RealtimeIntentPanel({
         }, 3000 + Math.random() * 2000);
 
         return () => clearInterval(interval);
-    }, [isSimulating]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [isSimulating, cities, intentTypes, modulations]);
 
     // Use external data if provided
     useEffect(() => {
@@ -189,15 +191,7 @@ export function RealtimeIntentPanel({
         }
     }, [externalPatternChanges]);
 
-    const getIntentColor = (type: string) => {
-        switch (type) {
-            case 'coverage': return '#3B82F6';
-            case 'latency': return '#8B5CF6';
-            case 'emergency': return '#EF4444';
-            case 'balanced': return '#10B981';
-            default: return '#6B7280';
-        }
-    };
+    // Color lookup moved to typeStyles object for consistency
 
     const getIntentIcon = (type: string) => {
         switch (type) {

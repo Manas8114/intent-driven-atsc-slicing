@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import { Send, CheckCircle, Settings2, ShieldCheck, Signal, ArrowRight, X } from 'lucide-react';
@@ -9,6 +9,9 @@ export function IntentControl() {
     const { phase, triggerIntent, activeIntent } = useSystem();
     const [selectedPreset, setSelectedPreset] = useState<string | null>(null);
     const [customJson, setCustomJson] = useState('{\n  "intent": "maximize_coverage",\n  "target": 0.95\n}');
+
+    // Stable latency value - fixed display value
+    const estimatedLatency = 50;
 
     const isSystemBusy = phase !== 'idle' && phase !== 'broadcasting' && phase !== 'emergency';
 
@@ -163,7 +166,7 @@ export function IntentControl() {
                                     Cancel
                                 </Button>
                                 <Button className="flex-1 bg-blue-600 hover:bg-blue-700 shadow-lg shadow-blue-500/30" onClick={handleConfirm}>
-                                    Confirm & Apply Intent ({useMemo(() => Math.floor(Math.random() * 20 + 40), [selectedPreset])}ms latency)
+                                    Confirm & Apply Intent ({estimatedLatency}ms latency)
                                 </Button>
                             </div>
                         </div>

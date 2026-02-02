@@ -90,6 +90,6 @@ echo   2. Scan QR codes with Expo Go
 echo   3. Mobile apps will connect via ngrok tunnel
 echo ===================================================
 echo.
-echo Press any key to open ngrok dashboard...
+echo Press any key to open ngrok inspector...
 pause > nul
-start http://localhost:4040
+start http://127.0.0.1:4040/inspect/http

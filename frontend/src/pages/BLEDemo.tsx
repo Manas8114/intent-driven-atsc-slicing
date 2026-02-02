@@ -183,7 +183,7 @@ export function BLEDemo() {
                 setLastUpdate(new Date());
                 setError(null);
             }
-        } catch (e) {
+        } catch (_e) {
             setError('Failed to fetch BLE state');
         }
     };

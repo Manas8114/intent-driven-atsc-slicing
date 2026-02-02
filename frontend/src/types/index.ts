@@ -26,7 +26,7 @@ export interface AIDecision {
     decision_id: string;
     timestamp: string;
     intent: string;
-    action_taken: any;
+    action_taken: unknown;
     reward_signal: number;
     reward_components?: RewardComponents;
     learning_contribution: string;

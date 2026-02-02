@@ -34,11 +34,11 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
     const [activeHurdle, setActiveHurdle] = useState<string | null>(null);
     const [adaptationExplanation, setAdaptationExplanation] = useState<{ changed: string, action: string, safe: string } | null>(null);
 
-    const [lastDecisionTime, setLastDecisionTime] = useState<number | null>(Date.now());
+    const [lastDecisionTime, setLastDecisionTime] = useState<number | null>(() => Date.now());
     const [safetyLock, setSafetyLock] = useState(false);
     const [receiversReached, setReceiversReached] = useState(12000);
     const [logs, setLogs] = useState<string[]>([]);
-    const [kpiHistory, setKpiHistory] = useState<unknown[]>([]);
+    const [kpiHistory, _setKpiHistory] = useState<unknown[]>([]);
     const [thoughtLog, setThoughtLog] = useState<AIDecision[]>([]);
 
     const addThought = useCallback((thought: AIDecision) => {
@@ -83,7 +83,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
 
         // 1. Tell Backend to Change Environment
         setPhase('parsing'); // "Sensing"
-        let data: any = null;
+        let data: { environment_change?: string } | null = null;
         try {
             const res = await fetch('http://127.0.0.1:8000/env/hurdle', {
                 method: 'POST',
@@ -91,7 +91,7 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
                 body: JSON.stringify({ hurdle: hurdle })
             });
             data = await res.json();
-            addLog(`Environment: ${data.environment_change}`);
+            addLog(`Environment: ${data?.environment_change}`);
         } catch (e) {
             console.error("Failed to inject hurdle", e);
             addLog("Error injecting hurdle.");

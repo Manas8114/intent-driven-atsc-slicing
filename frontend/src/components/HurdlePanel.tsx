@@ -1,8 +1,8 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import {
     Car, Radio, AlertTriangle, CloudFog,
-    ChevronLeft, ChevronRight, Activity,
-    Brain, Zap, TrendingUp
+    ChevronLeft, ChevronRight,
+    Brain
 } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { useSystem } from '../context/SystemContext';
@@ -48,19 +48,9 @@ const COGNITIVE_SCENARIOS = [
     }
 ];
 
-interface CognitiveEvent {
-    timestamp: Date;
-    scenario: string;
-    aiAction: string;
-    kpiImpact: string;
-}
-
 export function HurdlePanel() {
     const { triggerHurdle, triggerEmergency, phase, activeHurdle, addLog } = useSystem();
     const [isOpen, setIsOpen] = useState(true);
-    // Keeping this state for legacy reasons/if we switch back, but primarily using ThinkingTrace now
-    const [cognitiveEvents, setCognitiveEvents] = useState<CognitiveEvent[]>([]);
-    const [lastTriggeredScenario, setLastTriggeredScenario] = useState<string | null>(null);
     const [isAutoPlay, setIsAutoPlay] = useState(false);
     const autoPlayRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
@@ -68,8 +58,7 @@ export function HurdlePanel() {
 
     // Auto-Play Logic
 
-
-    const handleScenarioTrigger = async (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
+    const handleScenarioTrigger = useCallback(async (scenario: typeof COGNITIVE_SCENARIOS[0]) => {
         // Only one hurdle at a time
         if (activeHurdle && activeHurdle !== scenario.id) {
             // Clear previous hurdle first
@@ -84,17 +73,6 @@ export function HurdlePanel() {
                 console.error("Failed to clear scenario", e);
             }
         }
-
-        // Log cognitive stress event (Legacy local log)
-        const event: CognitiveEvent = {
-            timestamp: new Date(),
-            scenario: scenario.label,
-            aiAction: scenario.aiAction,
-            kpiImpact: scenario.impact
-        };
-
-        setCognitiveEvents(prev => [event, ...prev.slice(0, 4)]);
-        setLastTriggeredScenario(scenario.id);
 
         // Add to system logs
         if (addLog) {
@@ -116,7 +94,7 @@ export function HurdlePanel() {
 
         // Trigger the internal frontend state (legacy/visuals)
         triggerHurdle(scenario.id);
-    };
+    }, [activeHurdle, addLog, triggerHurdle]);
 
     // Auto-Play Logic
     useEffect(() => {
@@ -140,18 +118,9 @@ export function HurdlePanel() {
         return () => {
             if (autoPlayRef.current) clearInterval(autoPlayRef.current);
         };
-    }, [isAutoPlay]);
+    }, [isAutoPlay, handleScenarioTrigger]);
 
     const handleEmergencyEscalation = () => {
-        const event: CognitiveEvent = {
-            timestamp: new Date(),
-            scenario: '🚨 EMERGENCY OVERRIDE',
-            aiAction: 'The AI bypasses normal approval for public safety',
-            kpiImpact: 'Emergency PLP takes priority over all services'
-        };
-
-        setCognitiveEvents(prev => [event, ...prev.slice(0, 4)]);
-
         if (addLog) {
             addLog('🚨 EMERGENCY OVERRIDE ACTIVATED - AI bypasses approval for public safety');
         }

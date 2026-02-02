@@ -270,6 +270,30 @@ async def get_ble_state():
     }
 
 
+@router.get("/status")
+async def get_ble_status():
+    """
+    Get BLE broadcasting status (alias for /state with additional connection info).
+    """
+    state = get_current_ai_state()
+    
+    return {
+        "status": "active",
+        "broadcasting": True,
+        "delivery_mode": state.delivery_mode,
+        "coverage_percent": round(state.coverage_percent, 1),
+        "snr_db": round(state.snr_db, 1),
+        "modulation": state.modulation,
+        "power_dbm": round(state.power_dbm, 1),
+        "coding_rate": state.coding_rate,
+        "is_emergency": state.is_emergency,
+        "active_hurdle": state.active_hurdle,
+        "timestamp": int(time.time()),
+        "service_uuid": BLE_SERVICE_UUID,
+        "characteristic_uuid": BLE_CHARACTERISTIC_UUID
+    }
+
+
 @router.get("/config")
 async def get_ble_config():
     """

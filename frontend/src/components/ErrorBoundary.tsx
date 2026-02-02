@@ -41,7 +41,7 @@ export class ErrorBoundary extends Component<Props, State> {
             fetch('http://localhost:8000/env/demo-events', {
                 method: 'GET'
             }).catch(() => { });
-        } catch (e) {
+        } catch {
             // Ignore logging failures
         }
     }
