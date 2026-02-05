@@ -1084,6 +1084,12 @@ async def get_city_state():
                 current_modulation = "64QAM"
                 # Coverage might stay high, but 'quality' drops due to congestion
                 signal_quality = "moderate"
+                
+        elif active_scenario == "mobility_surge":
+            # High mobility affects Doppler tolerance
+            signal_quality = "moderate"
+            active_intent = "mobility"  # AI adapting to Doppler
+            current_modulation = "16QAM"  # More robust for high mobility
 
         city_states.append({
             "id": city["id"],
@@ -1117,7 +1123,7 @@ async def get_city_state():
 # ============================================================================
 
 class ScenarioRequest(BaseModel):
-    scenario: Literal["monsoon", "flash_crowd", "tower_failure", "clear"]
+    scenario: Literal["monsoon", "flash_crowd", "tower_failure", "mobility_surge", "clear"]
 
 @router.post("/inject-scenario")
 async def inject_scenario(request: ScenarioRequest):

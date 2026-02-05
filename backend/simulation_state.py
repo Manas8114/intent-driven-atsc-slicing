@@ -77,10 +77,19 @@ class SimulationState:
             # Simulate infrastructure loss
             impact = {"capacity_loss": 0.33, "dead_zones": "detected"}
             
+        elif scenario_type == "mobility_surge":
+            self.active_scenario_label = "High Mobility Surge (60% users at 75km/h)"
+            # Simulate high mobility environment
+            self.mobile_user_ratio = 0.6
+            self.average_velocity_kmh = 75.0
+            impact = {"mobile_ratio": 0.6, "avg_velocity_kmh": 75, "doppler_shift": "high"}
+            
         elif scenario_type == "clear":
             self.active_scenario = None
             self.active_scenario_label = None
-            self.unicast_congestion_level = 0.3 # Reset
+            self.unicast_congestion_level = 0.3  # Reset
+            self.mobile_user_ratio = 0.2  # Reset to baseline
+            self.average_velocity_kmh = 25.0  # Reset to baseline
             
         return {
             "scenario": scenario_type,

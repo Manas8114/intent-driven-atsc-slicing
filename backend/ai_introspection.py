@@ -121,17 +121,65 @@ async def get_ai_introspection():
     env = get_env_state()
     sim = get_simulation_state()
     
-    # Build observation vector
-    # Same format as ATSCSlicingEnv: [coverage, snr, w_emg, w_cov, congestion, mobile_ratio, velocity]
-    last_action = sim.last_action or {}
+    # === BUILD OBSERVATION FROM ACTUAL STATE ===
+    # Use real sim_state values, not hardcoded defaults
+    
+    # Get last action for context (coverage estimate)
+    last_action = getattr(sim, 'last_action', None) or {}
+    
+    # Safely get sim state values with fallbacks
+    mobile_ratio = getattr(sim, 'mobile_user_ratio', 0.2)
+    avg_velocity = getattr(sim, 'average_velocity_kmh', 25.0)
+    
+    # Base coverage + SNR from grid metrics if available
+    base_coverage = 85.0
+    base_snr = 18.0
+    
+    try:
+        grid = getattr(sim, 'grid', None)
+        if grid is not None:
+            grid_metrics = grid.calculate_grid_metrics(
+                tx_power_dbm=last_action.get("power_dbm", 35.0),
+                frequency_mhz=600.0,
+                min_snr_db=15.0,
+                noise_floor_dbm=getattr(env, 'noise_floor_dbm', -100.0),
+                channel_impairment_db=getattr(env, 'channel_gain_impairment', 0.0)
+            )
+            base_coverage = grid_metrics.get("coverage_percent", 85.0)
+            base_snr = grid_metrics.get("avg_snr_db", 18.0)
+    except Exception:
+        pass  # Keep defaults
+    
+    # Apply hurdle effects to observation (so PPO sees different inputs)
+    coverage = base_coverage
+    snr = base_snr
+    active_hurdle = getattr(env, 'active_hurdle', None)
+    
+    if active_hurdle == "monsoon":
+        # Rain fade: severe attenuation simulated
+        snr = max(5.0, snr - 10.0)
+        coverage = max(60.0, coverage - 20.0)
+    elif active_hurdle == "tower_failure":
+        # Tower failure: Coverage drop in affected sector
+        coverage = max(50.0, coverage - 30.0)
+        snr = max(8.0, snr - 5.0)
+    elif active_hurdle == "flash_crowd":
+        # Congestion: SNR may be stable but network stressed
+        snr = max(10.0, snr - 3.0)
+    elif active_hurdle == "mobility_surge":
+        # High mobility: SNR drops due to Doppler
+        snr = max(8.0, snr - 5.0)
+    
+    # Observation vector: [coverage, snr, w_emg, w_cov, congestion, mobile_ratio, velocity]
+    traffic_load = getattr(env, 'traffic_load_level', 1.0)
     observation = [
-        last_action.get("expected_coverage", 85.0),
-        last_action.get("avg_snr_db", 18.0),
-        1.5,  # Default emergency weight
-        1.0,  # Default coverage weight
-        env.traffic_load_level / 2.0,  # Normalize congestion
-        0.2,  # Default mobile ratio
-        0.3   # Default normalized velocity
+        coverage,                          # From grid or hurdle-modified
+        snr,                               # From grid or hurdle-modified
+        1.5,                               # Emergency weight (from current policy)
+        1.0,                               # Coverage weight (from current policy)
+        traffic_load / 2.0,                # Normalized congestion
+        mobile_ratio,                      # ACTUAL from sim_state
+        avg_velocity / 100.0               # ACTUAL from sim_state, normalized
     ]
     
     # Get PPO introspection
@@ -170,16 +218,71 @@ async def get_thinking_trace(limit: int = 10):
     from .learning_loop import get_learning_tracker
     from .rl_agent import get_rl_controller
     from .environment import get_env_state
+    from .simulation_state import get_simulation_state
     
     tracker = get_learning_tracker()
     env = get_env_state()
+    sim = get_simulation_state()
     
     # Get recent decisions
     recent_decisions = tracker.get_recent_decisions(limit)
     
+    # === BUILD OBSERVATION FROM ACTUAL STATE ===
+    last_action = getattr(sim, 'last_action', None) or {}
+    
+    # Safely get sim state values with fallbacks
+    mobile_ratio = getattr(sim, 'mobile_user_ratio', 0.2)
+    avg_velocity = getattr(sim, 'average_velocity_kmh', 25.0)
+    
+    # Base coverage + SNR from grid metrics
+    base_coverage = 85.0
+    base_snr = 18.0
+    
+    try:
+        grid = getattr(sim, 'grid', None)
+        if grid is not None:
+            grid_metrics = grid.calculate_grid_metrics(
+                tx_power_dbm=last_action.get("power_dbm", 35.0),
+                frequency_mhz=600.0,
+                min_snr_db=15.0,
+                noise_floor_dbm=getattr(env, 'noise_floor_dbm', -100.0),
+                channel_impairment_db=getattr(env, 'channel_gain_impairment', 0.0)
+            )
+            base_coverage = grid_metrics.get("coverage_percent", 85.0)
+            base_snr = grid_metrics.get("avg_snr_db", 18.0)
+    except Exception:
+        pass  # Keep defaults
+    
+    # Apply hurdle effects
+    coverage = base_coverage
+    snr = base_snr
+    active_hurdle = getattr(env, 'active_hurdle', None)
+    
+    if active_hurdle == "monsoon":
+        snr = max(5.0, snr - 10.0)
+        coverage = max(60.0, coverage - 20.0)
+    elif active_hurdle == "tower_failure":
+        coverage = max(50.0, coverage - 30.0)
+        snr = max(8.0, snr - 5.0)
+    elif active_hurdle == "flash_crowd":
+        snr = max(10.0, snr - 3.0)
+    elif active_hurdle == "mobility_surge":
+        snr = max(8.0, snr - 5.0)
+    
+    # Use ACTUAL sim_state values
+    traffic_load = getattr(env, 'traffic_load_level', 1.0)
+    current_obs = [
+        coverage,
+        snr,
+        1.5,
+        1.0,
+        traffic_load / 2.0,
+        mobile_ratio,
+        avg_velocity / 100.0
+    ]
+    
     # Get current introspection
     controller = get_rl_controller()
-    current_obs = [85.0, 18.0, 1.5, 1.0, env.traffic_load_level / 2.0, 0.2, 0.3]
     
     try:
         current_breakdown = controller.predict_with_breakdown(current_obs)

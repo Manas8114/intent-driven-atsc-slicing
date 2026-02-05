@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
-import { ThinkingTrace } from '../components/ui/ThinkingTrace';
+import { ThinkingTrace } from '../components/ThinkingTrace';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useWebSocket } from '../hooks/useWebSocket';
 import {
