@@ -15,6 +15,32 @@ interface IntrospectionData {
 
 import { useSystem } from '../context/SystemContext'; // Added import
 
+// Intent-to-friendly-label mapping
+const intentLabels: Record<string, string> = {
+    'maximize_coverage': '📡 Maximize Coverage',
+    'minimize_latency': '⚡ Minimize Latency',
+    'balanced': '⚖️ Balanced Mode',
+    'emergency': '🚨 Emergency Priority',
+    'maximize_reliability': '🛡️ Maximize Reliability',
+    'power_efficient': '🔋 Power Efficient',
+    'high_mobility': '🚄 High Mobility Support',
+    'monsoon': '⛈️ Monsoon Adaptation',
+    'flash_crowd': '👥 Flash Crowd Response',
+    'tower_failure': '🗼 Tower Failure Recovery',
+};
+
+function formatIntent(intent: string | undefined | null): string {
+    if (!intent) return '🔄 Initializing...';
+    // Check direct match
+    if (intentLabels[intent]) return intentLabels[intent];
+    // Check partial match (e.g., 'maximize_coverage' in 'current_maximize_coverage')
+    for (const [key, label] of Object.entries(intentLabels)) {
+        if (intent.toLowerCase().includes(key)) return label;
+    }
+    // Format the raw intent nicely as fallback
+    return intent.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
+}
+
 export function ThinkingTrace() {
     const { lastMessage } = useWebSocket();
     const { thoughtLog, addThought } = useSystem(); // Use persistent state
@@ -233,7 +259,7 @@ export function ThinkingTrace() {
                                                 {(log.reward_signal || 0).toFixed(2)}
                                             </span>
                                         </div>
-                                        <p className="text-sm text-slate-300 mb-1 font-medium">{log.intent || "Unknown Intent"}</p>
+                                        <p className="text-sm text-slate-300 mb-1 font-medium">{formatIntent(log.intent)}</p>
                                         <p className="text-xs text-slate-500 line-clamp-2 group-hover:text-slate-400 transition-colors">{log.learning_contribution || "Processing decision rationale..."}</p>
                                     </div>
                                 )

@@ -11,3 +11,5 @@ stable-baselines3
 torch
 gymnasium
 pyshp>=2.3.0
+matplotlib
+seaborn

@@ -42,7 +42,8 @@ echo   - Frontend Dashboard (port 5173)
 echo.
 
 REM Start ngrok with all tunnels using config file
-start /B "" "%NGROK_PATH%" start --all --config "%~dp0ngrok.yml"
+REM Start ngrok with all tunnels using config file
+start "Ngrok Tunnels" cmd /k ""%NGROK_PATH%" start --all --config "%~dp0ngrok.yml""
 
 echo [4/4] Waiting for tunnels to initialize (8 seconds)...
 timeout /t 8 /nobreak > nul

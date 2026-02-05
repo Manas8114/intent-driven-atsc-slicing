@@ -128,8 +128,20 @@ export function SystemProvider({ children }: { children: React.ReactNode }) {
             // Extract Explanation
             // We parse the generated explanation or construct one from the returned action
             // For the demo specific wording requested:
+
+            // Hurdle-to-description mapping for friendly display
+            const hurdleDescriptions: Record<string, string> = {
+                'monsoon': '⛈️ Severe Monsoon — Signal attenuation (-15dB) across all sectors',
+                'flash_crowd': '👥 Flash Crowd — 300% traffic surge in city center',
+                'tower_failure': '🗼 Tower Failure — Infrastructure failure in Sector A',
+                'mobility_surge': '🚄 High Mobility — 60% users moving at 75km/h',
+                'clear': '✅ Environment Reset — Normal conditions restored'
+            };
+
+            const hurdleDisplay = hurdleDescriptions[hurdle] || data?.environment_change || `Unknown hurdle: ${hurdle}`;
+
             const specificExpl = {
-                changed: data?.environment_change || "Environment changed.",
+                changed: hurdleDisplay,
                 action: decision.explanation, // The AI engine returns a summary
                 safe: "Reliability maintained > 99%."
             };

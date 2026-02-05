@@ -1,0 +1,122 @@
+{
+    "tech_stack": [
+        "Python 3.11+",
+        "FastAPI",
+        "React",
+        "Reinforcement Learning (PPO)",
+        "Uvicorn"
+    ],
+    "features": [
+        {
+            "name": "Intent Service",
+            "description": "Validate and translate high-level operator intents into formal objectives.",
+            "files": [
+                "backend/intent_service.py"
+            ],
+            "api_doc": {
+                "openapi": "3.1.0",
+                "paths": {
+                    "/intent/": {
+                        "post": {
+                            "tags": [
+                                "Intent Service"
+                            ],
+                            "summary": "Submit Intent",
+                            "operationId": "submit_intent_intent__post",
+                            "requestBody": {
+                                "content": {
+                                    "application/json": {
+                                        "schema": {
+                                            "type": "object",
+                                            "properties": {
+                                                "intent": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "maximize_coverage",
+                                                        "ensure_emergency_reliability",
+                                                        "optimize_spectrum"
+                                                    ]
+                                                },
+                                                "target": {
+                                                    "type": "number",
+                                                    "minimum": 0,
+                                                    "maximum": 1
+                                                }
+                                            },
+                                            "required": [
+                                                "intent",
+                                                "target"
+                                            ]
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "AI Engine",
+            "description": "Decision engine generating configuration recommendations using RL and optimization.",
+            "files": [
+                "backend/ai_engine.py",
+                "backend/rl_agent.py",
+                "backend/optimizer.py"
+            ],
+            "api_doc": {
+                "openapi": "3.1.0",
+                "paths": {
+                    "/ai/decision": {
+                        "post": {
+                            "tags": [
+                                "AI Engine"
+                            ],
+                            "summary": "Make Decision"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "KPI Engine",
+            "description": "Tracks and records Key Performance Indicators (coverage, reliability, latency).",
+            "files": [
+                "backend/kpi_engine.py"
+            ],
+            "api_doc": {
+                "openapi": "3.1.0",
+                "paths": {
+                    "/kpi/live": {
+                        "get": {
+                            "tags": [
+                                "KPI Engine"
+                            ],
+                            "summary": "Get Live KPIs"
+                        }
+                    }
+                }
+            }
+        },
+        {
+            "name": "Approval Workflow",
+            "description": "Human-in-the-loop approval system for AI recommendations.",
+            "files": [
+                "backend/approval_engine.py"
+            ],
+            "api_doc": {
+                "openapi": "3.1.0",
+                "paths": {
+                    "/approval/pending": {
+                        "get": {
+                            "tags": [
+                                "Approval Workflow"
+                            ],
+                            "summary": "Get Pending Approvals"
+                        }
+                    }
+                }
+            }
+        }
+    ]
+}

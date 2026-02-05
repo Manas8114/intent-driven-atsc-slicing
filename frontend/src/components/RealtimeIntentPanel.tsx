@@ -208,7 +208,7 @@ export function RealtimeIntentPanel({
             case 'incoming': return { bg: 'bg-amber-500/20', text: 'text-amber-500', label: 'INCOMING' };
             case 'processing': return { bg: 'bg-blue-500/20', text: 'text-blue-500', label: 'PROCESSING' };
             case 'applied': return { bg: 'bg-emerald-500/20', text: 'text-emerald-500', label: 'APPLIED' };
-            default: return { bg: 'bg-slate-500/20', text: 'text-slate-500', label: 'UNKNOWN' };
+            default: return { bg: 'bg-slate-500/20', text: 'text-slate-500', label: 'PENDING' };
         }
     };
 
