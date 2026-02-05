@@ -25,3 +25,6 @@ docs.zip
 
 data/AM query result.pdf
 data/cell_towers_*.csv
+
+# Secrets
+ngrok.yml

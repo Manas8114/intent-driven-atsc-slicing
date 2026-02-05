@@ -8,7 +8,9 @@
  */
 
 // API Base URL - uses environment variable or defaults to localhost
-export const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+// API Base URL - Hardcoded to public ngrok URL for hackathon demo sharing
+// This ensures friends accessing the frontend via ngrok can still hit the backend
+export const API_BASE = 'https://felicita-savoriest-nonmeteorologically.ngrok-free.dev';
 
 /**
  * Fetch with automatic retry and exponential backoff.

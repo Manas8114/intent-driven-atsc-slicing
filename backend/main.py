@@ -41,6 +41,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Root endpoint - returns API status
+@app.get("/")
+async def root():
+    """Root endpoint showing API status."""
+    return {
+        "status": "online",
+        "service": "Intent-Driven ATSC 3.0 Network Slicing API",
+        "version": "1.0.0",
+        "docs": "/docs"
+    }
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint for monitoring."""
+    return {"status": "healthy"}
+
+@app.get("/favicon.ico", include_in_schema=False)
+async def favicon():
+    from fastapi.responses import FileResponse
+    import os
+    # Return a generic icon or 204 No Content
+    return {"status": "ok"} # Simplified for now, or use FileResponse if icon exists
+
 # ============================================================================
 # WebSocket Endpoint for Real-Time Updates
 # ============================================================================

@@ -10,7 +10,13 @@ echo.
 
 set "PROJECT_DIR=%~dp0"
 
+:: 0. CLEANUP (Fix EPERM errors)
+echo [0/4] Cleaning Metro Bundler Cache to fix permissions...
+rmdir /s /q "%LocalAppData%\Temp\metro-cache" 2>nul
+echo       Cache cleared.
+
 :: 1. Start Ngrok Tunnel
+echo.
 echo [1/4] Starting Ngrok Tunnel...
 echo       (This will open in a new window and update mobile configs)
 start "Ngrok Tunnel" cmd /c "cd /d "%PROJECT_DIR%" && call start_ngrok.cmd"
@@ -20,7 +26,7 @@ echo       Waiting 10 seconds for Ngrok to initialize and update configs...
 timeout /t 10 /nobreak > nul
 
 :: 2. Start Backend & Frontend
-echoParams
+echo.
 echo [2/4] Starting Backend & Frontend...
 echo       (This will open separate windows for Backend and Frontend)
 start "Project Setup" cmd /c "cd /d "%PROJECT_DIR%" && call start_project.cmd"
@@ -29,17 +35,17 @@ echo.
 echo       Waiting 5 seconds for systems to spin up...
 timeout /t 5 /nobreak > nul
 
-:: 3. Start BLE Advertiser
+:: 3. Start BLE Advertiser (Port 8081)
 echo.
 echo [3/4] Starting BLE Advertiser (Expo)...
 echo       [IMPORTANT] Scan the QR code in the NEW WINDOW titled "BLE Advertiser"
-start "BLE Advertiser" cmd /k "cd /d "%PROJECT_DIR%mobile\ble-advertiser" && echo. && echo === SCAN THIS QR CODE FOR ADVERTISER === && echo. && npx expo start --clear --tunnel"
+start "BLE Advertiser" cmd /k "cd /d "%PROJECT_DIR%mobile\ble-advertiser" && echo. && echo === SCAN THIS QR CODE FOR ADVERTISER === && echo. && npx expo start --clear --lan --port 8081"
 
-:: 4. Start BLE Receiver
+:: 4. Start BLE Receiver (Port 8082)
 echo.
 echo [4/4] Starting BLE Receiver (Expo)...
 echo       [IMPORTANT] Scan the QR code in the NEW WINDOW titled "BLE Receiver"
-start "BLE Receiver" cmd /k "cd /d "%PROJECT_DIR%mobile\ble-receiver" && echo. && echo === SCAN THIS QR CODE FOR RECEIVER === && echo. && npx expo start --clear --tunnel"
+start "BLE Receiver" cmd /k "cd /d "%PROJECT_DIR%mobile\ble-receiver" && echo. && echo === SCAN THIS QR CODE FOR RECEIVER === && echo. && npx expo start --clear --lan --port 8082"
 
 echo.
 echo ===================================================
