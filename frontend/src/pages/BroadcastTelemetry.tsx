@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardContent } from '../components/ui/Card';
 import {
     Activity,
@@ -279,8 +280,8 @@ export function BroadcastTelemetry() {
         try {
             // Fetch both telemetry and offloading data in parallel
             const [telemetryRes, offloadingRes] = await Promise.all([
-                fetch('http://localhost:8000/telemetry/all'),
-                fetch('http://localhost:8000/telemetry/offloading')
+                fetch(`${API_BASE}/telemetry/all`),
+                fetch(`${API_BASE}/telemetry/offloading`)
             ]);
 
             if (telemetryRes.ok) {

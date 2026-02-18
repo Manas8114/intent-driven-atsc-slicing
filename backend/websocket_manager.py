@@ -6,7 +6,7 @@ and connected frontend clients. Broadcasts system state changes, AI decisions,
 and alert notifications instantly.
 """
 
-from fastapi import WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
 from typing import Set, Dict, Any
 import asyncio
 import json
@@ -134,3 +134,52 @@ async def broadcast_hurdle_event(hurdle: str, response: Dict[str, Any]):
             "ai_response": response
         }
     })
+
+
+# ============================================================================
+# WebSocket Router
+# ============================================================================
+
+ws_router = APIRouter()
+
+
+@ws_router.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """
+    WebSocket endpoint for real-time updates.
+
+    Clients can connect to receive:
+    - System state updates
+    - AI decision notifications
+    - Alert broadcasts
+    - KPI metric changes
+
+    Message format: JSON with 'type' and 'data' fields
+    """
+    await manager.connect(websocket)
+    try:
+        await websocket.send_json({
+            "type": "connection_established",
+            "data": {
+                "message": "Connected to AI-Native Broadcast Intelligence Platform",
+                "timestamp": str(datetime.utcnow())
+            }
+        })
+
+        while True:
+            data = await websocket.receive_json()
+
+            if data.get("type") == "broadcast_packet":
+                await manager.broadcast({
+                    "type": "air_interface_packet",
+                    "data": data.get("data")
+                })
+
+    except WebSocketDisconnect:
+        await manager.disconnect(websocket)
+    except Exception as e:
+        print(f"WebSocket error: {e}")
+        try:
+            await manager.disconnect(websocket)
+        except:
+            pass

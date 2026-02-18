@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import {
     BarChart3, TrendingUp, AlertCircle, CheckCircle2,
@@ -239,8 +240,8 @@ export function BootstrapUncertainty() {
 
         try {
             const [analysisRes, diagnosticsRes] = await Promise.all([
-                fetch('http://localhost:8000/bootstrap/analysis'),
-                fetch('http://localhost:8000/bootstrap/diagnostics')
+                fetch(`${API_BASE}/bootstrap/analysis`),
+                fetch(`${API_BASE}/bootstrap/diagnostics`)
             ]);
 
             const analysisData = await analysisRes.json();
@@ -326,7 +327,7 @@ export function BootstrapUncertainty() {
                                     <button
                                         onClick={async () => {
                                             try {
-                                                await fetch('http://localhost:8000/learning/seed-demo', { method: 'POST' });
+                                                await fetch(`${API_BASE}/learning/seed-demo`, { method: 'POST' });
                                                 await fetchData();
                                             } catch (err) {
                                                 console.error('Failed to seed demo data:', err);

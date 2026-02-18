@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react';
+import { API_BASE } from '../config';
 import { Camera, FileJson, FileSpreadsheet } from 'lucide-react';
 import { cn } from '../lib/utils';
 
@@ -24,9 +25,9 @@ export function DataExportControls() {
 
     const collectData = useCallback(async (): Promise<TelemetryExportData> => {
         const [telemetryRes, offloadingRes, eventsRes] = await Promise.all([
-            fetch('http://localhost:8000/telemetry/all'),
-            fetch('http://localhost:8000/telemetry/offloading'),
-            fetch('http://localhost:8000/env/demo-events')
+            fetch(`${API_BASE}/telemetry/all`),
+            fetch(`${API_BASE}/telemetry/offloading`),
+            fetch(`${API_BASE}/env/demo-events`)
         ]);
 
         const telemetry = telemetryRes.ok ? await telemetryRes.json() : {};

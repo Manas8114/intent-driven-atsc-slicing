@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { API_BASE } from '../config';
 import {
     Car, Radio, AlertTriangle, CloudFog,
     ChevronLeft, ChevronRight,
@@ -64,7 +65,7 @@ export function HurdlePanel() {
             // Clear previous hurdle first
             triggerHurdle('clear');
             try {
-                await fetch('http://localhost:8000/ai/inject-scenario', {
+                await fetch(`${API_BASE}/ai/inject-scenario`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ scenario: 'clear' })
@@ -82,7 +83,7 @@ export function HurdlePanel() {
 
         // Call Backend API
         try {
-            await fetch('http://localhost:8000/ai/inject-scenario', {
+            await fetch(`${API_BASE}/ai/inject-scenario`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ scenario: scenario.id })

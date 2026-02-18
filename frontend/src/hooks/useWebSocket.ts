@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { WS_URL } from '../config';
 
 export interface WebSocketMessage {
     type: 'connected' | 'state_update' | 'ai_decision' | 'alert' | 'kpi_update' | 'hurdle_response' | 'scenario_event';
@@ -13,7 +14,6 @@ interface UseWebSocketReturn {
     reconnect: () => void;
 }
 
-const WS_URL = 'ws://127.0.0.1:8000/ws';
 const RECONNECT_DELAY = 3000;
 const MAX_RECONNECT_ATTEMPTS = 5;
 

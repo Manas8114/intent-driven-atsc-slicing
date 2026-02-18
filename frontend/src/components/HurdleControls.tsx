@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Button } from './ui/Button';
 import {
     AlertTriangle, WifiOff, Siren, Activity, Layers,
@@ -86,7 +87,7 @@ export function HurdleControls() {
         if (demoMode) {
             const fetchEvents = async () => {
                 try {
-                    const res = await fetch('http://localhost:8000/env/demo-events');
+                    const res = await fetch(`${API_BASE}/env/demo-events`);
                     if (res.ok) {
                         const data = await res.json();
                         setEvents(data.events || []);
@@ -104,7 +105,7 @@ export function HurdleControls() {
     const toggleDemoMode = async () => {
         try {
             const newMode = !demoMode;
-            const res = await fetch('http://localhost:8000/env/demo-mode', {
+            const res = await fetch(`${API_BASE}/env/demo-mode`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ enabled: newMode })
@@ -119,7 +120,7 @@ export function HurdleControls() {
 
     const changeSpeed = async (speed: number) => {
         try {
-            const res = await fetch('http://localhost:8000/env/speed', {
+            const res = await fetch(`${API_BASE}/env/speed`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ speed })
@@ -134,7 +135,7 @@ export function HurdleControls() {
 
     const resetSimulation = async () => {
         try {
-            await fetch('http://localhost:8000/env/reset', { method: 'POST' });
+            await fetch(`${API_BASE}/env/reset`, { method: 'POST' });
             triggerHurdle('reset');
         } catch (e) {
             console.error('Failed to reset', e);

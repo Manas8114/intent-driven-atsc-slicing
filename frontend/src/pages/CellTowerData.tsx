@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE } from '../config';
 import {
     Radio, MapPin, AlertTriangle, Activity, RefreshCw,
     Signal, Wifi, TrendingUp, ChevronDown, ChevronUp, Info
@@ -76,7 +77,7 @@ export function CellTowerData() {
     const [queryRadius, setQueryRadius] = useState(30);
     const [expandedSection, setExpandedSection] = useState<string | null>('radio');
 
-    const API_BASE = 'http://localhost:8000';
+
 
     const fetchStatus = useCallback(async () => {
         try {

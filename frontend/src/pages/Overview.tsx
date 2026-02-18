@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Activity, Radio, Cpu, Server, Signal, User, ShieldCheck, Tv, BarChart3 } from 'lucide-react';
 import { IntentLogTerminal } from '../components/IntentLogTerminal';
@@ -16,7 +17,7 @@ export function Overview() {
     useEffect(() => {
         const fetchStats = async () => {
             try {
-                const res = await fetch('http://localhost:8000/kpi/live');
+                const res = await fetch(`${API_BASE}/kpi/live`);
                 const data = await res.json();
                 setStats(data);
             } catch (e) {
@@ -29,7 +30,7 @@ export function Overview() {
     }, []);
 
     const injectDrift = async () => {
-        await fetch('http://localhost:8000/drift/inject?offset=1.0', { method: 'POST' });
+        await fetch(`${API_BASE}/drift/inject?offset=1.0`, { method: 'POST' });
         alert("Drift Injected! Watch the monitor.");
     };
     return (

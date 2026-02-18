@@ -1,4 +1,5 @@
 import { useEffect, useState, useMemo, useCallback } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 import { RefreshCw, ShieldCheck, Zap, Radio, Activity, TrendingUp, TrendingDown, Clock } from 'lucide-react';
@@ -105,7 +106,7 @@ export function KPIDashboard() {
     const fetchData = useCallback(async () => {
         setLoading(true);
         try {
-            const res = await fetch('http://localhost:8000/kpi/?limit=30');
+            const res = await fetch(`${API_BASE}/kpi/?limit=30`);
             if (res.ok) {
                 const json = await res.json();
                 if (json.length > 0) {

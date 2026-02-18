@@ -1,6 +1,7 @@
-from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from datetime import datetime
+import os
 
 from .intent_service import router as intent_router
 from .ai_engine import router as ai_router
@@ -9,7 +10,8 @@ from .approval_engine import router as approval_router
 from .visualization_router import router as viz_router
 from .rf_adapter import router as rf_router
 from .broadcast_telemetry import router as telemetry_router
-from .websocket_manager import manager, broadcast_state_update
+from .websocket_manager import manager, broadcast_state_update, ws_router
+from .simulation_router import router as simulation_router
 
 # AI Intelligence Layer modules (Cognitive Broadcasting)
 from .ai_data_collector import router as knowledge_router
@@ -25,17 +27,31 @@ app = FastAPI(
     description=(
         "Cognitive Broadcasting AI Layer for Intent-Driven ATSC 3.0 Network Slicing. "
         "This system implements an AI-native control plane that continuously senses, "
-        "learns, predicts, and optimizes broadcast behavior. "
-        "It does NOT generate RF waveforms or transmit on licensed spectrum - "
-        "it acts as an intelligence and control layer above the broadcast infrastructure."
+        "learns, predicts, and optimizes broadcast behavior.\n\n"
+        "**⚠️ Simulation Limitations:**\n\n"
+        "- This platform does NOT generate RF waveforms or transmit on licensed spectrum. "
+        "It acts as an intelligence and control layer above the broadcast infrastructure.\n"
+        "- All RF metrics (RSSI, SNR, BER) are computed via log-distance path loss models, "
+        "not measured from real hardware.\n"
+        "- The `/demo` endpoints inject synthetic events for demonstration purposes. "
+        "Data from these endpoints should not be used for production decisions.\n"
+        "- Cell tower and broadcast station datasets are static snapshots and may not "
+        "reflect current real-world deployments.\n"
+        "- AI decisions (PPO policy) are trained on simulated reward signals and serve "
+        "as a proof-of-concept for intent-driven network management."
     ),
     version="2.0.0"
 )
 
-# Allow frontend (http://localhost:5173) to access API
+# CORS: Restrict to known frontends
+_allowed_origins = os.environ.get(
+    "CORS_ORIGINS",
+    "http://localhost:5173,http://localhost:3000,http://127.0.0.1:5173"
+).split(",")
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production restrict to specific origins
+    allow_origins=_allowed_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -64,55 +80,8 @@ async def favicon():
     # Return a generic icon or 204 No Content
     return {"status": "ok"} # Simplified for now, or use FileResponse if icon exists
 
-# ============================================================================
-# WebSocket Endpoint for Real-Time Updates
-# ============================================================================
-
-@app.websocket("/ws")
-async def websocket_endpoint(websocket: WebSocket):
-    """
-    WebSocket endpoint for real-time updates.
-    
-    Clients can connect to receive:
-    - System state updates
-    - AI decision notifications
-    - Alert broadcasts
-    - KPI metric changes
-    
-    Message format: JSON with 'type' and 'data' fields
-    """
-    await manager.connect(websocket)
-    try:
-        # Send initial connection confirmation
-        await websocket.send_json({
-            "type": "connection_established",
-            "data": {
-                "message": "Connected to AI-Native Broadcast Intelligence Platform",
-                "timestamp": str(datetime.utcnow())
-            }
-        })
-        
-        # Listen for incoming messages (e.g., from Advertiser App)
-        while True:
-            data = await websocket.receive_json()
-            
-            # Message Relay Logic
-            if data.get("type") == "broadcast_packet":
-                # Advertiser is broadcasting a packet
-                # Relay to ALL connected clients (Receivers will hear this)
-                await manager.broadcast({
-                    "type": "air_interface_packet",
-                    "data": data.get("data")
-                })
-                
-    except WebSocketDisconnect:
-        await manager.disconnect(websocket)
-    except Exception as e:
-        print(f"WebSocket error: {e}")
-        try:
-            await manager.disconnect(websocket)
-        except:
-            pass
+# WebSocket router (from websocket_manager)
+app.include_router(ws_router)
 
 # Core routers
 app.include_router(intent_router, prefix="/intent", tags=["Intent Service"])
@@ -218,125 +187,8 @@ async def reset_drift():
 
 
 
-# ============================================================================
-# QUICK DEMO MODE - For Hackathon Presentations
-# ============================================================================
-
-@app.post("/demo/quick-start", tags=["Demo Mode"])
-async def quick_start_demo():
-    """
-    🚀 QUICK DEMO MODE - One-click impressive demo setup
-    
-    This endpoint:
-    1. Seeds 30 AI learning experiences with improving rewards
-    2. Triggers a 'monsoon' chaos scenario
-    3. Returns success for frontend confirmation
-    
-    Use this to instantly show judges:
-    - AI learning curve (experiences already recorded)
-    - Chaos resilience (monsoon active)
-    - Real-time recovery (AI adapts)
-    """
-    import random
-    import uuid
-    
-    from .learning_loop import get_learning_tracker
-    from .environment import get_env_state
-    
-    tracker = get_learning_tracker()
-    env = get_env_state()
-    
-    # 1. Seed experiences with IMPROVING rewards (shows learning)
-    experiences_added = 0
-    for i in range(30):
-        decision_id = f"quickdemo-{uuid.uuid4().hex[:6]}"
-        
-        # Simulate improving performance over time
-        base_reward = 0.4 + (i / 30) * 0.5  # Starts at 0.4, ends at 0.9
-        noise = random.gauss(0, 0.05)
-        reward = min(1.0, max(0.0, base_reward + noise))
-        
-        predicted_kpis = {
-            "coverage": 0.7 + (i / 30) * 0.2,
-            "alert_reliability": 0.85 + (i / 30) * 0.1,
-        }
-        
-        actual_kpis = {
-            "coverage": predicted_kpis["coverage"] + random.gauss(0.02, 0.01),
-            "alert_reliability": predicted_kpis["alert_reliability"] + random.gauss(0, 0.01),
-            "mobile_stability": 0.8 + (i / 30) * 0.15,
-        }
-        
-        action = {
-            "modulation": ["QPSK", "16QAM", "64QAM"][min(2, i // 10)],
-            "coding_rate": "5/15" if i < 15 else "7/15",
-            "power_dbm": 33 + (i / 30) * 5,
-            "delivery_mode": "broadcast"
-        }
-        
-        tracker.record_decision_outcome(
-            decision_id=decision_id,
-            intent="maximize_coverage" if i < 15 else "balanced",
-            action=action,
-            predicted_kpis=predicted_kpis,
-            actual_kpis=actual_kpis
-        )
-        experiences_added += 1
-    
-    # 2. Trigger monsoon scenario for dramatic effect
-    env.active_hurdle = "monsoon"
-    env.hurdle_intensity = 0.7
-    
-    # 3. Seed Control Plane Metrics for visual dashboard
-    from .broadcast_telemetry import control_plane_metrics
-    # Reset first
-    control_plane_metrics._initialize()
-    
-    # Simulate past 24h of operations
-    # 200 recommendations, 98% acceptance
-    for _ in range(196):
-        control_plane_metrics.record_recommendation(accepted=True)
-    for _ in range(4):
-        control_plane_metrics.record_recommendation(accepted=False)
-        
-    # Simulate safety interventions
-    for _ in range(12):
-        control_plane_metrics.record_safety_override()
-        
-    # Simulate emergency overrides
-    for _ in range(3):
-        control_plane_metrics.record_emergency_override()
-    
-    return {
-        "status": "🚀 DEMO MODE ACTIVE",
-        "experiences_added": experiences_added,
-        "total_experiences": tracker.total_decisions,
-        "active_scenario": "monsoon",
-        "message": "AI is now learning and adapting to monsoon conditions!",
-        "next_steps": [
-            "Open Learning Timeline to see improvement curve",
-            "Open Thinking Trace to see AI decisions",
-            "Watch constellation diagram scatter under stress"
-        ]
-    }
-
-
-@app.post("/demo/reset", tags=["Demo Mode"])
-async def reset_demo():
-    """
-    Reset demo state - clears scenario and resets to normal operation.
-    """
-    from .environment import get_env_state
-    
-    env = get_env_state()
-    env.active_hurdle = None
-    env.hurdle_intensity = 0.0
-    
-    return {
-        "status": "Demo reset",
-        "active_scenario": None,
-        "message": "System returned to normal operation"
-    }
+# Demo/Simulation routes (extracted to simulation_router.py)
+app.include_router(simulation_router)
 
 
 # ============================================================================

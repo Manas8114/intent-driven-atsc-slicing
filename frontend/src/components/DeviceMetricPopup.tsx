@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Signal, Wifi, WifiOff } from 'lucide-react';
+import { API_BASE } from '../config';
 
 interface PhysicsData {
     snr_db: number;
@@ -15,7 +16,7 @@ interface DeviceMetricPopupProps {
     onClose: () => void;
 }
 
-const API_BASE = 'http://localhost:8000';
+
 
 export const DeviceMetricPopup: React.FC<DeviceMetricPopupProps> = ({
     deviceId,

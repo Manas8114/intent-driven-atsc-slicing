@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
+import { API_BASE } from '../config';
 import { Activity } from 'lucide-react';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { DeviceMetricPopup } from './DeviceMetricPopup';
@@ -119,7 +120,7 @@ export function InteractiveIndiaMap({
         if (onCitySelect) onCitySelect(city);
 
         try {
-            await fetch('http://localhost:8000/ai/focus', {
+            await fetch(`${API_BASE}/ai/focus`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ region_id: city.id })

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { API_BASE } from '../config';
 
 interface SignalRayProps {
     towerPosition: { x: number; y: number };
@@ -7,7 +8,7 @@ interface SignalRayProps {
     containerHeight: number;
 }
 
-const API_BASE = 'http://localhost:8000';
+
 
 export const SignalRayOverlay: React.FC<SignalRayProps> = ({
     towerPosition,

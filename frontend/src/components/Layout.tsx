@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Sun, Moon, Home, Activity, Zap, History, Database, Cpu, LayoutGrid, Radio, Signal, Bluetooth } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Button } from './ui/Button';
@@ -140,7 +141,7 @@ export function Layout({ children, activePage, onNavigate }: LayoutProps) {
                                     const btn = document.getElementById('quick-demo-btn');
                                     if (btn) btn.textContent = '⏳ Loading...';
 
-                                    const res = await fetch('http://localhost:8000/demo/quick-start', {
+                                    const res = await fetch(`${API_BASE}/demo/quick-start`, {
                                         method: 'POST'
                                     });
                                     const data = await res.json();

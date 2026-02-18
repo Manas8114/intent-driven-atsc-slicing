@@ -476,3 +476,45 @@ textarea:focus-visible {
 .map-vignette-effect {
   background: radial-gradient(ellipse at center, transparent 40%, rgba(15, 23, 42, 0.6) 100%);
 }
+
+/* ============================================================================
+   Connection Status Banner
+   ============================================================================ */
+
+.connection-status-banner {
+  position: fixed;
+  top: 0;
+  left: 256px;
+  right: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: rgba(245, 158, 11, 0.15);
+  border-bottom: 1px solid rgba(245, 158, 11, 0.3);
+  color: #f59e0b;
+  font-size: 0.875rem;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.connection-status-banner .reconnect-btn {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 0.375rem;
+  background: rgba(245, 158, 11, 0.2);
+  border: 1px solid rgba(245, 158, 11, 0.4);
+  color: #f59e0b;
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.connection-status-banner .reconnect-btn:hover {
+  background: rgba(245, 158, 11, 0.3);
+}

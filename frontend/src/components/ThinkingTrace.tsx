@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { Brain, Cpu, Zap, Target, Signal, AlertTriangle, TrendingUp, Gauge, Activity } from 'lucide-react';
@@ -54,7 +55,7 @@ export function ThinkingTrace() {
         const fetchIntrospection = async () => {
             // Only fetch if we need PPO internals, trace comes via WebSocket mostly
             try {
-                const res = await fetch('http://localhost:8000/ai/thinking-trace');
+                const res = await fetch(`${API_BASE}/ai/thinking-trace`);
                 if (res.ok) {
                     const data = await res.json();
                     // debounce/smooth update

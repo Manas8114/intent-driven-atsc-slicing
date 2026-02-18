@@ -2,6 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from './ui/Card';
 import { AlertTriangle, CheckCircle, Lock } from 'lucide-react';
+import { API_BASE } from '../config';
 
 interface DriftMetrics {
     coverage_error: number;
@@ -24,7 +25,7 @@ export function DriftMonitor() {
     useEffect(() => {
         const fetchDrift = async () => {
             try {
-                const res = await fetch('http://localhost:8000/drift/status');
+                const res = await fetch(`${API_BASE}/drift/status`);
                 const data = await res.json();
                 setDriftData(data);
             } catch (err) {

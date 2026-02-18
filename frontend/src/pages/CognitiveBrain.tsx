@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
+import { API_BASE } from '../config';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { ThinkingTrace } from '../components/ThinkingTrace';
 import { ErrorBoundary } from '../components/ErrorBoundary';
 import { useWebSocket } from '../hooks/useWebSocket';
+import { ConnectionStatus } from '../components/ConnectionStatus';
 import {
     Brain, Activity, Wifi, Radio, Zap, TrendingUp,
     AlertTriangle, CheckCircle, Gauge, Car,
@@ -136,7 +138,7 @@ export function CognitiveBrain() {
     const [error, setError] = useState<string | null>(null);
 
     // REAL-TIME: WebSocket connection for instant updates
-    const { lastMessage } = useWebSocket();
+    const { lastMessage, isConnected, connectionError, reconnect } = useWebSocket();
 
     // Handle WebSocket state updates
     useEffect(() => {
@@ -201,7 +203,7 @@ export function CognitiveBrain() {
     useEffect(() => {
         const fetchState = async () => {
             try {
-                const response = await fetch('http://localhost:8000/ai/cognitive-state');
+                const response = await fetch(`${API_BASE}/ai/cognitive-state`);
                 if (!response.ok) throw new Error('Failed to fetch cognitive state');
                 const data = await response.json();
                 setCognitiveState(data);
@@ -263,8 +265,18 @@ export function CognitiveBrain() {
 
     const state = cognitiveState!;
 
+    // Connection status banner for real-time feedback
+    const connectionBanner = (
+        <ConnectionStatus
+            isConnected={isConnected}
+            connectionError={connectionError}
+            onReconnect={reconnect}
+        />
+    );
+
     return (
         <div className="space-y-6 animate-in fade-in duration-500">
+            {connectionBanner}
             {/* Header with AI-Native branding */}
             <div className="flex items-center justify-between">
                 <div>

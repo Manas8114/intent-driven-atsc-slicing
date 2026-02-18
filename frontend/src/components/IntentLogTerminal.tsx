@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Terminal, Zap, Radio, AlertTriangle } from 'lucide-react';
+import { API_BASE } from '../config';
 
 interface PhysicsLog {
     timestamp: string;
@@ -31,7 +32,7 @@ interface LogEntry {
     quality?: 'good' | 'fair' | 'poor';
 }
 
-const API_BASE = 'http://localhost:8000';
+
 
 export const IntentLogTerminal: React.FC = () => {
     const [logs, setLogs] = useState<LogEntry[]>([]);

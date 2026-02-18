@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { API_BASE } from '../config';
 import './BroadcastCoverage.css';
 
 interface Station {
@@ -35,7 +36,7 @@ interface BroadcastStats {
     is_real_data: boolean;
 }
 
-const API_BASE = 'http://localhost:8000';
+
 
 const SERVICE_TYPES = ['All', 'FM', 'AM', 'TV'];
 const PRESET_LOCATIONS = [

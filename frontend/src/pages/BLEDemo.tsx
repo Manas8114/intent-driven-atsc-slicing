@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '../components/ui/Card';
 import { Button } from '../components/ui/Button';
 import {
@@ -6,6 +6,7 @@ import {
     Play, Square, AlertTriangle, CheckCircle,
     Download, QrCode, Zap, Activity
 } from 'lucide-react';
+import { API_BASE } from '../config';
 
 interface BLEState {
     delivery_mode: string;
@@ -171,8 +172,8 @@ export function BLEDemo() {
     const fetchState = async () => {
         try {
             const [stateRes, packetRes] = await Promise.all([
-                fetch('http://localhost:8000/ble/state'),
-                fetch('http://localhost:8000/ble/packet')
+                fetch(`${API_BASE}/ble/state`),
+                fetch(`${API_BASE}/ble/packet`)
             ]);
 
             if (stateRes.ok && packetRes.ok) {
@@ -184,18 +185,28 @@ export function BLEDemo() {
                 setError(null);
             }
         } catch (_e) {
-            setError('Failed to fetch BLE state');
+            setError('Backend unreachable — check if server is running');
         }
     };
 
-    // Poll for updates when broadcasting
+    // Robust polling: recursive setTimeout prevents request stacking
     useEffect(() => {
-        fetchState();
+        let isMounted = true;
+        let timeoutId: ReturnType<typeof setTimeout>;
 
-        if (isBroadcasting) {
-            const interval = setInterval(fetchState, 2000);
-            return () => clearInterval(interval);
-        }
+        const poll = async () => {
+            await fetchState();
+            if (isMounted && isBroadcasting) {
+                timeoutId = setTimeout(poll, 2000);
+            }
+        };
+
+        poll();
+
+        return () => {
+            isMounted = false;
+            clearTimeout(timeoutId);
+        };
     }, [isBroadcasting]);
 
     return (
